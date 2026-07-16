@@ -1,0 +1,48 @@
+/* Field.module.css */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0; /* permite que el campo encoja dentro de grids */
+}
+
+.label {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* La aclaración va en minúsculas y sin tracking, como en el prototipo. */
+.hint {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+/* Estilo base compartido por inputs/textareas dentro de un Field.
+   :global porque el input lo pone el consumidor, no este componente. */
+.field :global(input),
+.field :global(textarea) {
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  outline: none;
+  color: var(--text-title);
+  font-size: var(--fs-body);
+  transition: border-color 0.13s;
+}
+
+.field :global(input:focus),
+.field :global(textarea:focus) {
+  border-color: var(--acc-1);
+}
+
+.field :global(textarea) {
+  resize: none;
+  line-height: 1.5;
+}

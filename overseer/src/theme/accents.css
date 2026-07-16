@@ -1,0 +1,42 @@
+/*
+  accents.css — Temas de acento conmutables.
+
+  El acento es el color de marca que tiñe botones principales, tabs activos,
+  el logo y las selecciones. Cambia según el atributo data-accent de <html>
+  (lo estampa ThemeProvider.jsx y se elige en Ajustes → Apariencia).
+
+  Cada tema redefine SOLO 3 variables; el resto del sistema las consume:
+    --acc-grad  → gradiente de fondos (botones, avatar, logo)
+    --acc-1     → color sólido (links, textos de acento)
+    --acc-soft  → versión translúcida (::selection, halos)
+
+  Valores exactos del prototipo (props "accent" del editor).
+*/
+
+/* Coral — tema por defecto (marca OVERSEER) */
+html[data-accent='coral'] {
+  --acc-grad: linear-gradient(150deg, #ff5c38, #ff2d78);
+  --acc-1: #ff7a5c;
+  --acc-soft: rgba(255, 92, 56, 0.3);
+}
+
+/* Eléctrico — verde lima */
+html[data-accent='electrico'] {
+  --acc-grad: linear-gradient(150deg, #8df25a, #22c69a);
+  --acc-1: #9df26a;
+  --acc-soft: rgba(141, 242, 90, 0.28);
+}
+
+/* Océano — azul */
+html[data-accent='oceano'] {
+  --acc-grad: linear-gradient(150deg, #3aa4ff, #2d63ff);
+  --acc-1: #5cb0ff;
+  --acc-soft: rgba(58, 164, 255, 0.28);
+}
+
+/* Púrpura — violeta/magenta */
+html[data-accent='purpura'] {
+  --acc-grad: linear-gradient(150deg, #a24bff, #ff2db4);
+  --acc-1: #c07dff;
+  --acc-soft: rgba(162, 75, 255, 0.3);
+}

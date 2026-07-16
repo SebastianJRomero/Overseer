@@ -1,0 +1,140 @@
+/*
+  theme.css — FUENTE ÚNICA de design tokens de OVERSEER.
+
+  Todos los valores vienen del prototipo (README §6). Ningún componente debe
+  escribir colores/radios/sombras "a mano": siempre var(--token). Así un cambio
+  de marca se hace aquí, en un solo archivo, sin tocar componentes.
+
+  Los tres ejes conmutables (acento, densidad, redondez) se activan con
+  atributos data-* en <html>, que estampa ThemeProvider.jsx:
+    <html data-accent="coral" data-density="comodo" data-roundness="redondeado">
+*/
+
+:root {
+  /* ── Fondos ─────────────────────────────────────────────────────────── */
+  --bg-app: #0a0c11;            /* fondo general de la app */
+  --surface-1: #0e121b;         /* tarjetas y modales */
+  --surface-2: #12161f;         /* inputs, filas, iconos */
+  --surface-3: #0d1119;         /* paneles hundidos (sub-tabs, cajas internas) */
+  --surface-deep: #080a0f;      /* celdas fuera de mes en el calendario */
+  --surface-row-hover: #111622; /* hover de filas de listas/tablas */
+  --surface-hover: #141a26;     /* hover de botones ghost y menús */
+
+  /* ── Bordes ─────────────────────────────────────────────────────────── */
+  --border-1: #161c28;          /* separadores internos (cabeceras, filas) */
+  --border-2: #1c2334;          /* borde por defecto de tarjetas e inputs */
+  --border-3: #1e2536;          /* borde de modales y popovers */
+  --border-4: #26324a;          /* borde de botones outline y destacados */
+  --border-hover: #2a3550;      /* borde al pasar el mouse por tarjetas */
+  --border-cal-dashed: #202c42; /* borde punteado de las celdas del calendario */
+
+  /* ── Texto ──────────────────────────────────────────────────────────── */
+  --text-strong: #f2f5fa;       /* cifras grandes y KPI */
+  --text-title: #eef1f6;        /* títulos y nombres */
+  --text-mid: #c6cfdd;          /* texto normal */
+  --text-soft: #9daabf;         /* texto secundario */
+  --text-muted: #8b96ab;        /* labels de KPI y descripciones */
+  --text-dim: #5c6a82;          /* metadatos, hints, placeholders visibles */
+  --text-faint: #4e5a70;        /* texto casi decorativo */
+
+  /* ── Colores semánticos (estados del negocio) ───────────────────────── */
+  /* verde = activo / entrada de dinero */
+  --ok: #7ee2a0;
+  --ok-strong: #3ecf74;
+  --ok-bg: #12231b;
+  --ok-border: #1d3a2a;
+  --ok-grad: linear-gradient(150deg, #1f9d57, #0f7a3f);
+  --ok-shadow: 0 3px 12px rgba(31, 157, 87, 0.28);
+  /* ámbar = vence pronto / pendiente */
+  --warn: #ffb35c;
+  --warn-bg: #2a2417;
+  /* coral = vencido / salida de dinero / peligro */
+  --danger: #ff8b6e;
+  --danger-strong: #ff5c38;
+  --danger-bg: #241722;
+  --danger-border: #3a2028;
+  /* azul = información / reservas */
+  --info: #7fb1f5;
+  --info-bg: #16233a;
+  /* lavanda = fin de semana y festivos del calendario */
+  --holiday: #a99cd6;
+  --holiday-bg: rgba(169, 156, 214, 0.06);
+  --holiday-bg-hover: rgba(169, 156, 214, 0.12);
+
+  /* ── Acento de marca (lo sobreescribe accents.css según data-accent) ── */
+  --acc-grad: linear-gradient(150deg, #ff5c38, #ff2d78);
+  --acc-1: #ff7a5c;             /* acento sólido para textos/links */
+  --acc-soft: rgba(255, 92, 56, 0.3);
+  --acc-shadow: 0 3px 12px rgba(255, 60, 90, 0.28); /* sombra de botones de acento */
+
+  /* ── Radios (los sobreescribe data-roundness) ───────────────────────── */
+  --r-chip: 8px;
+  --r-btn: 10px;
+  --r-card: 14px;
+  --r-modal: 20px;
+  --r-pill: 999px;
+
+  /* ── Tipografía ─────────────────────────────────────────────────────── */
+  --font-sans: 'Sora', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  /* escala extraída del prototipo */
+  --fs-kpi: 28px;         /* cifra grande de KPI */
+  --fs-title: 20px;       /* título de módulo */
+  --fs-modal-title: 16px; /* título de modal */
+  --fs-body: 13.5px;      /* cuerpo */
+  --fs-small: 12.5px;     /* secundario */
+  --fs-meta: 11.5px;      /* metadatos */
+  --fs-label: 10.5px;     /* labels uppercase de formularios */
+  --fs-micro: 9.5px;      /* micro-etiquetas */
+  /* tracking: negativo en títulos, positivo en labels */
+  --ls-title: -0.015em;
+  --ls-label: 0.08em;
+
+  /* ── Sombras ────────────────────────────────────────────────────────── */
+  --shadow-modal: 0 30px 80px rgba(0, 0, 0, 0.6);
+  --shadow-menu: 0 20px 50px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.28);
+  --shadow-card-hover: 0 10px 26px rgba(0, 0, 0, 0.35);
+
+  /* ── Densidad (la sobreescribe data-density) ────────────────────────── */
+  /* Un solo factor multiplica los espaciados "estructurales" de los módulos.
+     Los paddings finos internos de cada componente no escalan: en el
+     prototipo la densidad solo afecta padding y gap del contenedor. */
+  --density: 1;
+  --module-pad-y: calc(24px * var(--density));
+  --module-pad-x: calc(28px * var(--density));
+  --module-gap: calc(20px * var(--density));
+}
+
+/* ── Redondez conmutable (Ajustes → Apariencia) ───────────────────────── */
+/* Valores exactos del prototipo: Nítido 5/4/9 · Redondeado 14/10/20 · Suave 22/15/30 */
+html[data-roundness='nitido'] {
+  --r-card: 5px;
+  --r-btn: 4px;
+  --r-modal: 9px;
+  --r-chip: 4px;
+}
+html[data-roundness='redondeado'] {
+  --r-card: 14px;
+  --r-btn: 10px;
+  --r-modal: 20px;
+  --r-chip: 8px;
+}
+html[data-roundness='suave'] {
+  --r-card: 22px;
+  --r-btn: 15px;
+  --r-modal: 30px;
+  --r-chip: 12px;
+}
+
+/* ── Densidad conmutable (Ajustes → Apariencia) ───────────────────────── */
+/* Factores exactos del prototipo: Compacto 0.68 · Cómodo 1 · Espacioso 1.42 */
+html[data-density='compacto'] {
+  --density: 0.68;
+}
+html[data-density='comodo'] {
+  --density: 1;
+}
+html[data-density='espacioso'] {
+  --density: 1.42;
+}

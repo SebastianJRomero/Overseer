@@ -1,0 +1,17 @@
+/* AppShell.module.css */
+
+.shell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-app);
+  color: var(--text-title);
+}
+
+.main {
+  flex: 1;
+  overflow: auto;
+  /* halo coral sutil en la parte superior — detalle de marca del prototipo */
+  background: radial-gradient(900px 400px at 50% -10%, rgba(255, 92, 56, 0.06), transparent 60%);
+}
