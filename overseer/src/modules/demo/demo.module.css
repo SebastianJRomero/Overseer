@@ -1,4 +1,12 @@
-/* demo.module.css — estilos del módulo de demostración (Fase 0). */
+/* demo.module.css — estilos del módulo de demostración (Fase 0).
+
+   REGLA DEL PROYECTO: CSS Modules hashea los nombres de animación de este
+   archivo → los keyframes usados por clases se declaran aquí mismo. */
+
+@keyframes moduleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
 
 .wrap {
   height: 100%;
