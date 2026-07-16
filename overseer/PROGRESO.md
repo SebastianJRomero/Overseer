@@ -15,8 +15,8 @@
 
 | Fase | Contenido | Estado | Fecha |
 |------|-----------|--------|-------|
-| 0 | Andamiaje: Vite, theme, lib, componentes base, shell, registry con módulo dummy | **hecha — pendiente revisión del usuario** | 2026-07-16 |
-| 1 | Login y sesión (SessionProvider, authService, celebración) | pendiente | |
+| 0 | Andamiaje: Vite, theme, lib, componentes base, shell, registry con módulo dummy | revisada y mergeada (PR #1) | 2026-07-16 |
+| 1 | Login y sesión (SessionProvider, authService, celebración) | **hecha — pendiente revisión del usuario** | 2026-07-16 |
 | 2 | Módulo `members` (vertical de referencia: tabla, ficha, wizards, DatePicker) | pendiente | |
 | 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | pendiente | |
 | 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | pendiente | |
@@ -68,12 +68,38 @@
 - `settingsService` nació en Fase 0 (solo apariencia y flags) porque ThemeProvider y ModulesProvider lo necesitan; el plan lo tenía para Fase 7 — se amplía entonces.
 - Los componentes `StatusChip`, `Table`, `DatePicker`, `TimePicker` NO están aún: llegan con Members (Fase 2) y Calendar (Fase 3), que son quienes definen sus casos de uso.
 
+## Fase 1 — detalle (2026-07-16, rama `fase-1-login`)
+
+**Creado:**
+- `src/services/authService.js` — login mock (no vacíos), `remember` → storage `auth`, getSession/logout.
+- `src/context/SessionProvider.jsx` — status `cargando|anonimo|autenticado`, user, `justIn` (600 ms para `appEnter`), enter/logout/switchUser.
+- `src/auth/LoginScreen.jsx` + css — formulario fiel (orbes, glow del logo, campos escalonados `fieldIn`, Ver/Ocultar, Recordarme, error `shake`), coreografía de salida: `cardCelebrate` → `loginFade` → shell.
+- `src/auth/LoginCelebration.jsx` + css — flash, 3 anillos `ringBurst`, 32 confetis (`--cx/--cy/--cr`), check SVG con trazo `stroke`, saludo con nombre.
+- `src/app/TopBar/UserMenu.jsx` + css — avatar discreto (vino/coral) + popover `menuIn` con cabecera gradiente y acciones Cambiar de usuario / Cerrar sesión.
+
+**Modificado:** `App.jsx` (Gate: cargando→null, anonimo→Login, autenticado→Shell), `AppShell.jsx` (`appEnter` solo con `justIn`), `TopBar.jsx` (usa UserMenu).
+
+**Verificado en navegador:** error con campos vacíos (shake + bordes rojos) · login → confirmación → shell con iniciales correctas · Recordarme sobrevive recarga sin parpadeo · logout y cambiar de usuario vuelven al login limpiando storage · consola sin errores.
+
+**Ajuste por feedback del cliente:** la celebración original (confeti + anillos + flash + `cardCelebrate`) se reemplazó por una confirmación sobria: la tarjeta se retira con `cardAway`, halo tenue + check en círculo fino que se dibuja (`stroke`) + saludo. Los keyframes festivos (checkPop/ringBurst/confettiFall/checkGlow) siguen en `index.css` para la celebración de renovación (fase Miembros) — evaluar allí también la versión sobria.
+
+**⚠ REGLA DESCUBIERTA (aplica a TODAS las fases):** CSS Modules hashea los
+nombres de animación dentro de `*.module.css` (`stroke` → `_stroke_hash`),
+así que una clase de módulo NO puede referenciar keyframes globales de
+`index.css` — falla EN SILENCIO (no anima, sin error). Regla adoptada:
+- Animación aplicada por **clase** en un módulo → declarar los `@keyframes`
+  en ese mismo `.module.css` (duplicar está bien, quedan hasheados).
+- Animación aplicada por **estilo inline** (`style={{animation}}`, casos
+  dinámicos como abrir/cerrar modal o swaps) → keyframes globales de
+  `index.css`.
+Se corrigieron los afectados: LoginScreen, LoginCelebration, UserMenu, demo.
+
 ## Cómo continuar
 
-**Siguiente fase: 1 — Login y sesión.**
-1. `services/authService.js` (login mock: usuario+contraseña no vacíos; `remember` → storage `auth`).
-2. `context/SessionProvider.jsx` (authed, user, login/logout/switchUser).
-3. `modules/… no — el login NO es módulo`: vive en `src/auth/LoginScreen.jsx` (+ css) y `App.jsx` decide `authed ? <AppShell/> : <LoginScreen/>`.
-4. Celebración de éxito completa (flash, anillos, confeti, check SVG con `stroke`, saludo) y transición `appEnter`.
-5. `UserMenu` en la TopBar (popover `menuIn`, cambiar usuario / cerrar sesión) + avatar con iniciales reales.
+**Siguiente fase: 2 — Módulo `members` (vertical de referencia).**
+1. `data/seedMembers.js` (los 6 del prototipo, fechas relativas a hoy) + `data/seedPlans.js`.
+2. `services/membersService.js` (list/get/create/update/renew — registros completos, no overrides) y `services/plansService.js`.
+3. Componentes compartidos nuevos: `DatePicker` (popover calendario, el más repetido del prototipo) + hook `usePopover` (cierre animado 150 ms `pickerOut`), `StatusChip`, `Table` genérica si aplica.
+4. `modules/members/`: meta+registry (reemplaza a `demo`), toolbar con chips-contador, tabla 9 columnas, ficha modal (nombre editable inline, 2 date-pickers, dropdown plan, renovar), wizard alta (7 pasos+resumen, Enter global), wizard renovación (2 pasos, inicio = fin anterior), modal de filtro.
+5. Reglas: estado derivado con `lib/memberStatus.js`; `computeFin` en cambios de plan/fecha inicio.
 6. Actualizar este archivo y detenerse para revisión.
