@@ -1,0 +1,125 @@
+/* TopBar.module.css — estilos de la barra superior y sus piezas. */
+
+.bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 58px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border-1);
+  background: rgba(12, 15, 22, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+/* ── Marca ── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.logo {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(255, 60, 90, 0.35);
+}
+
+/* La "O" inclinada es parte de la identidad del prototipo. */
+.logoLetter {
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
+  transform: skewX(-8deg);
+}
+
+.wordmark {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ── Tabs de módulos ── */
+.tabs {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none; /* los tabs no muestran scrollbar */
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #7a869c;
+  background: transparent;
+  transition: all 0.13s;
+}
+.tab:hover {
+  color: var(--text-title);
+  background: var(--surface-hover);
+}
+
+.tabActive {
+  color: var(--text-title);
+  background: #161d2b;
+  border-color: var(--border-4);
+}
+
+.tabIcon {
+  font-size: 13px;
+}
+
+/* ── Zona derecha: reloj + avatar ── */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: none;
+}
+
+.clock {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.clockTime {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #c7cfdd;
+}
+
+.clockDate {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: #7486a6;
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-2);
+  flex: none;
+}

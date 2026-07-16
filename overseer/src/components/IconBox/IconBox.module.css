@@ -1,0 +1,10 @@
+/* IconBox.module.css */
+
+.box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-2);
+}

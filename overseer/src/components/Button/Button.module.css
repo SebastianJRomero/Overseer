@@ -1,0 +1,60 @@
+/* Button.module.css — estilos del botón (valores del prototipo). */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: var(--r-btn);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.12s, filter 0.13s, background 0.13s, border-color 0.13s;
+}
+
+/* Tamaños: md para acciones principales, sm para cabeceras de tarjeta. */
+.md { height: 36px; padding: 0 16px; }
+.sm { height: 32px; padding: 0 13px; font-size: 12px; }
+
+/* Acento de marca: botones principales (Agregar, Guardar, Registrar salida). */
+.accent {
+  background: var(--acc-grad);
+  color: #fff;
+  box-shadow: var(--acc-shadow);
+}
+.accent:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+
+/* Verde: SIEMPRE es entrada de dinero (Registrar entrada), no depende del acento. */
+.green {
+  background: var(--ok-grad);
+  color: #fff;
+  box-shadow: var(--ok-shadow);
+}
+.green:hover:not(:disabled) { filter: brightness(1.08); }
+
+/* Outline: acciones secundarias (Cancelar, Guardar cambios). */
+.outline {
+  background: transparent;
+  border-color: var(--border-4);
+  color: var(--text-mid);
+}
+.outline:hover:not(:disabled) { background: var(--surface-hover); }
+
+/* Ghost: acciones terciarias (Historial) — solo texto hasta el hover. */
+.ghost {
+  background: transparent;
+  color: #7a869c;
+}
+.ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-mid); }
+
+/* Deshabilitado: gris plano y sin sombra, igual que el prototipo. */
+.button:disabled {
+  background: #2a2f3d;
+  color: #fff;
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
