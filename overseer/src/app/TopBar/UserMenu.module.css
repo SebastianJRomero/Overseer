@@ -1,0 +1,158 @@
+/* UserMenu.module.css — avatar de la topbar + popover de cuenta.
+
+   REGLA DEL PROYECTO: CSS Modules hashea los nombres de animación de este
+   archivo → los keyframes usados por clases se declaran aquí mismo. */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* El avatar de la TOPBAR no usa el gradiente: es la variante discreta
+   (fondo vino, texto coral) del prototipo. El gradiente queda para la
+   cabecera del popover. */
+.avatarBtn {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-btn);
+  background: #2a1d29;
+  color: #ff9d85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.avatarBtn:hover {
+  transform: translateY(-1px);
+  border-color: var(--acc-1);
+}
+.avatarBtnOpen {
+  border-color: var(--acc-1);
+}
+
+/* Overlay invisible: captura el clic fuera para cerrar el menú. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  animation: fadeIn 0.15s ease;
+}
+
+.menu {
+  position: absolute;
+  top: 56px;
+  right: 18px;
+  width: 250px;
+  border-radius: var(--r-modal);
+  background: var(--surface-1);
+  border: 1px solid var(--border-3);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: menuIn 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--border-1);
+  /* tinte de acento que se desvanece — detalle del prototipo */
+  background: linear-gradient(150deg, rgba(255, 92, 56, 0.1), transparent 70%);
+}
+
+.headerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--acc-grad);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(255, 60, 90, 0.35);
+  flex: none;
+}
+
+.headerTexts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.headerName {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerRole {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.actions {
+  padding: 6px;
+}
+
+.action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 11px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #d6dce8;
+  transition: background 0.13s;
+  text-align: left;
+}
+.action:hover {
+  background: var(--surface-hover);
+}
+
+.actionDanger {
+  color: #ff8a6e;
+}
+.actionDanger:hover {
+  background: rgba(255, 60, 90, 0.1);
+}
+
+.actionIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  font-size: 12px;
+  color: var(--text-muted);
+  flex: none;
+}
+
+.actionIconDanger {
+  background: #2a1620;
+  border-color: #3a1d28;
+  color: #ff6b52;
+}

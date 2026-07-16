@@ -1,0 +1,314 @@
+/* LoginScreen.module.css — estilos de la pantalla de acceso (del prototipo).
+
+   REGLA DEL PROYECTO: CSS Modules reescribe (hashea) los nombres de
+   animación de este archivo, así que los keyframes deben declararse AQUÍ
+   MISMO — los globales de index.css solo funcionan en estilos inline
+   (por eso loginRise/cardAway/loginFade, que van por style=, viven allá). */
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(24px, -30px) scale(1.12); }
+}
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 26px) scale(1.15); }
+}
+@keyframes fieldIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 8px 26px rgba(255, 60, 90, 0.42), 0 0 0 rgba(255, 92, 56, 0); }
+  50% { box-shadow: 0 8px 34px rgba(255, 60, 90, 0.6), 0 0 22px rgba(255, 92, 56, 0.25); }
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(1100px 620px at 50% -8%, rgba(255, 92, 56, 0.14), transparent 62%),
+    #08090d;
+  overflow: hidden;
+}
+
+/* ── Orbes ambientales (decoración animada de fondo) ── */
+.orbA,
+.orbB {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(20px);
+  pointer-events: none;
+}
+.orbA {
+  top: -140px;
+  left: -120px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(255, 92, 56, 0.22), transparent 70%);
+  animation: orbFloat 14s ease-in-out infinite;
+}
+.orbB {
+  bottom: -160px;
+  right: -120px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(255, 45, 120, 0.18), transparent 70%);
+  animation: orbFloat2 17s ease-in-out infinite;
+}
+
+/* ── Tarjeta ── */
+.card {
+  position: relative;
+  width: min(390px, 100%);
+  border-radius: var(--r-modal);
+  background: rgba(14, 18, 27, 0.94);
+  border: 1px solid var(--border-3);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(14px);
+  padding: 36px 32px 30px;
+}
+
+/* ── Marca ── */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 26px;
+  animation: fieldIn 0.5s ease 0.05s both;
+}
+
+.logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--acc-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: glowPulse 3.4s ease-in-out infinite;
+}
+
+.logoLetter {
+  font-weight: 800;
+  font-size: 24px;
+  color: #fff;
+  transform: skewX(-8deg);
+}
+
+.brandTexts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.welcome {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #e0e0e0;
+}
+
+.subtitle {
+  font-size: var(--fs-small);
+  color: #6b7893;
+}
+
+.wordmark {
+  font-style: normal;
+  color: #ff9d85;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ── Campos ──
+   Cada bloque entra escalonado (delays del prototipo: .13s y .21s). */
+.fieldUser,
+.fieldPass {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.fieldUser { animation: fieldIn 0.5s ease 0.13s both; }
+.fieldPass { animation: fieldIn 0.5s ease 0.21s both; margin-bottom: 6px; }
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: #0a0d15;
+  border: 1px solid var(--border-2);
+  transition: border-color 0.16s, box-shadow 0.16s;
+}
+.inputWrap:focus-within {
+  border-color: var(--acc-1);
+  box-shadow: 0 0 0 3px var(--acc-soft);
+}
+
+/* Campo señalado tras un intento fallido. */
+.inputError {
+  border-color: rgba(255, 60, 90, 0.5);
+}
+
+.fieldIcon {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-title);
+  font-size: var(--fs-body);
+}
+.inputPass {
+  letter-spacing: 0.06em;
+}
+
+.passToggle {
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7486a6;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 4px;
+}
+.passToggle:hover {
+  color: #ff9d85;
+}
+
+/* ── Error ── */
+.errorBox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r-btn);
+  background: rgba(255, 60, 90, 0.09);
+  border: 1px solid rgba(255, 60, 90, 0.28);
+  font-size: var(--fs-meta);
+  color: #ff8a6e;
+  animation: shake 0.45s ease;
+}
+
+.errorIcon {
+  font-size: 12px;
+  color: #ff6b52;
+}
+
+/* ── Opciones ── */
+.options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 18px;
+  animation: fieldIn 0.5s ease 0.28s both;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  transition: all 0.14s;
+}
+.checkboxOn {
+  background: var(--acc-grad);
+  border-color: transparent;
+}
+
+.rememberText {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.forgot {
+  font-size: 12px;
+  color: #7486a6;
+}
+.forgot:hover {
+  color: #ff9d85;
+}
+
+/* ── Botón de ingreso ── */
+.submit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: var(--acc-grad);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 60, 90, 0.32);
+  transition: transform 0.14s, box-shadow 0.14s;
+  animation: fieldIn 0.5s ease 0.34s both;
+}
+.submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(255, 60, 90, 0.45);
+}
+.submit:active {
+  transform: translateY(0);
+}
+
+.submitArrow {
+  font-size: 15px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 11px;
+  color: var(--text-faint);
+  animation: fieldIn 0.5s ease 0.4s both;
+}

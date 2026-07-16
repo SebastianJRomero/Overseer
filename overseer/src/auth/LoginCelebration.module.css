@@ -1,0 +1,90 @@
+/* LoginCelebration.module.css — confirmación sobria de acceso.
+   Todo entra escalonado con softIn/labelUp; sin estallidos ni confeti.
+
+   REGLA DEL PROYECTO: CSS Modules reescribe (hashea) los nombres de
+   animación de este archivo, así que los keyframes deben declararse AQUÍ
+   MISMO — los globales de index.css solo funcionan en estilos inline. */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes softIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes stroke {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes labelUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  pointer-events: none; /* solo decoración: no bloquea nada */
+}
+
+/* Halo muy tenue detrás del check — da profundidad sin gritar. */
+.halo {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 46%, rgba(62, 207, 116, 0.1), transparent 55%);
+  animation: fadeIn 0.6s ease 0.15s both;
+}
+
+/* ── Check ──
+   Círculo discreto: borde fino verde sobre superficie oscura; el pop
+   bounce del prototipo se sustituye por una escala mínima (softIn). */
+.check {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(62, 207, 116, 0.08);
+  border: 1.5px solid rgba(126, 226, 160, 0.45);
+  box-shadow: 0 0 40px rgba(62, 207, 116, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: softIn 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) 0.2s both;
+}
+
+/* El trazo se "dibuja": arranca oculto (offset = largo del path) y el
+   keyframe stroke lo lleva a 0 una vez el círculo ya está en escena. */
+.checkPath {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: stroke 0.45s ease 0.5s forwards;
+}
+
+/* ── Saludo ── */
+.greeting {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: labelUp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) 0.55s both;
+}
+
+.greetingTitle {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-title);
+}
+
+.greetingName {
+  font-size: 13px;
+  color: #7ee2a0;
+  font-weight: 600;
+}
