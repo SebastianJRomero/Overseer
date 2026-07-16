@@ -1,0 +1,58 @@
+/* MonthNav.module.css */
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.arrow {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  color: var(--text-mid);
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color 0.13s, color 0.13s;
+}
+.arrow:hover {
+  border-color: var(--border-hover);
+  color: var(--text-title);
+}
+
+.label {
+  min-width: 148px;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: capitalize;
+}
+
+.today {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  color: var(--text-mid);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+/* Encendido = ya estás en el periodo actual. */
+.todayOn {
+  background: var(--acc-grad);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--acc-shadow);
+}

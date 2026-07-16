@@ -1,0 +1,38 @@
+/* SegmentedOptions.module.css */
+
+.grid {
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.13s;
+}
+
+.option:hover {
+  border-color: var(--border-hover);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}

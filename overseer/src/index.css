@@ -1,0 +1,205 @@
+/*
+  index.css — Reset mínimo + keyframes globales de la app.
+
+  Aquí NO van estilos de componentes (cada uno tiene su .module.css).
+  Sí van:
+    1. El import de los design tokens (theme.css + accents.css).
+    2. Un reset pequeño y los estilos del <body>.
+    3. Los @keyframes compartidos por toda la app — las animaciones son
+       globales por diseño: varios módulos reutilizan las mismas
+       (cardIn/cardOut en todos los modales, moduleIn en todos los módulos...).
+       Los nombres son los del prototipo para poder compararlos 1 a 1.
+*/
+
+@import './theme/theme.css';
+@import './theme/accents.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-title);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* La app ocupa siempre el viewport completo (solo desktop). */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+a {
+  color: var(--acc-1);
+  text-decoration: none;
+}
+a:hover {
+  filter: brightness(1.15);
+}
+
+/* La selección de texto usa el acento activo — detalle de marca del prototipo. */
+::selection {
+  background: var(--acc-soft);
+}
+
+/* Scrollbars oscuros, finos, como en el prototipo. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #1c2230;
+  border-radius: 8px;
+}
+
+/* Los botones/inputs nativos heredan la fuente del sistema de diseño. */
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* ═══ Keyframes globales (nombres idénticos al prototipo) ═══ */
+
+/* Overlays de modal: aparecen y desaparecen en fundido. */
+@keyframes ovIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ovOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* Tarjeta de modal: entra subiendo con leve zoom; sale hacia abajo.
+   cardOut se reproduce ~170ms ANTES de desmontar (cierre diferido). */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes cardOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+
+/* Cierre de popovers pequeños (date/time pickers, menús). */
+@keyframes pickerOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-6px) scale(0.96); }
+}
+
+/* Entrada de un módulo al montarse en el ModuleHost. */
+@keyframes moduleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Entrada suave de filas/elementos de lista. */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Menús desplegables (menú de usuario, dropdowns). */
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Login ── */
+@keyframes loginRise {
+  from { opacity: 0; transform: translateY(26px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fieldIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 8px 26px rgba(255, 60, 90, 0.42), 0 0 0 rgba(255, 92, 56, 0); }
+  50% { box-shadow: 0 8px 34px rgba(255, 60, 90, 0.6), 0 0 22px rgba(255, 92, 56, 0.25); }
+}
+@keyframes glowPulseBlue {
+  0%, 100% { box-shadow: 0 6px 22px rgba(16, 36, 66, 0.42), 0 0 0 rgba(127, 201, 255, 0); }
+  50% { box-shadow: 0 10px 32px rgba(28, 66, 116, 0.5), 0 0 22px rgba(127, 201, 255, 0.3); }
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(24px, -30px) scale(1.12); }
+}
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 26px) scale(1.15); }
+}
+
+/* ── Celebración de login exitoso ── */
+@keyframes cardCelebrate {
+  0% { transform: none; }
+  18% { transform: scale(0.94) rotate(-1.5deg); }
+  42% { transform: scale(1.06) rotate(1deg); }
+  100% { transform: scale(1.9) rotate(0); opacity: 0; filter: blur(6px); }
+}
+@keyframes checkPop {
+  0% { transform: scale(0) rotate(-90deg); opacity: 0; }
+  55% { transform: scale(1.28) rotate(8deg); opacity: 1; }
+  72% { transform: scale(0.9) rotate(-4deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes checkGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(62, 207, 116, 0), 0 10px 40px rgba(62, 207, 116, 0.4); }
+  50% { box-shadow: 0 0 60px rgba(62, 207, 116, 0.7), 0 10px 46px rgba(62, 207, 116, 0.6); }
+}
+@keyframes ringBurst {
+  0% { transform: scale(0.4); opacity: 0.85; border-width: 6px; }
+  100% { transform: scale(3.4); opacity: 0; border-width: 1px; }
+}
+@keyframes stroke {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes labelUp {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes confettiFall {
+  0% { opacity: 0; transform: translate(0, -10px) rotate(0); }
+  8% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--cx), var(--cy)) rotate(var(--cr)); }
+}
+@keyframes flashOut {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+@keyframes loginFade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes appEnter {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ── Transiciones de swap ──
+   Pares idénticos a propósito: para RE-disparar una animación CSS sobre el
+   mismo nodo hay que cambiar el nombre de la animación, así que se alterna
+   entre A y B cada vez que cambia la vista (ver hook useSwapAnimation). */
+@keyframes swapA {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes swapB {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes screenA {
+  from { opacity: 0; transform: scale(0.992); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes screenB {
+  from { opacity: 0; transform: scale(0.992); }
+  to { opacity: 1; transform: none; }
+}

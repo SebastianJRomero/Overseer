@@ -1,0 +1,45 @@
+/* Card.module.css */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-card);
+  overflow: hidden; /* las listas internas no deben salirse del radio */
+}
+
+/* Tarjeta protagonista (p. ej. "Movimientos del día"): borde fuerte + sombra. */
+.highlight {
+  border-color: var(--border-4);
+  border-radius: var(--r-modal);
+  box-shadow: var(--shadow-card);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.body {
+  padding: 16px 18px;
+}

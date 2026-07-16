@@ -1,0 +1,36 @@
+/* MoneyInput.module.css */
+
+.wrap {
+  display: flex;
+  align-items: center;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  overflow: hidden;
+  transition: border-color 0.13s;
+}
+
+/* El foco vive en el input interno, pero el borde lo pinta el contenedor. */
+.wrap:focus-within {
+  border-color: var(--acc-1);
+}
+
+.prefix {
+  padding-left: 14px;
+  color: var(--text-dim);
+  font-size: var(--fs-body);
+  font-family: var(--font-mono);
+  user-select: none;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-title);
+  font-size: var(--fs-body);
+  font-family: var(--font-mono);
+}
