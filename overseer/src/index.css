@@ -64,7 +64,15 @@ select {
   font-family: inherit;
 }
 
-/* ═══ Keyframes globales (nombres idénticos al prototipo) ═══ */
+/* ═══ Keyframes globales (nombres idénticos al prototipo) ═══
+
+   IMPORTANTE — regla del proyecto sobre animaciones:
+   Estos keyframes SOLO sirven para animaciones aplicadas por estilo
+   INLINE (style={{ animation: 'cardIn …' }}), que el hasher de CSS
+   Modules no toca. Dentro de un *.module.css el nombre se reescribe
+   (cardIn → _cardIn_hash) y la referencia a un keyframe global se rompe
+   EN SILENCIO: sin error, simplemente no anima. Por eso cada módulo
+   declara localmente los keyframes que usa en sus clases. */
 
 /* Overlays de modal: aparecen y desaparecen en fundido. */
 @keyframes ovIn { from { opacity: 0; } to { opacity: 1; } }
@@ -137,13 +145,17 @@ select {
   50% { transform: translate(-30px, 26px) scale(1.15); }
 }
 
-/* ── Celebración de login exitoso ── */
-@keyframes cardCelebrate {
-  0% { transform: none; }
-  18% { transform: scale(0.94) rotate(-1.5deg); }
-  42% { transform: scale(1.06) rotate(1deg); }
-  100% { transform: scale(1.9) rotate(0); opacity: 0; filter: blur(6px); }
+/* ── Éxito de login (versión sobria) ──
+   La tarjeta se retira con un desvanecimiento suave hacia arriba y el
+   check aparece con una escala mínima — sin confeti ni estallidos.
+   (checkPop/checkGlow/ringBurst/confettiFall se conservan más abajo:
+   los usa la celebración de renovación del prototipo, fase Miembros.) */
+@keyframes cardAway {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-14px) scale(0.97); }
 }
+
+/* ── Celebración (renovación de membresía) ── */
 @keyframes checkPop {
   0% { transform: scale(0) rotate(-90deg); opacity: 0; }
   55% { transform: scale(1.28) rotate(8deg); opacity: 1; }
