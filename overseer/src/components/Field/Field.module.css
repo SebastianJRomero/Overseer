@@ -24,9 +24,15 @@
 }
 
 /* Estilo base compartido por inputs/textareas dentro de un Field.
-   :global porque el input lo pone el consumidor, no este componente. */
-.field :global(input),
-.field :global(textarea) {
+   :global porque el input lo pone el consumidor, no este componente.
+
+   IMPORTANTE — hijo directo (`>`): solo estilamos el control cuando es
+   hijo DIRECTO del Field. Componentes como MoneyInput envuelven su input
+   en un <div.wrap> con su propio borde; ese input es NIETO y no debe
+   recibir este borde/fondo (si no, se dibuja una "caja dentro de la caja").
+   Los inputs/textarea que el consumidor pone directamente sí se estilan. */
+.field > :global(input),
+.field > :global(textarea) {
   padding: 12px 14px;
   border-radius: 11px;
   background: var(--surface-2);
@@ -37,12 +43,12 @@
   transition: border-color 0.13s;
 }
 
-.field :global(input:focus),
-.field :global(textarea:focus) {
+.field > :global(input:focus),
+.field > :global(textarea:focus) {
   border-color: var(--acc-1);
 }
 
-.field :global(textarea) {
+.field > :global(textarea) {
   resize: none;
   line-height: 1.5;
 }

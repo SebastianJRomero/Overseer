@@ -15,11 +15,14 @@
     - width: ancho máximo de la tarjeta en px (cada modal tiene el suyo:
       440 evento, 560 ficha, 620 wizard, 960 movimiento…)
     - onOverlayClose: callback opcional al cerrar por overlay (para limpiar)
+    - overflowVisible: true en modales con popovers internos (date-pickers,
+      dropdowns) para que puedan SOBRESALIR de la tarjeta sin recortarse ni
+      generar scroll. Por defecto la tarjeta recorta y hace scroll.
 */
 
 import styles from './Modal.module.css';
 
-export default function Modal({ controller, width = 520, onOverlayClose, children }) {
+export default function Modal({ controller, width = 520, onOverlayClose, overflowVisible = false, children }) {
   const { isOpen, isClosing, close } = controller;
 
   // Sin desmontar hasta que la animación de salida termine (cierre diferido).
@@ -32,7 +35,7 @@ export default function Modal({ controller, width = 520, onOverlayClose, childre
       onClick={() => close(onOverlayClose)}
     >
       <div
-        className={styles.card}
+        className={overflowVisible ? `${styles.card} ${styles.cardVisible}` : styles.card}
         style={{
           width: `min(${width}px, 100%)`,
           animation: isClosing

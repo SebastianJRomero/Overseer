@@ -1,0 +1,104 @@
+/* MemberTable.module.css — tabla de miembros (contenedor, cabecera y filas). */
+
+.container {
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  background: var(--surface-1);
+}
+
+/* La tabla no se aplasta: si no cabe, scroll horizontal dentro del marco. */
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  min-width: 900px;
+}
+
+.headRow {
+  border-bottom: 1px solid var(--border-2);
+  background: #10141f;
+}
+
+.th {
+  text-align: left;
+  padding: 11px 14px;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.row {
+  border-bottom: 1px solid #141a26;
+  transition: background 0.12s;
+  cursor: pointer;
+}
+.row:hover {
+  background: #11161f;
+}
+
+.cell {
+  padding: 11px 14px;
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  color: var(--text-soft);
+}
+
+.soft {
+  color: var(--text-soft);
+}
+
+/* Observaciones: una línea con puntos suspensivos, no rompe la fila. */
+.obs {
+  color: var(--text-dim);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Celda de nombre ── */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--r-btn);
+  background: #1a2130;
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-label);
+  font-weight: 600;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--text-title);
+  transition: color 0.12s;
+}
+.row:hover .name {
+  color: #ff8b6e;
+}
+
+.empty {
+  padding: 30px 18px;
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+}

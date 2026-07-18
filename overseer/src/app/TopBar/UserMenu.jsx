@@ -6,11 +6,16 @@
   acciones: "Cambiar de usuario" y "Cerrar sesión" — ambas vuelven al
   login limpiando la sesión (via SessionProvider → authService).
 
-  El clic en cualquier punto fuera del popover lo cierra (overlay
-  invisible a pantalla completa, mismo mecanismo del prototipo).
+  IMPORTANTE — por qué un PORTAL: la TopBar usa backdrop-filter, que crea
+  un "contexto de apilamiento". Cualquier z-index de un hijo (como este
+  popover) queda ATRAPADO dentro de la barra y se pinta DEBAJO del área de
+  módulos (la tabla). Eso hacía que el menú se viera detrás y que sus
+  botones no recibieran el clic. Renderizándolo en document.body con un
+  portal, el overlay vive fuera de la barra y se apila por encima de todo.
 */
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSession } from '../../context/SessionProvider';
 import { getInitials } from '../../lib/initials';
 import styles from './UserMenu.module.css';
@@ -19,6 +24,8 @@ export default function UserMenu() {
   const { user, logout, switchUser } = useSession();
   const [open, setOpen] = useState(false);
   const name = user || 'Admin';
+
+  const close = () => setOpen(false);
 
   return (
     <>
@@ -31,10 +38,12 @@ export default function UserMenu() {
         {getInitials(name)}
       </button>
 
-      {open && (
-        <div className={styles.overlay} onClick={() => setOpen(false)}>
+      {/* El popover se monta en <body> (portal) para escapar del contexto
+          de apilamiento de la barra. El overlay a pantalla completa cierra
+          al hacer clic fuera; el menú detiene la propagación. */}
+      {open && createPortal(
+        <div className={styles.overlay} onClick={close}>
           <div className={styles.menu} onClick={(e) => e.stopPropagation()}>
-            {/* cabecera de la cuenta */}
             <div className={styles.header}>
               <span className={styles.headerAvatar}>{getInitials(name)}</span>
               <div className={styles.headerTexts}>
@@ -43,19 +52,19 @@ export default function UserMenu() {
               </div>
             </div>
 
-            {/* acciones */}
             <div className={styles.actions}>
-              <button type="button" className={styles.action} onClick={switchUser}>
+              <button type="button" className={styles.action} onClick={() => { close(); switchUser(); }}>
                 <span className={styles.actionIcon}>⇄</span>
                 <span>Cambiar de usuario</span>
               </button>
-              <button type="button" className={`${styles.action} ${styles.actionDanger}`} onClick={logout}>
+              <button type="button" className={`${styles.action} ${styles.actionDanger}`} onClick={() => { close(); logout(); }}>
                 <span className={`${styles.actionIcon} ${styles.actionIconDanger}`}>⏻</span>
                 <span>Cerrar sesión</span>
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
