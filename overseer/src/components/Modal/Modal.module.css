@@ -22,3 +22,11 @@
   box-shadow: var(--shadow-modal);
   overflow: auto;
 }
+
+/* Variante para modales con popovers internos: la tarjeta NO recorta, así
+   los calendarios/menús sobresalen. Sin max-height para que no aparezca
+   scroll (estos modales son de altura acotada por su contenido). */
+.cardVisible {
+  overflow: visible;
+  max-height: none;
+}

@@ -1,0 +1,95 @@
+/* PlanDropdown.module.css — campo + menú del selector de plan. */
+
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Misma altura que los inputs de Field y el DatePicker: en la ficha,
+   Membresía queda alineada con N° Recibo y las fechas. */
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  font-size: var(--fs-body);
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: border-color 0.13s;
+  text-align: left;
+}
+.trigger:hover {
+  border-color: #2c3650;
+}
+.triggerOpen {
+  border-color: var(--acc-1);
+}
+
+.caret {
+  color: var(--text-dim);
+  font-size: 11px;
+  display: inline-block;
+  transition: transform 0.18s;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  z-index: 20;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-3);
+  box-shadow: var(--shadow-menu);
+}
+
+.option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+}
+.option:hover {
+  background: var(--surface-hover);
+}
+.optionActive {
+  background: var(--surface-hover);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.optionLabel {
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--text-mid);
+  margin-right: auto;
+}
+.optionActive .optionLabel {
+  color: var(--text-title);
+}
+
+.check {
+  font-size: 12px;
+  color: var(--ok);
+}
