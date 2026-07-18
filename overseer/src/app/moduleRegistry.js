@@ -19,8 +19,9 @@
 
 import demo from '../modules/demo';
 import members from '../modules/members';
+import calendar from '../modules/calendar';
 
-export const MODULES = [demo, members];
+export const MODULES = [demo, members, calendar];
 
 /** A dónde vuelve la app cuando se oculta el módulo activo (será 'dashboard'). */
 export const DEFAULT_MODULE_ID = MODULES[0].id;
