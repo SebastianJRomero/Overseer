@@ -1,0 +1,262 @@
+/* MemberWizard.module.css — wizard de alta/renovación y sus pasos. */
+
+/* ── Cabecera ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 12px;
+}
+
+.stepText {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+.wizTitle {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.close {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--border-1);
+  color: var(--text-title);
+}
+
+/* ── Barra de progreso ── */
+.progress {
+  height: 3px;
+  margin: 0 18px 4px;
+  background: var(--border-1);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff5c38, #ff2d78);
+  border-radius: var(--r-pill);
+  transition: width 0.25s ease;
+}
+
+/* ── Cuerpo común de los pasos ── */
+.stepBody {
+  padding: 6px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 170px;
+}
+
+.stepHeading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stepTitle {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #dddddd;
+}
+
+.stepHint {
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+}
+
+/* Input protagonista de los pasos de texto: grande y subrayado. */
+.bigInput {
+  padding: 12px 2px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--border-4);
+  font-size: 20px;
+  color: var(--text-title);
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.bigInput:focus {
+  border-bottom-color: var(--acc-1);
+}
+.bigInputMono {
+  font-family: var(--font-mono);
+}
+/* Subrayado en rojo tenue mientras el campo obligatorio esté vacío. */
+.bigInputInvalid {
+  border-bottom-color: var(--danger-border);
+}
+
+/* Campos "de caja" (renovación: recibo, observaciones). */
+.boxInput {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  font-size: 13px;
+  color: var(--text-title);
+  font-family: var(--font-mono);
+  outline: none;
+}
+.boxInput:focus {
+  border-color: var(--acc-1);
+}
+
+.boxTextarea {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  font-size: var(--fs-small);
+  color: var(--text-title);
+  font-family: var(--font-sans);
+  outline: none;
+  resize: vertical;
+  min-height: 52px;
+  line-height: 1.5;
+}
+.boxTextarea:focus {
+  border-color: var(--acc-1);
+}
+
+/* Grid de dos columnas (fechas, valor+recibo). */
+.dateGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Resumen ── */
+.summary {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: none;
+  border-bottom: 1px solid #141a26;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+}
+.summaryRow:last-child {
+  border-bottom: none;
+}
+.summaryRow:hover {
+  background: #11161f;
+}
+
+.summaryLabel {
+  width: 120px;
+  flex: none;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.summaryValue,
+.summaryEmpty {
+  font-size: var(--fs-small);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.summaryValue { color: var(--text-title); }
+.summaryEmpty { color: var(--text-faint); }
+
+.summaryEdit {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+/* ── Pie ── */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 16px;
+  border-top: 1px solid var(--border-1);
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-4);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.backBtn:hover {
+  background: #161d2b;
+  color: var(--text-title);
+}
+
+.enterHint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  background: var(--border-1);
+  border: 1px solid #232c40;
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: #6b7893;
+  font-size: 11px;
+}
+
+.nextBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  color: #fff;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--acc-shadow);
+}
