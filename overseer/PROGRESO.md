@@ -17,7 +17,7 @@
 | 0 | Andamiaje: Vite, theme, lib, componentes base, shell, registry con módulo dummy | revisada y mergeada (PR #1) | 2026-07-16 |
 | 1 | Login y sesión (SessionProvider, authService, celebración) | revisada y mergeada (PR #2) | 2026-07-16 |
 | 2 | Módulo `members` (vertical de referencia: tabla, ficha, wizards, DatePicker) | hecha + correcciones round 2 — pendiente revisión del usuario | 2026-07-17 |
-| 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | pendiente | |
+| 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | **hecha — pendiente revisión del usuario** | 2026-07-18 |
 | 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | pendiente | |
 | 5 | Módulo `dashboard` (compone members+movements+events) | pendiente | |
 | 6 | Módulo `inventory` (productos / equipo / gas) | pendiente | |
@@ -185,17 +185,54 @@ resueltos y verificados por DOM + screenshots en esta sesión:
   `components/DatePicker/DatePicker.module.css`,
   `modules/members/components/PlanDropdown.module.css`.
 
+## Fase 3 — detalle (2026-07-18, rama `fase-3-calendar`)
+
+**Creado:**
+- `data/seedEvents.js` — eventos del prototipo con fechas RELATIVAS a hoy
+  (hoy, +1, +3, +5) → siempre hay eventos y "próximos".
+- `services/eventsService.js` — listEvents/saveEvent/deleteEvent (mapa por
+  dateKey `aaaa-mm-dd` en storage) + getUpcoming(n) para el Inicio (fase 5).
+- `components/TimePicker/` — selector emergente horas(1-12)/min(×5)/AM-PM;
+  valor viaja en 24h "HH:mm", se elige/muestra en 12h. Reutiliza usePopover.
+  Misma altura que DatePicker/inputs (12px 14px).
+- `modules/calendar/`: `eventTypes.js` (Reserva=info, Clase=ok, Tarea=warn,
+  Nota=danger; Cobro/Pago reservados para Finanzas), `calendarCells.js`
+  (constructor puro de la grilla lunes-first con huecos), `useCalendar.js`
+  (mapa + cursor + navegación + save/delete), `CalendarModule`, y componentes
+  `CalendarToolbar` (MonthNav), `CalendarGrid`+`CalendarCell` (celdas de alto
+  fijo 118px, findes/festivos en lavanda, anillo de acento en hoy, píldora de
+  día, máx 3 eventos + "+n más"), `CalendarLegend`, `EventModal` (título,
+  TimePicker, tipo segmentado, Eliminar en edición, Guardar bloqueado sin
+  título; `overflowVisible` para que el TimePicker sobresalga).
+- `moduleRegistry` incorpora `calendar` (order 30).
+
+**Reglas aplicadas:** semana lunes-first (`mondayFirstLead`), festivos fijos
+CO desde `lib/holidays.js`, hora guardada en 24h; el modal se remonta con
+`key` en cada apertura. Clic en día vacío → nuevo; clic en evento → editar
+(con `stopPropagation` para no disparar el "nuevo" del día).
+
+**Verificado en navegador (E2E por DOM):** grilla lunes-first · hoy resaltado
+· festivo (20 jul) en lavanda · 5 eventos semilla · crear evento con
+TimePicker (8:30 PM → guarda 20:30, se ve en celda) · Guardar bloqueado sin
+título · editar (precarga título/hora: yoga → 09:00 AM) · eliminar · navegar
+Julio↔Agosto · botón Hoy se apaga al alejarse y regresa al mes real ·
+persistencia en storage tras recarga · consola sin errores.
+NOTA: screenshots del panel fallaron esta sesión (entorno) — revisión visual
+fina al usuario.
+
 ## Cómo continuar
 
-**Siguiente fase: 3 — Módulo `calendar`.**
-1. `services/eventsService.js` (eventos por dateKey `aaaa-mm-dd`, semilla
-   relativa a hoy como el prototipo) + `lib/holidays.js` ya existe (fijos CO).
-2. `components/TimePicker/` (popover horas/minutos/AM-PM, reutiliza usePopover).
-3. `modules/calendar/`: toolbar mes ‹ › + Hoy (acento si es el mes actual),
-   grid lunes-first con celdas de alto fijo, findes/festivos en lavanda
-   (--holiday-*), anillo de acento en hoy, máx 3 eventos + "+n más",
-   leyenda de tipos; EventModal (título, TimePicker, tipo segmentado,
-   guardar/eliminar, cierre diferido).
-4. Tipos de evento: Reserva (info), Clase (ok), Tarea (warn), Nota (danger)
-   (+ Cobro/Pago llegan con Finanzas).
+**Siguiente fase: 4 — Módulo `finance`.**
+1. `services/movementsService.js`: generador demo determinista por (año,mes)
+   con `lib/seededRandom.js` (anclado a la fecha real) + movimientos del
+   usuario + `settle(id)`; tipos entrada/salida/entrada_pend/salida_pend
+   (+ gasto/mantenimiento generados). `listByMonth`, `listByDay`, `getHistory`.
+2. Sincronización: pendientes y recurrentes → evento `Cobro`/`Pago` en el
+   calendario (usar `eventsService`; añadir ahí `addFromMovement`).
+3. `modules/finance/`: MonthNav + KPIs clicables (entradas/salidas/balance)
+   + modal KPI, detalle de movimientos, sidebar (origen entradas, gastos
+   próximos), modal de movimiento (3 columnas: catálogo con steppers +
+   monto/fecha/observaciones + pendiente + comprobante), sparkline + modal
+   de historial con `LineChart` SVG propio.
+4. Componentes SVG a mano (Sparkline, LineChart). MoneyInput ya existe.
 5. Actualizar este archivo y detenerse para revisión.
