@@ -1,0 +1,21 @@
+/* calendar.module.css — contenedor del módulo calendario.
+
+   REGLA DEL PROYECTO: CSS Modules hashea los nombres de animación de este
+   archivo → los keyframes usados por clases se declaran aquí mismo. */
+
+@keyframes moduleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.module {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Paddings gobernados por la densidad del tema (Compacto/Cómodo/Espacioso). */
+  padding: var(--module-pad-y) var(--module-pad-x);
+  max-width: 1347px;
+  margin: 0 auto;
+  width: 100%;
+  animation: moduleIn 0.38s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}

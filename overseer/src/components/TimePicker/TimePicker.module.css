@@ -1,0 +1,121 @@
+/* TimePicker.module.css — campo de hora + selector emergente.
+   Animaciones inline (cardIn/pickerOut globales de index.css). */
+
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Campo disparador (misma altura que inputs/DatePicker) ── */
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.13s;
+}
+.triggerOpen {
+  border-color: var(--acc-1);
+}
+
+.value {
+  margin-right: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-body);
+  letter-spacing: 0.04em;
+  color: var(--text-title);
+}
+.placeholder {
+  margin-right: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-body);
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.icon {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+/* ── Popover: 3 columnas (horas · minutos · AM/PM) ── */
+.popover {
+  position: absolute;
+  top: 100%;
+  margin-top: 6px;
+  z-index: 30;
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+  border: 1px solid var(--border-3);
+  box-shadow: var(--shadow-menu);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 170px;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-4) transparent;
+}
+
+.cell {
+  min-width: 42px;
+  text-align: center;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-mid);
+  font-size: var(--fs-small);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.cell:hover {
+  background: var(--border-1);
+}
+.cellOn {
+  color: #fff;
+  background: var(--acc-grad);
+}
+.cellOn:hover {
+  background: var(--acc-grad);
+}
+
+.ampmColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.seg {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-4);
+  background: var(--surface-2);
+  color: var(--text-soft);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.segOn {
+  color: #fff;
+  background: var(--acc-grad);
+  border-color: transparent;
+}

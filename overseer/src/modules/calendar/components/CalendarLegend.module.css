@@ -1,0 +1,28 @@
+/* CalendarLegend.module.css — leyenda de tipos + finde/festivo. */
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.divider {
+  width: 1px;
+  height: 12px;
+  background: var(--border-2);
+}
