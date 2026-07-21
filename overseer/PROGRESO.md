@@ -4,6 +4,23 @@
 > sesión nueva pueda retomar el trabajo sin el chat original**.
 > Se actualiza al cerrar cada fase (y si algo queda a medias).
 
+## ▶ Cómo retomar en una sesión nueva
+
+Empezar una sesión limpia después de cada PR mergeado mantiene el contexto
+ligero y el trabajo igual de continuo. Para retomar basta con pedir:
+
+> **Lee `overseer/PROGRESO.md` y `ARQUITECTURA.md`, y continúa con la fase
+> que siga pendiente.**
+
+Antes de escribir código, la sesión nueva debería:
+1. Leer este archivo completo (estado de fases + convenciones + "Cómo continuar").
+2. Leer `../ARQUITECTURA.md` (reglas de código obligatorias) y, si hace falta
+   comparar visualmente, abrir `../prototipo/Gym Dashboard Final V1.dc.html`.
+3. Sincronizar `main` (`git checkout main && git pull`) y crear la rama de la
+   fase: `git checkout -b fase-N-<nombre>`.
+4. Al cerrar la fase: verificar en navegador, actualizar este archivo y
+   **detenerse para revisión del usuario** antes de commitear.
+
 ## Referencias obligatorias
 
 - `../README.md` — qué es la app, pantallas, tokens, modelo de datos.
@@ -16,10 +33,10 @@
 |------|-----------|--------|-------|
 | 0 | Andamiaje: Vite, theme, lib, componentes base, shell, registry con módulo dummy | revisada y mergeada (PR #1) | 2026-07-16 |
 | 1 | Login y sesión (SessionProvider, authService, celebración) | revisada y mergeada (PR #2) | 2026-07-16 |
-| 2 | Módulo `members` (vertical de referencia: tabla, ficha, wizards, DatePicker) | hecha + correcciones round 2 — pendiente revisión del usuario | 2026-07-17 |
-| 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | **hecha — pendiente revisión del usuario** | 2026-07-18 |
-| 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | **hecha — pendiente revisión del usuario** | 2026-07-18 |
-| 5 | Módulo `dashboard` (compone members+movements+events) | pendiente | |
+| 2 | Módulo `members` (vertical de referencia: tabla, ficha, wizards, DatePicker) | revisada y mergeada (PR #3) | 2026-07-17 |
+| 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | revisada y mergeada (PR #4) | 2026-07-18 |
+| 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | revisada y mergeada (PR #5) | 2026-07-19 |
+| 5 | Módulo `dashboard` (compone members+movements+events) | **← SIGUIENTE** | |
 | 6 | Módulo `inventory` (productos / equipo / gas) | pendiente | |
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | pendiente | |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | pendiente | |
@@ -325,3 +342,24 @@ MovementRow.jsx` y `MovementList.module.css`.
    decide en la fase con la opción más limpia).
 4. Botones de movimiento del Inicio reusan `MovementModal` de Finanzas.
 5. Actualizar este archivo y detenerse para revisión.
+
+**Piezas que YA existen y hay que reutilizar (no reinventar):**
+- `modules/members/useMembers.js` → lista con estado derivado + `counts`
+  (activos / pronto / vencidos) para el KpiGrid y los vencimientos.
+- `services/movementsService.listDay(y, m, d)` → movimientos de un día
+  (creado en la fase 4 pensando justo en este widget) y `settleMovement`.
+- `services/eventsService.getUpcoming(n)` → próximos eventos ya ordenados.
+- `modules/finance/components/MovementModal` + `movementMeta` y
+  `MovementRow` → para la lista de movimientos del día y sus botones.
+- `components/MonthNav` sirve también como selector de DÍA (‹ / etiqueta /
+  › / "Hoy"); el prototipo enciende "Hoy" solo si el cursor está en el día real.
+- `components/KpiCard`, `Badge`, `EmptyState`, `Avatar`, `useModal`,
+  `useSwapAnimation`.
+
+**Recordatorios de convenciones que ya costaron un bug:**
+- Keyframes usados por CLASES van en el propio `.module.css` (CSS Modules
+  hashea los nombres); los globales de `index.css` solo valen inline.
+- Los modales van con portal a `document.body` (ya lo hace `<Modal>`): un
+  ancestro con `transform` rompe `position: fixed`.
+- Guardar los componentes de gráficos/derivados contra datos vacíos del
+  primer render (el `Sparkline` tumbó la app por eso).
