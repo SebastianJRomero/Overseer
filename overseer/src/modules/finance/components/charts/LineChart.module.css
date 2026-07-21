@@ -1,0 +1,46 @@
+/* LineChart.module.css — gráfico de líneas del historial. */
+
+.svg {
+  width: 100%;
+  height: 340px;
+  display: block;
+  overflow: visible;
+}
+
+.gridLine {
+  stroke: #1e2a3b;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.axisLabel {
+  fill: #5a7089;
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+}
+
+.incLabel,
+.expLabel,
+.monthLabel {
+  font-family: var(--font-mono);
+  text-anchor: middle;
+}
+
+.incLabel {
+  fill: #bfe0ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.expLabel {
+  fill: #f0a878;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.monthLabel {
+  fill: #8296b2;
+  font-size: 12px;
+  font-weight: 600;
+}
