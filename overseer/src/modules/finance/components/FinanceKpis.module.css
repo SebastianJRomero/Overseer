@@ -1,0 +1,167 @@
+/* FinanceKpis.module.css — fila de KPIs + widget de historial.
+
+   Keyframe local (glow azul del widget), por la regla de CSS Modules. */
+
+@keyframes glowPulseBlue {
+  0%, 100% { box-shadow: 0 6px 22px rgba(16, 36, 66, 0.42), 0 0 0 rgba(127, 201, 255, 0); }
+  50% { box-shadow: 0 10px 32px rgba(28, 66, 116, 0.5), 0 0 22px rgba(127, 201, 255, 0.3); }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+/* ── Tarjeta KPI ── */
+.card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+  border: 1px solid var(--border-2);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1), border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-hover);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardLabel {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.cardIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardValue {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+}
+
+.cardDelta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.cardBar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  opacity: 0.7;
+}
+
+/* ── Widget de historial ── */
+.histWidget {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px 18px;
+  border-radius: var(--r-card);
+  background: linear-gradient(160deg, #101b2b, #0b1119);
+  border: 1px solid #24354d;
+  cursor: pointer;
+  text-align: left;
+  animation: glowPulseBlue 3.6s ease-in-out infinite;
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1), border-color 0.2s;
+}
+.histWidget:hover {
+  transform: translateY(-3px);
+  border-color: #4a7bb3;
+}
+
+.histTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.histLabel {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #9db8d6;
+}
+
+.histIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #7fc9ff;
+  background: #12233a;
+  border: 1px solid #24354d;
+}
+
+.histValue {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.histNet {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #eaf2fb;
+  font-family: var(--font-mono);
+}
+
+.histSub {
+  font-size: 10.5px;
+  color: #6f86a6;
+}
+
+.histChart {
+  height: 40px;
+}
+
+.histFooter {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: #6f8bb0;
+  font-weight: 600;
+}

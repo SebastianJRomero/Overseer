@@ -10,6 +10,14 @@
     - clic en el overlay cierra; clic DENTRO de la tarjeta no propaga,
     - la tarjeta no se desmonta hasta que termina la animación de salida.
 
+  IMPORTANTE — por qué un PORTAL a document.body: el área de módulos
+  (`main`) tiene scroll y cada módulo se anima con `transform` (moduleIn).
+  Un ancestro con transform convierte `position: fixed` en relativo a ESE
+  ancestro, así que el overlay se posicionaba respecto al módulo (muy alto
+  cuando hay muchos movimientos) y el modal aparecía a media página. Con el
+  portal, el overlay vive en <body> y `position: fixed` vuelve a ser
+  relativo al viewport → el modal SIEMPRE aparece a la misma altura.
+
   Recibe:
     - controller: lo que devuelve useModal() — { isOpen, isClosing, close }
     - width: ancho máximo de la tarjeta en px (cada modal tiene el suyo:
@@ -20,6 +28,7 @@
       generar scroll. Por defecto la tarjeta recorta y hace scroll.
 */
 
+import { createPortal } from 'react-dom';
 import styles from './Modal.module.css';
 
 export default function Modal({ controller, width = 520, onOverlayClose, overflowVisible = false, children }) {
@@ -28,7 +37,7 @@ export default function Modal({ controller, width = 520, onOverlayClose, overflo
   // Sin desmontar hasta que la animación de salida termine (cierre diferido).
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
       className={styles.overlay}
       style={{ animation: isClosing ? 'ovOut .16s ease forwards' : 'ovIn .2s ease' }}
@@ -47,6 +56,7 @@ export default function Modal({ controller, width = 520, onOverlayClose, overflo
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

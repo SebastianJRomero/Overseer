@@ -18,7 +18,7 @@
 | 1 | Login y sesión (SessionProvider, authService, celebración) | revisada y mergeada (PR #2) | 2026-07-16 |
 | 2 | Módulo `members` (vertical de referencia: tabla, ficha, wizards, DatePicker) | hecha + correcciones round 2 — pendiente revisión del usuario | 2026-07-17 |
 | 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | **hecha — pendiente revisión del usuario** | 2026-07-18 |
-| 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | pendiente | |
+| 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | **hecha — pendiente revisión del usuario** | 2026-07-18 |
 | 5 | Módulo `dashboard` (compone members+movements+events) | pendiente | |
 | 6 | Módulo `inventory` (productos / equipo / gas) | pendiente | |
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | pendiente | |
@@ -220,19 +220,108 @@ persistencia en storage tras recarga · consola sin errores.
 NOTA: screenshots del panel fallaron esta sesión (entorno) — revisión visual
 fina al usuario.
 
+## Fase 4 — detalle (2026-07-18, rama `fase-4-finance`)
+
+**Creado:**
+- `data/seedProducts.js` (8 productos, compartido con Inventario fase 6) +
+  `data/seedFinance.js` (fuentes de ingreso, membresías cobradas, gastos
+  fijos, 5 meses de historial).
+- `services/inventoryService.js` (solo `listProducts()` por ahora; fase 6 lo
+  amplía) — lo usa el catálogo del modal de movimiento.
+- `services/movementsService.js`: **generador demo determinista** por (año,mes)
+  con `lib/seededRandom.js` (mismo mes → mismos datos) + movimientos del
+  usuario en storage. `listMonth` (mezcla + totales confirmados, pendientes
+  NO cuentan), `listDay` (para Inicio, fase 5), `createMovement`,
+  `settleMovement`, `getHistory` (6 meses), `getIncomeBreakdown`,
+  `getUpcomingExpenses`.
+- `eventsService.addFromMovement` — agenda pendientes/recurrentes como evento
+  Cobro/Pago (sincronización Finanzas → Calendario).
+- `modules/finance/`: `movementMeta.js`, `useFinance.js` (cursor + carga de
+  mes/historial/desgloses + create/settle con sync), `FinanceKpis` (3 KPIs
+  clicables + widget con `Sparkline`), `MovementList`+`MovementRow`,
+  `IncomeBreakdown`, `UpcomingExpenses`, `KpiDetailModal`,
+  `FinanceHistoryModal` (+ `LineChart`), `MovementModal`+`MovementCatalog`
+  (3 columnas: catálogo con steppers → monto auto · monto/fecha/observaciones ·
+  pendiente · comprobante). Charts SVG a mano en `components/charts/`
+  (`chartPaths.js` puro + `Sparkline` + `LineChart`).
+- `moduleRegistry` incorpora `finance` (order 40).
+
+**Reglas aplicadas:** monto auto = Σ precio×cantidad (editable a mano);
+pendiente → tipo `*_pend` + evento en calendario; totales solo cuentan lo
+confirmado; generador anclado a la fecha real; modales se remontan con `key`.
+
+**Bug corregido en verificación:** `Sparkline` crasheaba con `history` vacío
+(primer render antes de la carga async) → `buildPaths([])` accedía a `xs[-1]`.
+Sin error boundary, tumbaba toda la app. Blindados `buildPaths` (n=0 → vacío)
+y `Sparkline` (< 2 puntos → lienzo vacío).
+
+**Verificado en navegador (E2E por DOM):** KPIs con totales · registrar
+entrada desde catálogo (Proteína ×2 → monto auto 190.000) · registrar salida
+con "Nuevo artículo" y monto manual · pendiente → badge + **evento agendado
+en calendario** · confirmar pendiente (✓ Pagar) · modal KPI (con pie
+Confirmado) · modal historial (LineChart + métricas) · navegación de mes con
+datos deterministas ($807K jul → $478K jun) · botón Actual se apaga/regresa ·
+persistencia · consola sin errores. Screenshots del panel fallaron (entorno)
+→ revisión visual fina al usuario.
+
+## Fase 4 — ajustes por feedback del cliente (2026-07-18)
+
+Tras la primera revisión, el usuario pidió 4 cambios; todos hechos y
+verificados por DOM + screenshots:
+
+1. **Filas de movimientos PENDIENTES resaltadas** → tinte ámbar sutil +
+   franja lateral con el color del tipo (azul cobro / ámbar pago) que pulsa
+   despacio (`pendingPulse`), para no olvidar cobrar/pagar. `MovementRow`
+   añade clase `.pending` con `--pending-color` inline; keyframe en
+   `MovementList.module.css`.
+2. **Observaciones junto a "Entrada/Salida pendiente"** → el motivo (donde
+   se anota de quién es el cobro/pago) se muestra: si el movimiento tiene
+   artículos, se anexa al tipo (`Entrada pendiente · Carlos debe 2 aguas`);
+   si no, ya era el concepto principal. `MovementRow` conserva `mv.motivo`.
+3. **Salidas en naranja sutil** → nuevo token `--egreso: #f0a878` (el mismo
+   naranja de las salidas del gráfico); los montos de egreso NO pendientes
+   lo usan, las entradas siguen en verde, y los pendientes quedan en el
+   neutro actual (`--text-muted`).
+4. **Modales siempre a la misma altura (arriba)** → causa: `main` tiene
+   scroll y los módulos se animan con `transform` (moduleIn), que convierte
+   `position: fixed` en relativo al módulo alto → el modal salía a media
+   página. Fix: `Modal` se renderiza con **portal a `document.body`**
+   (createPortal) + overlay `align-items: flex-start` con `padding: 48px`.
+   Verificado: con la página scrolleada 729px, el modal abre a 48px del top
+   del viewport. Los modales `overflowVisible` siguen mostrando sus
+   date-pickers sin recortarse (overlay con `overflow-y: auto`).
+
+**Archivos:** `theme.css` (token `--egreso`), `components/Modal/Modal.jsx`
+(+ portal) y `Modal.module.css` (top-align), `modules/finance/components/
+MovementRow.jsx` y `MovementList.module.css`.
+
+**Segunda tanda de refinamientos (misma fecha):**
+- **Modales un poco más abajo** → offset superior 118px (a la altura de los
+  widgets/KPIs, no pegados al borde). Verificado: card top 118 ≈ widget 146.
+- **Animación de pulso en toda la fila pendiente** (no solo la franja): el
+  fondo pulsa despacio (`pendingRowIn`/`pendingRowOut`).
+- **Tinte del resalte diferenciado por tipo** → entrada pendiente = azul
+  tenue (--info), salida/gasto pendiente = ámbar tenue (--warn); así se
+  distingue cobro vs pago de un vistazo. La franja lateral toma el mismo
+  color.
+- **Observaciones legibles** → en su propia línea a lo ancho, debajo del
+  tipo, en blanco (--text-title) y negrita (peso 600); title de la fila con
+  el texto completo.
+- **Limpieza**: se quitó el badge "Pendiente" (redundante con el resalte +
+  la etiqueta de tipo + la acción) para ganar ancho y que "Entrada/Salida
+  pendiente" no se trunque.
+
 ## Cómo continuar
 
-**Siguiente fase: 4 — Módulo `finance`.**
-1. `services/movementsService.js`: generador demo determinista por (año,mes)
-   con `lib/seededRandom.js` (anclado a la fecha real) + movimientos del
-   usuario + `settle(id)`; tipos entrada/salida/entrada_pend/salida_pend
-   (+ gasto/mantenimiento generados). `listByMonth`, `listByDay`, `getHistory`.
-2. Sincronización: pendientes y recurrentes → evento `Cobro`/`Pago` en el
-   calendario (usar `eventsService`; añadir ahí `addFromMovement`).
-3. `modules/finance/`: MonthNav + KPIs clicables (entradas/salidas/balance)
-   + modal KPI, detalle de movimientos, sidebar (origen entradas, gastos
-   próximos), modal de movimiento (3 columnas: catálogo con steppers +
-   monto/fecha/observaciones + pendiente + comprobante), sparkline + modal
-   de historial con `LineChart` SVG propio.
-4. Componentes SVG a mano (Sparkline, LineChart). MoneyInput ya existe.
+**Siguiente fase: 5 — Módulo `dashboard` (Inicio).**
+1. Compone lo ya hecho vía `dashboard/widgets.js`: KpiGrid (de `useMembers`),
+   Movimientos del día (selector de día + `movementsService.listDay`),
+   Próximos vencimientos (miembros con venceFlag), Próximos eventos
+   (`eventsService.getUpcoming`).
+2. El módulo `demo` (order 10) se REEMPLAZA por `dashboard` en el registry
+   (mismo id/posición de Inicio); revisar `DEFAULT_MODULE_ID`.
+3. Reutilizar el modal de filtro y la ficha de Miembros: abrir desde los KPIs
+   del Inicio sin acoplar módulos (navegar con parámetro o elevar estado; se
+   decide en la fase con la opción más limpia).
+4. Botones de movimiento del Inicio reusan `MovementModal` de Finanzas.
 5. Actualizar este archivo y detenerse para revisión.

@@ -17,7 +17,8 @@
 import { load, save } from './storage';
 import { buildSeedEvents } from '../data/seedEvents';
 import { newId } from '../lib/id';
-import { dateKey, todayAtMidnight } from '../lib/date';
+import { dateKey, todayAtMidnight, parseDMY } from '../lib/date';
+import { formatMoney } from '../lib/money';
 
 const KEY = 'events';
 
@@ -95,5 +96,26 @@ export async function getUpcoming(n = 4) {
     .slice(0, n);
 }
 
-/* Nota: addFromMovement (agendar pendientes/recurrentes de Finanzas como
-   Cobro/Pago) llega en la fase 4, cuando exista movementsService. */
+/**
+ * Agenda un movimiento en el calendario como evento Cobro/Pago.
+ *
+ * Regla de negocio del prototipo: los movimientos PENDIENTES (cobros/pagos
+ * que se harán después) y los RECURRENTES (mensuales) se agendan el día de
+ * su fecha, para que aparezcan en el calendario y en "Próximos eventos".
+ * Los movimientos normales (ya efectuados) no generan evento.
+ *
+ * @param {{id, tipo, monto, motivo, fecha, recurrent}} mov
+ * @returns {Promise<Object>} mapa de eventos (actualizado o intacto)
+ */
+export async function addFromMovement(mov) {
+  const pending = mov.tipo === 'entrada_pend' || mov.tipo === 'salida_pend';
+  const d = parseDMY(mov.fecha);
+  if ((!pending && !mov.recurrent) || !d) return readAll();
+
+  const income = mov.tipo === 'entrada' || mov.tipo === 'entrada_pend';
+  const base = (mov.motivo || '').trim() || (income ? 'Cobro pendiente' : 'Pago pendiente');
+  const title = `${base} · ${formatMoney(mov.monto)}${mov.recurrent ? ' (mensual)' : ''}`;
+  return saveEvent(dateKey(d), {
+    id: mov.id, title, time: '', type: income ? 'Cobro' : 'Pago',
+  });
+}
