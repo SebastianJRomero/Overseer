@@ -5,15 +5,22 @@
   inset: 0;
   z-index: 70;
   display: flex;
-  align-items: center;
+  /* Alineado ARRIBA (no centrado): el modal aparece siempre a la misma
+     altura sin importar cuánto contenido haya detrás. El offset superior lo
+     deja a la altura de los widgets/KPIs (ni pegado al borde ni a media
+     página). Se puede desplazar dentro del overlay si el modal es más alto
+     que la pantalla. */
+  align-items: flex-start;
   justify-content: center;
-  padding: 18px;
+  overflow-y: auto;
+  padding: 118px 18px 48px;
   background: rgba(4, 6, 10, 0.65);
   backdrop-filter: blur(3px);
 }
 
 .card {
-  max-height: 90%;
+  /* Cabe entre el offset superior (118px) y un respiro inferior (48px). */
+  max-height: calc(100vh - 166px);
   display: flex;
   flex-direction: column;
   border-radius: var(--r-modal);

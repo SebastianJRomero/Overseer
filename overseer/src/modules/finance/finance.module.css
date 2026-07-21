@@ -1,0 +1,71 @@
+/* finance.module.css — contenedor y layout del módulo Finanzas.
+
+   REGLA DEL PROYECTO: keyframes de animación declarados localmente. */
+
+@keyframes moduleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.module {
+  display: flex;
+  flex-direction: column;
+  gap: var(--module-gap);
+  padding: var(--module-pad-y) var(--module-pad-x);
+  max-width: 1326px;
+  margin: 0 auto;
+  width: 100%;
+  animation: moduleIn 0.38s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-right: auto;
+}
+
+.title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.subtitle {
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+}
+
+.month {
+  text-transform: capitalize;
+}
+
+/* Grupo que se re-anima al cambiar de mes (KPIs + área principal). Conserva
+   el gap del módulo entre sus hijos. */
+.swapGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--module-gap);
+}
+
+/* ── Área principal: detalle + sidebar ── */
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
