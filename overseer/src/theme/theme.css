@@ -53,6 +53,10 @@
   --danger-strong: #ff5c38;
   --danger-bg: #241722;
   --danger-border: #3a2028;
+  /* naranja sutil = montos de EGRESO (salidas/gastos), para contrastar con
+     el verde de las entradas sin la carga de "peligro" del coral.
+     Es el mismo naranja de las salidas en el gráfico de historial. */
+  --egreso: #f0a878;
   /* azul = información / reservas */
   --info: #7fb1f5;
   --info-bg: #16233a;

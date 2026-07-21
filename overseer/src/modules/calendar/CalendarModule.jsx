@@ -14,6 +14,7 @@
 import { useMemo, useState } from 'react';
 import useCalendar from './useCalendar';
 import useModal from '../../hooks/useModal';
+import useSwapAnimation from '../../hooks/useSwapAnimation';
 import { buildCalendarCells } from './calendarCells';
 import { MONTH_NAMES } from '../../lib/date';
 import CalendarToolbar from './components/CalendarToolbar';
@@ -31,6 +32,9 @@ export default function CalendarModule() {
   // Celdas del mes visible (se recalculan al cambiar mes o eventos).
   const cells = useMemo(() => buildCalendarCells(cursor, events), [cursor, events]);
   const monthLabel = `${MONTH_NAMES[cursor.m]} ${cursor.y}`;
+  // La grilla vuelve a entrar con una micro transición al cambiar de mes
+  // (fundido + leve subida), coherente con Finanzas.
+  const monthSwap = useSwapAnimation(`${cursor.y}-${cursor.m}`, ['swapA', 'swapB']);
 
   const openNew = (dateKey) => {
     setEditing({ dateKey, id: null, title: '', time: '', type: 'Reserva' });
@@ -64,7 +68,9 @@ export default function CalendarModule() {
         onToday={goToday}
       />
 
-      <CalendarGrid cells={cells} onDayClick={openNew} onEventClick={openEdit} />
+      <div style={{ animation: monthSwap }}>
+        <CalendarGrid cells={cells} onDayClick={openNew} onEventClick={openEdit} />
+      </div>
 
       <CalendarLegend />
 
