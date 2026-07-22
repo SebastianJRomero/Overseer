@@ -13,16 +13,16 @@
     REUTILIZAR → TopBar y ModuleHost derivan TODO de esta lista; nunca hay
                  listas de módulos duplicadas en el código.
 
-  El módulo demo ocupa el lugar del futuro dashboard; cada fase agrega
-  su módulo real con UNA línea en este array.
+  Cada fase agrega su módulo real con UNA línea en este array (el módulo
+  demo de la Fase 0 ya cumplió su papel y salió al entrar 'dashboard').
 */
 
-import demo from '../modules/demo';
+import dashboard from '../modules/dashboard';
 import members from '../modules/members';
 import calendar from '../modules/calendar';
 import finance from '../modules/finance';
 
-export const MODULES = [demo, members, calendar, finance];
+export const MODULES = [dashboard, members, calendar, finance];
 
 /** A dónde vuelve la app cuando se oculta el módulo activo (será 'dashboard'). */
 export const DEFAULT_MODULE_ID = MODULES[0].id;
