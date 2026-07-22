@@ -10,6 +10,10 @@
     - wizard (wizModal): alta ("＋ Agregar") o renovación (desde la ficha).
       Se remonta con `key` en cada apertura para arrancar limpio.
     - filtro (filterModal): chips de la toolbar.
+
+  Estos mismos modales los monta también el Inicio (MemberModalsHost) para
+  abrirlos sin traer al usuario hasta aquí — por eso viven en components/ y
+  reciben todo por props, sin leer estado del módulo.
 */
 
 import { useState } from 'react';
