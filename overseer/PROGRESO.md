@@ -36,8 +36,8 @@ Antes de escribir código, la sesión nueva debería:
 | 2 | Módulo `members` (vertical de referencia: tabla, ficha, wizards, DatePicker) | revisada y mergeada (PR #3) | 2026-07-17 |
 | 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | revisada y mergeada (PR #4) | 2026-07-18 |
 | 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | revisada y mergeada (PR #5) | 2026-07-19 |
-| 5 | Módulo `dashboard` (compone members+movements+events) | **← SIGUIENTE** | |
-| 6 | Módulo `inventory` (productos / equipo / gas) | pendiente | |
+| 5 | Módulo `dashboard` (compone members+movements+events) | hecha — **pendiente de revisión** | 2026-07-20 |
+| 6 | Módulo `inventory` (productos / equipo / gas) | **← SIGUIENTE** | |
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | pendiente | |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | pendiente | |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | pendiente | |
@@ -328,33 +328,84 @@ MovementRow.jsx` y `MovementList.module.css`.
   la etiqueta de tipo + la acción) para ganar ancho y que "Entrada/Salida
   pendiente" no se trunque.
 
+## Fase 5 — detalle (2026-07-20, rama `fase-5-dashboard`)
+
+**Creado:**
+- `modules/dashboard/`: `index.js` (meta id `dashboard`, order 10),
+  `DashboardModule.jsx` (orquesta: header + KPIs + dos columnas de widgets),
+  `useDashboard.js` (cursor de DÍA + `listDay` + `getUpcoming` + totales del
+  día + create/settle con la misma sincronización a calendario que Finanzas),
+  `widgets.js` (**registro de widgets**, ARQUITECTURA §4: `{id, column, Component}`;
+  agregar/quitar/reordenar un panel = una línea) y `dashboard.module.css`.
+- `components/`: `DashboardHeader` (saludo real por hora + nombre de sesión,
+  el prototipo lo tenía fijo), `DashboardKpis` (4 KPIs sobre `<KpiCard>`),
+  `DayMovements` (+css; MonthNav como selector de día, píldoras de entradas/
+  salidas y las filas de Finanzas), `ExpiringMembers` y `UpcomingEvents`
+  (comparten `SideWidget.module.css`, como MovementList/MovementRow).
+- `moduleRegistry`: `demo` **reemplazado** por `dashboard` y carpeta
+  `modules/demo/` eliminada (la app compila igual — esa es la gracia).
+
+**Decisión del cliente — los KPIs abren el modal, NO redirigen:** el primer
+intento navegaba a Miembros con "params" de navegación; el usuario pidió que
+el modal se abra en el Inicio, sin cambiar de módulo (el Inicio es un panel
+de trabajo, no un menú de accesos directos). Solución: `MemberModalsHost`
+monta los MISMOS modales de Miembros (ficha, filtro, wizard) dentro del
+Inicio y recibe las acciones de `useMembers`, así los KPIs se refrescan al
+instante. El padre pide un modal con un objeto plano
+`{ kind: 'filter'|'detail'|'add', filter?, memberId?, key }`; la `key` sube
+en cada clic para poder reabrir el MISMO modal dos veces seguidas.
+Los `params` de `ModulesProvider` del intento anterior se REVIRTIERON (nadie
+los usaba: código muerto). Solo navegan el KPI de ingresos (→ Finanzas) y el
+panel de eventos (→ Calendario), donde no hay modal que abrir.
+
+**Acoplamientos aceptados (y por qué):** el Inicio es *el módulo que compone*,
+así que sí importa piezas ajenas: de Miembros `useMembers` (la regla de
+vencimientos no se duplica) y sus tres modales; de Finanzas `MovementModal`
++ `MovementRow` + `movementMeta` (registrar un movimiento ocurre aquí mismo
+y debe verse idéntico en ambos módulos); del Calendario `eventTypes`. Los
+tres son módulos **core**; si algún día dejan de serlo, el widget
+correspondiente se quita del registro `widgets.js`. Miembros NO importa nada
+del Inicio: la dependencia va en un solo sentido.
+
+**Detalle propio del Inicio:** los totales del día SÍ suman los pendientes
+(el widget responde "qué se movió hoy", incluido lo que quedó por cobrar),
+al revés que los totales del mes en Finanzas — es la regla del prototipo.
+
+**Verificado en navegador (E2E por DOM):** KPIs con 5/1/1 y $582.000 · KPI
+"Vencidos" → modal de filtro **sin salir de Inicio** → fila abre la ficha ·
+dos clics seguidos en el mismo KPI lo reabren (contador `key`) ·
+"Próximos vencimientos" → ficha de Luisa · "＋ Agregar miembro" → wizard paso
+1/7 sobre el Inicio · los chips del módulo Miembros siguen funcionando igual ·
+navegación de día (‹ → Domingo 19 jul, "Hoy" se apaga y
+vuelve a encenderse) · registrar entrada pendiente $25.000 desde el Inicio →
+fila resaltada con pulso + totales 155.000 + **evento Cobro en Próximos
+eventos** · ✓ Saldar → "· saldada" y sin resalte · panel de eventos → Calendario ·
+persistencia tras recarga · `npm run lint` y `npm run build` limpios · consola
+sin errores. Screenshots del panel fallaron otra vez (entorno) → revisión
+visual fina al usuario.
+
+**Ajuste menor:** en "Próximos eventos", los eventos generados por Finanzas
+(Cobro/Pago) no tienen hora → se omite el separador "·" en vez de dejarlo
+colgando como el prototipo.
+
 ## Cómo continuar
 
-**Siguiente fase: 5 — Módulo `dashboard` (Inicio).**
-1. Compone lo ya hecho vía `dashboard/widgets.js`: KpiGrid (de `useMembers`),
-   Movimientos del día (selector de día + `movementsService.listDay`),
-   Próximos vencimientos (miembros con venceFlag), Próximos eventos
-   (`eventsService.getUpcoming`).
-2. El módulo `demo` (order 10) se REEMPLAZA por `dashboard` en el registry
-   (mismo id/posición de Inicio); revisar `DEFAULT_MODULE_ID`.
-3. Reutilizar el modal de filtro y la ficha de Miembros: abrir desde los KPIs
-   del Inicio sin acoplar módulos (navegar con parámetro o elevar estado; se
-   decide en la fase con la opción más limpia).
-4. Botones de movimiento del Inicio reusan `MovementModal` de Finanzas.
-5. Actualizar este archivo y detenerse para revisión.
+**Siguiente fase: 6 — Módulo `inventory` (productos / equipo / gas).**
+1. Sub-vistas con el MISMO patrón de registro: `inventoryTabs.js` (array de
+   pestañas), no condicionales (ARQUITECTURA §4).
+2. `services/inventoryService.js` YA existe con `listProducts()` (fase 4, lo
+   consume el catálogo del modal de movimiento) y `data/seedProducts.js` con
+   los 8 productos — ampliar el service, no duplicarlo.
+3. Al cerrar: actualizar este archivo y detenerse para revisión.
 
 **Piezas que YA existen y hay que reutilizar (no reinventar):**
-- `modules/members/useMembers.js` → lista con estado derivado + `counts`
-  (activos / pronto / vencidos) para el KpiGrid y los vencimientos.
-- `services/movementsService.listDay(y, m, d)` → movimientos de un día
-  (creado en la fase 4 pensando justo en este widget) y `settleMovement`.
-- `services/eventsService.getUpcoming(n)` → próximos eventos ya ordenados.
-- `modules/finance/components/MovementModal` + `movementMeta` y
-  `MovementRow` → para la lista de movimientos del día y sus botones.
-- `components/MonthNav` sirve también como selector de DÍA (‹ / etiqueta /
-  › / "Hoy"); el prototipo enciende "Hoy" solo si el cursor está en el día real.
-- `components/KpiCard`, `Badge`, `EmptyState`, `Avatar`, `useModal`,
-  `useSwapAnimation`.
+- `components/`: KpiCard, Badge, EmptyState, Avatar, Field, MoneyInput,
+  SegmentedOptions, ProgressBar, Modal, MonthNav, DatePicker, TimePicker.
+- `hooks/`: `useModal` (cierre diferido), `usePopover`, `useSwapAnimation`.
+- Registro de widgets del Inicio (`modules/dashboard/widgets.js`) como
+  plantilla para cualquier lista de sub-vistas.
+- `ModulesProvider.setActive(id, params)` para navegar entre módulos sin
+  importarlos.
 
 **Recordatorios de convenciones que ya costaron un bug:**
 - Keyframes usados por CLASES van en el propio `.module.css` (CSS Modules
