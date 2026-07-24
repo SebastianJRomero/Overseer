@@ -1,0 +1,67 @@
+/* trainers.module.css — contenedor, encabezado y rejilla del módulo. */
+
+@keyframes moduleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.module {
+  display: flex;
+  flex-direction: column;
+  gap: var(--module-gap);
+  padding: var(--module-pad-y) var(--module-pad-x);
+  max-width: 1326px;
+  margin: 0 auto;
+  width: 100%;
+  animation: moduleIn 0.38s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-right: auto;
+}
+
+.title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: var(--ls-title);
+}
+
+.subtitle {
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 15px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  box-shadow: var(--acc-shadow);
+  color: #fff;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.addBtn:hover {
+  filter: brightness(1.08);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}

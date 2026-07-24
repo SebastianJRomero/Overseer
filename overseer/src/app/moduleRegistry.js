@@ -23,8 +23,14 @@ import calendar from '../modules/calendar';
 import finance from '../modules/finance';
 import inventory from '../modules/inventory';
 import settings from '../modules/settings';
+import classes from '../modules/classes';
+import trainers from '../modules/trainers';
+import reports from '../modules/reports';
 
-export const MODULES = [dashboard, members, calendar, finance, inventory, settings];
+// El orden visible lo decide meta.order (getVisibleModules ordena por él),
+// no la posición en este array. Los opcionales (classes/trainers/reports)
+// tienen core:false → solo aparecen si su flag no está apagado.
+export const MODULES = [dashboard, members, calendar, finance, inventory, settings, classes, trainers, reports];
 
 /** A dónde vuelve la app cuando se oculta el módulo activo (será 'dashboard'). */
 export const DEFAULT_MODULE_ID = MODULES[0].id;

@@ -38,9 +38,9 @@ Antes de escribir código, la sesión nueva debería:
 | 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | revisada y mergeada (PR #5) | 2026-07-19 |
 | 5 | Módulo `dashboard` (compone members+movements+events) | revisada y mergeada (PR #6) | 2026-07-22 |
 | 6 | Módulo `inventory` (productos / equipo / gas) | revisada y mergeada (PR #7) | 2026-07-24 |
-| 7 | Módulo `settings` (7 secciones, incl. Apariencia) | hecha — **pendiente de revisión** | 2026-07-24 |
-| 8 | Módulos opcionales `classes` / `trainers` / `reports` | **← SIGUIENTE** | |
-| 9 | Cierre: auditoría de fidelidad vs prototipo | pendiente | |
+| 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
+| 8 | Módulos opcionales `classes` / `trainers` / `reports` | hecha — **pendiente de revisión** | 2026-07-24 |
+| 9 | Cierre: auditoría de fidelidad vs prototipo | **← SIGUIENTE** | |
 | 10 | Backend + BD (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | pendiente | |
 
 ## Decisiones aprobadas por el usuario
@@ -584,17 +584,67 @@ General: editar el nombre persiste · **todo sobrevive recarga** · `npm run lin
 y `npm run build` limpios · consola sin errores. Screenshots del panel fallaron
 (entorno) → revisión visual fina al usuario.
 
+## Fase 8 — detalle (2026-07-24, rama `fase-8-optional`)
+
+**Creado:**
+- `components/StatTiles/` — mini-KPIs reutilizables (label + cifra mono + delta
+  opcional); los usan los tres módulos. `components/FormModal/formModal.module.css`
+  — chrome de modal-formulario compartido (lo usan ClassModal y TrainerModal).
+- `data/seedClasses.js` (6 clases, paleta categórica en hex), `seedTrainers.js`
+  (5), `seedReports.js` (KPIs + ingresos + distribución, cifras fijas de demo).
+  `services/`: `classesService` (list/create), `trainersService` (list/create),
+  `reportsService` (getReport, solo lectura).
+- `modules/classes/`: meta (order 35), `ClassesModule`, `useClasses`,
+  `ClassCard` (deriva ocupación y color de barra), `ClassModal`, css.
+- `modules/trainers/`: meta (order 38), `TrainersModule`, `useTrainers`,
+  `TrainerCard` (avatar con anillo de acento si disponible), `TrainerModal`, css.
+- `modules/reports/`: meta (order 55), `ReportsModule` (solo lectura),
+  `useReports`, `IncomeBars` (barras a mano) y `PlanDistribution`, css.
+- `moduleRegistry` incorpora los tres con **core:false** y order que reproduce
+  el orden del prototipo (classes 35 y trainers 38 entre Calendario y Finanzas;
+  reports 55 entre Inventario y Ajustes). El orden VISIBLE lo decide `meta.order`
+  vía `getVisibleModules`, no la posición en el array.
+
+**Decisiones:**
+- **Opcionales de verdad:** aparecen en la barra solo si su flag no está
+  apagado (ya lo hacía `getVisibleModules`; ahora hay módulos reales detrás).
+- **`ModulesSection` ya deriva** los opcionales de `MODULES.filter(!core)` (se
+  eliminó la lista estática `OPTIONAL` de la fase 7) — al agregar un opcional
+  nuevo, aparece solo en Ajustes sin tocar esa sección.
+- **Botones "＋" funcionales:** el prototipo tenía "Nueva clase"/"Nuevo
+  entrenador" sin acción; aquí crean y persisten vía service (coherente con el
+  resto de la app, sin botones muertos). Reportes es solo lectura (como el
+  prototipo); las cifras reales agregadas son trabajo de Fase 10.
+- **Editar y eliminar (feedback del cliente, misma rama):** clic en una
+  tarjeta de Clase o Entrenador abre el modal en modo edición (campos
+  precargados + botón "Eliminar"), mismo patrón que ProductRow/EquipmentRow.
+  Los services ganaron `updateClass`/`deleteClass` y
+  `updateTrainer`/`deleteTrainer`; al editar se conserva el color de la clase.
+  El modal de entrenador añade un control de **Estado** (Disponible/Ausente).
+  Las tarjetas pasaron a ser `<button>` (se neutralizaron sus estilos por
+  defecto). Chrome de "Eliminar" añadido a `FormModal/formModal.module.css`.
+
+**Verificado en navegador (E2E por DOM + screenshot):** los 9 módulos en la
+barra en el orden correcto · Clases: KPIs 6/101/77%, 6 tarjetas con barras de
+ocupación; alta de "Pilates" (6→7, persistida) · Entrenadores: KPIs 5/4/153,
+tarjetas con anillo y estado; alta de "Pedro Salas" (5→6, nace disponible) ·
+Reportes: 4 KPIs con delta, 6 barras de ingresos, 4 planes · apagar Reportes en
+Ajustes lo quita de la barra (flag `reports:false`) y reactivarlo lo devuelve ·
+**editar** clase (Spinning cupo 25→40, resto intacto) · **eliminar** clase
+(Pilates, 7→6) · **editar** entrenador (Camila → Ausente, Disponibles 5→4) ·
+**eliminar** entrenador (Pedro, 6→5) · **todo persiste tras recarga** ·
+`npm run lint` y `npm run build` limpios · consola sin errores.
+
 ## Cómo continuar
 
-**Siguiente fase: 8 — Módulos opcionales `classes` / `trainers` / `reports`.**
-1. Son OPCIONALES (`core:false`): sus flags ya existen y se togglean desde
-   Ajustes → Módulos. Al registrarlos en `moduleRegistry` con `core:false`,
-   aparecerán en la barra solo si su flag está encendido (ya lo maneja
-   `getVisibleModules`). Entonces `ModulesSection` podrá derivar la lista de
-   opcionales de `MODULES.filter(!core)` en vez de la lista estática `OPTIONAL`.
-2. Markup del prototipo: Clases (líneas ~202-246), Entrenadores (~248-293),
-   Reportes (~295-344). Son más simples (tarjetas + KPIs + barras de progreso).
-3. Al cerrar: actualizar este archivo y detenerse para revisión.
+**Siguiente fase: 9 — Cierre: auditoría de fidelidad vs prototipo.**
+1. Con los 9 módulos ya construidos, comparar pantalla por pantalla contra
+   `../prototipo/Gym Dashboard Final V1.dc.html` (abrir en navegador) y ajustar
+   detalles visuales finos que se hayan escapado.
+2. Repasar responsividad desktop, estados vacíos, y consistencia de tokens.
+3. NO es una fase de features nuevas; es pulido y verificación de fidelidad.
+   Las divergencias funcionales intencionales ya están en "Limitaciones
+   conocidas" y "Peticiones para la Fase 10" — no re-litigar esas.
 
 **Piezas que YA existen y hay que reutilizar (no reinventar):**
 - `components/`: KpiCard, Badge, EmptyState, Avatar, Field, MoneyInput,
@@ -602,9 +652,9 @@ y `npm run build` limpios · consola sin errores. Screenshots del panel fallaron
 - `hooks/`: `useModal`, `usePopover`, `useSwapAnimation`.
 - **Registros de sub-vistas** como plantilla: `widgets.js` (Inicio),
   `inventoryTabs.js` (Inventario), `settingsSections.js` (Ajustes).
-- Chrome de modal compartido: `inventory/.../InventoryModal.module.css` y
-  `settings/components/SettingsModal.module.css` (si hace falta, promover a
-  un componente común).
+- Chrome de modal compartido: `components/FormModal/formModal.module.css`
+  (genérico), más los de `inventory/` y `settings/`.
+- `components/StatTiles` (mini-KPIs con delta), reutilizable en más módulos.
 
 **Recordatorios de convenciones que ya costaron un bug:**
 - Keyframes usados por CLASES van en el propio `.module.css` (CSS Modules
