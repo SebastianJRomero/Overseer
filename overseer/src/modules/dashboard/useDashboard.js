@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as movementsService from '../../services/movementsService';
 import * as eventsService from '../../services/eventsService';
+import * as inventoryService from '../../services/inventoryService';
 import { getMovementMeta } from '../finance/movementMeta';
 
 /** Fecha de hoy como { y, m, d } (m = 0-11, como Date). */
@@ -72,6 +73,10 @@ export default function useDashboard() {
     const saved = await movementsService.createMovement(mov);
     // Misma regla que Finanzas: pendientes y recurrentes se agendan.
     await eventsService.addFromMovement(saved);
+    // Y una venta (entrada) con artículos descuenta stock del inventario.
+    if (saved.tipo === 'entrada' || saved.tipo === 'entrada_pend') {
+      await inventoryService.applySale(saved.items);
+    }
     await refresh();
   };
 

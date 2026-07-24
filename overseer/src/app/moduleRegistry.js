@@ -21,8 +21,9 @@ import dashboard from '../modules/dashboard';
 import members from '../modules/members';
 import calendar from '../modules/calendar';
 import finance from '../modules/finance';
+import inventory from '../modules/inventory';
 
-export const MODULES = [dashboard, members, calendar, finance];
+export const MODULES = [dashboard, members, calendar, finance, inventory];
 
 /** A dónde vuelve la app cuando se oculta el módulo activo (será 'dashboard'). */
 export const DEFAULT_MODULE_ID = MODULES[0].id;

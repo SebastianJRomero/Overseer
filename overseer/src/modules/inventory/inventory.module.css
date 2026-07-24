@@ -1,0 +1,47 @@
+/* inventory.module.css — contenedor y encabezado del módulo Inventario.
+
+   REGLA DEL PROYECTO: keyframes usados por CLASE se declaran localmente
+   (CSS Modules hashea sus nombres); los de estilo inline (swapA/swapB del
+   cambio de sub-tab) son globales de index.css. */
+
+@keyframes moduleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.module {
+  display: flex;
+  flex-direction: column;
+  gap: var(--module-gap);
+  padding: var(--module-pad-y) var(--module-pad-x);
+  max-width: 1326px;
+  margin: 0 auto;
+  width: 100%;
+  animation: moduleIn 0.38s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: var(--ls-title);
+}
+
+.subtitle {
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+}
+
+/* Contenido de la pestaña activa: apila KPIs + panel(es) con el gap del
+   módulo y se re-anima al cambiar de sub-tab. */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
