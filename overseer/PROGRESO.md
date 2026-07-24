@@ -39,9 +39,9 @@ Antes de escribir código, la sesión nueva debería:
 | 5 | Módulo `dashboard` (compone members+movements+events) | revisada y mergeada (PR #6) | 2026-07-22 |
 | 6 | Módulo `inventory` (productos / equipo / gas) | revisada y mergeada (PR #7) | 2026-07-24 |
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
-| 8 | Módulos opcionales `classes` / `trainers` / `reports` | hecha — **pendiente de revisión** | 2026-07-24 |
-| 9 | Cierre: auditoría de fidelidad vs prototipo | **← SIGUIENTE** | |
-| 10 | Backend + BD (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | pendiente | |
+| 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
+| 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
+| 10 | Backend + BD (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **← SIGUIENTE** | |
 
 ## Decisiones aprobadas por el usuario
 
@@ -635,16 +635,53 @@ Ajustes lo quita de la barra (flag `reports:false`) y reactivarlo lo devuelve ·
 **eliminar** entrenador (Pedro, 6→5) · **todo persiste tras recarga** ·
 `npm run lint` y `npm run build` limpios · consola sin errores.
 
+## Fase 9 — detalle (2026-07-24, rama `fase-9-auditoria`)
+
+Auditoría de fidelidad con los 9 módulos ya ensamblados. Barrido pantalla por
+pantalla (login + 9 módulos) por DOM + screenshot, comparando contra la
+especificación del prototipo ya conocida.
+
+**Bug real encontrado y corregido — solape de pestañas en la TopBar:** al
+llegar a 9 módulos, las pestañas dejaron de caber a 1280px y, por
+`justify-content: center` + `overflow-x: auto`, el contenido centrado se
+desbordaba por ambos lados → la 1.ª pestaña ("Inicio") quedaba RECORTADA bajo
+el wordmark "OVERSEER" (medido: solape de 23px). Fix en `TopBar.module.css`:
+- `.tabs` → `justify-content: safe center` + `min-width: 0`: centra cuando
+  caben (pocos módulos) pero alinea al inicio (sin recortar) cuando no caben.
+- `.tab` compactado (padding `7px 13px`→`7px 10px`, gap `7`→`6`) y gap del
+  contenedor `4`→`2`: las 9 pestañas ahora **caben sin scroll a 1280px**
+  (overflow 74px → 0). Verificado: "Inicio" empieza 14px a la derecha del
+  wordmark; las 9 visibles.
+
+**Verificaciones de fidelidad (sin cambios necesarios):** login (orbes, glow,
+campos, Recordarme) · Inicio (KPIs, movimientos del día, sidebar) · Miembros
+(chips centrados, tabla, estados) · Calendario (grid lunes-first, hoy con
+anillo, festivo en lavanda, eventos) · Finanzas (KPIs, sparkline, movimientos,
+desgloses) · Reportes (KPIs con delta, barras, distribución) — todos fieles.
+
+**Theming transversal (cross-check):** con acento **océano** + densidad
+**espaciosa** + bordes **suaves**, los módulos nuevos responden correctamente
+(logo/pestaña/última barra en azul, más aire, esquinas redondeadas) sin
+romperse, y las 9 pestañas siguen cabiendo. Todos los módulos consumen los
+tokens de densidad/redondez/acento — nada hardcodeado que rompa el tema.
+
+**Nota sobre consola:** durante el barrido aparecían mensajes `[vite] Failed to
+reload …` de Clases/Trainers/StatTiles. Se comprobó que eran **historial de HMR
+obsoleto** de la sesión de edición de la Fase 8, bufferizado en la pestaña
+antigua: en una **pestaña nueva** (server reiniciado) la consola queda LIMPIA
+tras recorrer los tres módulos, y `npm run build` pasa sin errores. No hay
+problema real.
+
+**Resultado:** fidelidad confirmada; el único cambio de la fase es el fix de la
+TopBar (una regresión que introdujeron los 9 módulos, no un defecto de fase).
+
 ## Cómo continuar
 
-**Siguiente fase: 9 — Cierre: auditoría de fidelidad vs prototipo.**
-1. Con los 9 módulos ya construidos, comparar pantalla por pantalla contra
-   `../prototipo/Gym Dashboard Final V1.dc.html` (abrir en navegador) y ajustar
-   detalles visuales finos que se hayan escapado.
-2. Repasar responsividad desktop, estados vacíos, y consistencia de tokens.
-3. NO es una fase de features nuevas; es pulido y verificación de fidelidad.
-   Las divergencias funcionales intencionales ya están en "Limitaciones
-   conocidas" y "Peticiones para la Fase 10" — no re-litigar esas.
+**Siguiente fase: 10 — Backend + Base de datos.** Reescribir el interior de
+`services/` (mock→API) sin tocar módulos ni componentes (ARQUITECTURA §9), y
+resolver lo aplazado (ver "Limitaciones conocidas" y "Peticiones para la Fase
+10"): libro mayor único, sync planes↔alta/renovación, eliminar cuentas (Admin),
+menú avanzado import/reset. Stack a acordar con el cliente antes de empezar.
 
 **Piezas que YA existen y hay que reutilizar (no reinventar):**
 - `components/`: KpiCard, Badge, EmptyState, Avatar, Field, MoneyInput,

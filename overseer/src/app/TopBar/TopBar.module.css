@@ -46,11 +46,16 @@
 }
 
 /* ── Tabs de módulos ── */
+/* `safe center`: centrados cuando caben (pocos módulos), pero alineados al
+   inicio y desplazables cuando NO caben (los 9 módulos a la vez) — así el
+   primer tab nunca queda recortado bajo el wordmark. min-width:0 permite que
+   el contenedor encoja dentro del flex y active el scroll en vez de empujar. */
 .tabs {
   flex: 1;
+  min-width: 0;
   display: flex;
-  justify-content: center;
-  gap: 4px;
+  justify-content: safe center;
+  gap: 2px;
   overflow-x: auto;
   scrollbar-width: none; /* los tabs no muestran scrollbar */
 }
@@ -61,8 +66,8 @@
 .tab {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 13px;
+  gap: 6px;
+  padding: 7px 10px;
   border: 1px solid transparent;
   border-radius: var(--r-pill);
   cursor: pointer;
