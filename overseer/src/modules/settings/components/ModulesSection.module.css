@@ -1,0 +1,39 @@
+/* ModulesSection.module.css — opcionales (toggle) + base (solo lectura). */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Icono de un módulo base (apagado/neutro). */
+.coreIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+}
+
+.coreLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+
+.coreDesc {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.check {
+  flex: none;
+  color: var(--ok-strong);
+  font-size: 13px;
+}

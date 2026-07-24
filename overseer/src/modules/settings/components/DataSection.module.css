@@ -1,0 +1,75 @@
+/* DataSection.module.css — exportaciones + copias de seguridad. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.expIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-btn);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--info);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+}
+
+/* Botón de descarga CSV (outline). */
+.expBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-4);
+  background: var(--surface-hover);
+  color: var(--text-mid);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+  transition: border-color 0.13s;
+}
+.expBtn:hover {
+  border-color: var(--border-hover);
+}
+
+.lastLabel {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.lastValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  font-family: var(--font-mono);
+}
+
+/* Botón "Crear copia ahora" (acento). */
+.backupBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 15px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  box-shadow: var(--acc-shadow);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+.backupBtn:hover {
+  filter: brightness(1.08);
+}

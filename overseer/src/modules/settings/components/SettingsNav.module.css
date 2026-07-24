@@ -1,0 +1,93 @@
+/* SettingsNav.module.css — sub-nav lateral de Ajustes. */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-1);
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  transition: background 0.13s, border-color 0.13s;
+}
+.item:hover {
+  background: var(--surface-hover);
+}
+
+.active {
+  background: #161d2b;
+  border-color: var(--border-4);
+}
+
+/* Barra de acento a la izquierda (solo activa). */
+.bar {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+}
+.active .bar {
+  background: var(--acc-grad);
+}
+
+.icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-btn);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+}
+.active .icon {
+  color: var(--acc-1);
+  background: var(--danger-bg);
+}
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.active .label {
+  color: var(--text-title);
+}
+
+.desc {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.active .desc {
+  color: var(--text-soft);
+}
