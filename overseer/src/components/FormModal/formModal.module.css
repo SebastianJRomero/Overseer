@@ -1,0 +1,153 @@
+/* formModal.module.css — chrome de modal-formulario REUTILIZABLE.
+
+   Cabecera con icono, cuerpo, rejilla y pie Cancelar/Guardar. Vive en
+   components/ para que cualquier módulo lo comparta (lo usan los modales de
+   Clases y Entrenadores). Mismo lenguaje visual que los demás modales. */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.headIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--acc-1);
+  background: var(--danger-bg);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--fs-modal-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.close {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 15px;
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--border-1);
+  color: var(--text-title);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-1);
+}
+
+/* Botón "Eliminar" (solo en edición), a la izquierda del pie. */
+.delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 15px;
+  border-radius: var(--r-btn);
+  border: 1px solid #5a3328;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: auto;
+}
+.delete:hover {
+  filter: brightness(1.15);
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cancel {
+  height: 36px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-4);
+  background: transparent;
+  color: var(--text-mid);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel:hover {
+  background: var(--surface-hover);
+}
+
+.save {
+  height: 36px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--acc-shadow);
+}
+.save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

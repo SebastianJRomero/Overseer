@@ -1,0 +1,51 @@
+/* IncomeBars.module.css — panel de barras de ingresos mensuales. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  height: 180px;
+}
+
+.col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.value {
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.bar {
+  width: 100%;
+  max-width: 38px;
+  border-radius: 7px 7px 3px 3px;
+  transition: height 0.35s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.mes {
+  font-size: 11px;
+  color: var(--text-dim);
+}
