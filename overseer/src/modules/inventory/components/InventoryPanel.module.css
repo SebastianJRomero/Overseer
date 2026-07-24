@@ -1,0 +1,175 @@
+/* InventoryPanel.module.css — chrome COMPARTIDO por los paneles de tabla del
+   inventario (Productos y Equipos): la caja, la cabecera con botón de acción
+   y las filas de rejilla. Cada tabla define su propia rejilla de columnas
+   (.gridProducts / .gridEquip) para no repetir el resto.
+
+   Keyframes locales (regla del proyecto): no hay animaciones por clase aquí. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-right: auto;
+}
+
+/* Botón "＋ Registrar / Agregar" con el acento del gimnasio. */
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 13px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  box-shadow: var(--acc-shadow);
+  color: #fff;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.addBtn:hover {
+  filter: brightness(1.08);
+}
+
+/* Cabecera de columnas (labels uppercase). */
+.headRow {
+  display: grid;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 18px;
+  border-bottom: 1px solid var(--border-1);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* Fila de datos. */
+.row {
+  display: grid;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 18px;
+  border: none;
+  border-bottom: 1px solid var(--surface-2);
+  background: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background 0.13s;
+}
+.rowClickable {
+  cursor: pointer;
+}
+.rowClickable:hover {
+  background: var(--surface-row-hover);
+}
+
+/* Rejillas de columnas por tabla. */
+.gridProducts {
+  grid-template-columns: 1fr 150px 84px 100px;
+}
+.gridEquip {
+  grid-template-columns: 1fr 150px 1.1fr 84px;
+}
+
+/* ── Celdas comunes ── */
+.nameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-title);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+/* Badge de estado con punto (centrado en su columna). */
+.statusCell {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+}
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Categoría (badge pequeño alineado a la izquierda bajo el nombre). */
+.catBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+}
+
+/* Columna numérica a la derecha con etiqueta debajo. */
+.numCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.num {
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.numLabel {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.precio {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-mid);
+  text-align: right;
+}
+
+.obs {
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--text-soft);
+  line-height: 1.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

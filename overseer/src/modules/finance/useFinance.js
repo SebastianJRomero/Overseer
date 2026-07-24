@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as movementsService from '../../services/movementsService';
 import * as eventsService from '../../services/eventsService';
+import * as inventoryService from '../../services/inventoryService';
 
 export default function useFinance() {
   const [cursor, setCursor] = useState(() => {
@@ -57,6 +58,12 @@ export default function useFinance() {
     const saved = await movementsService.createMovement(mov);
     // Pendientes y recurrentes se agendan en el calendario.
     await eventsService.addFromMovement(saved);
+    // Venta con artículos del catálogo → descuenta stock del inventario
+    // (también las ventas pendientes: el producto ya salió, aunque falte
+    // cobrar). Las salidas y los artículos escritos a mano no afectan stock.
+    if (saved.tipo === 'entrada' || saved.tipo === 'entrada_pend') {
+      await inventoryService.applySale(saved.items);
+    }
     await refresh();
   };
 
