@@ -6,10 +6,9 @@
       que persiste el flag y, si ocultas el activo, vuelve a Inicio).
     - Base: los módulos núcleo, siempre activos (solo lectura, con ✓).
 
-  Los módulos base se derivan de MODULES (core === true). Los opcionales aún
-  no existen como módulos (llegan en la fase 8), pero sus flags ya funcionan;
-  se listan estáticos aquí y la fase 8 podrá derivarlos de MODULES al
-  registrarlos con core:false.
+  Tanto los opcionales (core:false) como los base (core:true) se DERIVAN de
+  MODULES — desde la fase 8 los tres opcionales ya están registrados, así que
+  no hace falta ninguna lista estática.
 
   No usa useSettings: la visibilidad de módulos es un contexto global.
 */
@@ -22,31 +21,29 @@ import SettingsCard from './SettingsCard';
 import shared from './SettingsShared.module.css';
 import styles from './ModulesSection.module.css';
 
-/* Módulos opcionales (fase 8). El flag por defecto es visible. */
-const OPTIONAL = [
-  { id: 'classes', icon: 'classes', label: 'Clases', desc: 'Programación de clases grupales' },
-  { id: 'trainers', icon: 'trainers', label: 'Entrenadores', desc: 'Staff y asignación de clientes' },
-  { id: 'reports', icon: 'reports', label: 'Reportes', desc: 'Indicadores y análisis del negocio' },
-];
-
-/* Descripción de cada módulo base (los metas no llevan `desc`). */
-const CORE_DESC = {
+/* Descripción de cada módulo (los metas no llevan `desc`). */
+const MODULE_DESC = {
   dashboard: 'Panel principal del día',
   members: 'Registro y estados de membresías',
   calendar: 'Agenda y eventos',
   finance: 'Ingresos, egresos y caja',
   inventory: 'Productos, equipo y zona húmeda',
   settings: 'Configuración del sistema',
+  classes: 'Programación de clases grupales',
+  trainers: 'Staff y asignación de clientes',
+  reports: 'Indicadores y análisis del negocio',
 };
 
 export default function ModulesSection() {
   const { flags, toggleModule } = useModules();
-  const coreModules = MODULES.filter((m) => m.core);
+  const byOrder = (a, b) => a.order - b.order;
+  const optionalModules = MODULES.filter((m) => !m.core).sort(byOrder);
+  const coreModules = MODULES.filter((m) => m.core).sort(byOrder);
 
   return (
     <div className={styles.wrap}>
       <SettingsCard title="Módulos opcionales" subtitle="Actívalos para mostrarlos en la barra de navegación">
-        {OPTIONAL.map((m) => {
+        {optionalModules.map((m) => {
           const on = flags[m.id] !== false;
           return (
             <div key={m.id} className={`${shared.row} ${shared.rowHover}`}>
@@ -60,7 +57,7 @@ export default function ModulesSection() {
               </span>
               <div className={shared.rowInfo}>
                 <span className={shared.rowLabel}>{m.label}</span>
-                <span className={shared.rowDesc}>{m.desc}</span>
+                <span className={shared.rowDesc}>{MODULE_DESC[m.id] || ''}</span>
               </div>
               <span className={shared.stateLabel} style={{ color: on ? 'var(--ok)' : 'var(--text-muted)' }}>
                 {on ? 'Activo' : 'Oculto'}
@@ -77,7 +74,7 @@ export default function ModulesSection() {
             <span className={styles.coreIcon}><Icon name={m.icon} /></span>
             <div className={shared.rowInfo}>
               <span className={styles.coreLabel}>{m.label}</span>
-              <span className={styles.coreDesc}>{CORE_DESC[m.id] || ''}</span>
+              <span className={styles.coreDesc}>{MODULE_DESC[m.id] || ''}</span>
             </div>
             <span className={styles.check}><Icon name="check" /></span>
           </div>
