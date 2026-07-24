@@ -37,11 +37,11 @@ Antes de escribir código, la sesión nueva debería:
 | 3 | Módulo `calendar` (grid, festivos, EventModal, TimePicker) | revisada y mergeada (PR #4) | 2026-07-18 |
 | 4 | Módulo `finance` (movimientos, KPIs, modales, gráficos SVG) | revisada y mergeada (PR #5) | 2026-07-19 |
 | 5 | Módulo `dashboard` (compone members+movements+events) | revisada y mergeada (PR #6) | 2026-07-22 |
-| 6 | Módulo `inventory` (productos / equipo / gas) | hecha — **pendiente de revisión** | 2026-07-24 |
-| 7 | Módulo `settings` (7 secciones, incl. Apariencia) | **← SIGUIENTE** | |
-| 8 | Módulos opcionales `classes` / `trainers` / `reports` | pendiente | |
+| 6 | Módulo `inventory` (productos / equipo / gas) | revisada y mergeada (PR #7) | 2026-07-24 |
+| 7 | Módulo `settings` (7 secciones, incl. Apariencia) | hecha — **pendiente de revisión** | 2026-07-24 |
+| 8 | Módulos opcionales `classes` / `trainers` / `reports` | **← SIGUIENTE** | |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | pendiente | |
-| 10 | Backend + BD (reescribe `services/` mock→API; **libro mayor único**: pagos de miembros/ventas/gastos como asientos del mismo origen — ver "Limitaciones conocidas") | pendiente | |
+| 10 | Backend + BD (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | pendiente | |
 
 ## Decisiones aprobadas por el usuario
 
@@ -83,6 +83,35 @@ para que membresías, ventas y gastos sean asientos del mismo origen, con
 agregación histórica real.** La única sync que SÍ se hizo en el mock es
 `inventoryService.applySale` (venta → descuenta stock) porque era autocontenida
 y no chocaba con ninguna semilla.
+
+### Peticiones del cliente registradas para la Fase 10 (2026-07-24)
+
+Funcionalidades pedidas que se implementan cuando exista backend/roles reales.
+No son bugs; son alcance nuevo.
+
+1. **Sincronizar Planes y precios con el alta/renovación de miembros.** Hoy el
+   wizard de Miembros usa `PLAN_OPTIONS` (lista fija en `lib/memberStatus.js`),
+   así que activar/ocultar/crear/eliminar un plan en Ajustes → Planes NO se
+   refleja al crear o renovar una membresía. Objetivo: que el modal de Nuevo
+   miembro y el de Renovar lean `plansService.listActivePlans()` (solo activos),
+   muestren cada plan con su **precio precargado**, y que Ajustes sea la única
+   fuente del catálogo. Cambio principal: reemplazar el consumo de
+   `PLAN_OPTIONS` por el catálogo del service en `MemberWizard`/renovación.
+2. **Eliminar cuentas y roles (solo Admin).** `usersService` hoy solo tiene
+   `listUsers`/`createUser`. Falta `deleteUser(id)` y que la acción esté
+   **gated por rol Admin**. Ojo: `SessionProvider` hoy solo guarda el nombre de
+   usuario (string), no el rol — el gating real de permisos necesita que la
+   sesión/el backend traiga el rol del usuario logueado. Mientras tanto sería
+   un permiso simulado.
+3. **Menú avanzado / secreto (mantenimiento del sistema).** Un panel oculto
+   (acceso restringido, p. ej. solo Admin o atajo) con: **importar
+   configuraciones** (cargar un JSON y volcarlo a storage), **eliminar
+   registros** selectivos (por entidad: miembros, movimientos, inventario…), y
+   **resetear todo** (empezar de cero). Nota técnica: `services/storage.js` usa
+   el prefijo `overseer:`, así que un reset total = borrar todas las claves con
+   ese prefijo; conviene exponer helpers en `storage.js` (`clearAll(prefix)`,
+   `exportAll()`, `importAll(obj)`) y que este menú los use. Debe pedir
+   confirmación fuerte (es destructivo).
 
 ## Convenciones vigentes (resumen para retomar)
 
@@ -491,31 +520,91 @@ KPIs a 2 activos/94 restantes/6 al año) · alta de producto con margen en vivo
 el catálogo** e incluye el producto nuevo (sin regresión) · `npm run lint` y
 `npm run build` limpios · consola sin errores. Revisión visual fina al usuario.
 
+## Fase 7 — detalle (2026-07-24, rama `fase-7-settings`)
+
+**Creado:**
+- `data/seedUsers.js` (4 cuentas + `ROLE_LEGEND`). `services/usersService.js`
+  (listUsers/createUser; la contraseña NO se persiste). `plansService.js`
+  ampliado con `createPlan`/`togglePlan`/`deletePlan`. `settingsService.js`
+  ampliado con datos del gimnasio (`GYM_FIELDS`, getGymInfo/setGymField),
+  notificaciones (getNotifications/setNotification) y respaldos
+  (getBackup/setAutoBackup/runBackup).
+- `lib/csv.js` — `toCsv` + `downloadCsv` (genera el CSV en el cliente con BOM y
+  `;`, para los exports de Respaldos).
+- `modules/settings/`: `index.js` (meta, order 60), `SettingsModule.jsx`
+  (orquesta: encabezado + sub-nav + sección activa con swap), `useSettings.js`
+  (centraliza gym/users/plans/notif/backup + acciones), `settingsSections.js`
+  (**registro de 7 secciones**, mismo patrón que inventoryTabs/widgets),
+  `roleStyles.js` y `settings.module.css`.
+- `components/`: `SettingsNav`+css (sub-nav lateral), `SettingsCard` +
+  `SettingsShared.module.css` (chrome de tarjeta y filas compartido),
+  `SettingsModal.module.css` (chrome de los 2 modales), y las 7 secciones:
+  `GeneralSection` (logo + campos), `AppearanceSection` (acento/densidad/bordes),
+  `ModulesSection` (opcionales + base), `AccountsSection` + `UserModal`,
+  `PlansSection` + `PlanModal`, `NotificationsSection`, `DataSection` (exports +
+  copias).
+- `moduleRegistry` incorpora `settings` (order 60). Dos glifos nuevos en
+  `Icon` (`appearance` ◑, `notification` ◔).
+
+**Decisiones:**
+- **Apariencia es NUEVA:** el prototipo no tenía sección in-app de tema (se
+  controlaba desde el panel de la herramienta de diseño). Se construyó como
+  7ª sección conectada a `ThemeProvider.setAppearance` (decisión #2). Quedan
+  7 secciones: general · apariencia · módulos · cuentas · planes ·
+  notificaciones · datos.
+- **Reutilización de contextos:** Apariencia usa `useTheme`, Módulos usa
+  `useModules` (no pasan por `useSettings`). Los módulos base se derivan de
+  `MODULES` (core:true); los opcionales (classes/trainers/reports) se listan
+  estáticos porque aún no existen (fase 8) — sus flags ya funcionan.
+- **Planes = catálogo compartido:** la sección Planes hace CRUD sobre
+  `plansService`, el mismo que lee Miembros (`listActivePlans`). OJO: el
+  wizard de Miembros usa `PLAN_OPTIONS` (lista fija de `lib/memberStatus`),
+  así que activar/crear un plan aquí NO se refleja aún en el wizard — es otro
+  silo, se unifica en la Fase 10 (ver "Limitaciones conocidas").
+- **Exports CSV** funcionales (miembros e inventario desde sus services;
+  "Pagos y recibos" exporta los recibos de los miembros como aproximación —
+  el libro de transacciones real llega con el backend).
+
+**Bug corregido en verificación:** import circular — `UserModal` importaba
+`ROLE_STYLES` de `AccountsSection` y lo usaba en el nivel superior del módulo,
+pero `AccountsSection` importa `UserModal`; al evaluar, `ROLE_STYLES` estaba en
+TDZ y la app NO montaba (root vacío, sin error en consola). Se movió
+`ROLE_STYLES` a `modules/settings/roleStyles.js` (módulo neutro) y ambos lo
+importan de ahí. Lección: no usar en el TOP-LEVEL de un módulo un valor
+importado de otro con el que hay ciclo.
+
+**Verificado en navegador (E2E por DOM):** las 7 secciones cargan · Apariencia:
+acento coral→océano estampa `data-accent` y persiste, densidad y bordes igual ·
+Módulos: toggle Clases persiste el flag, base lista 6 núcleo con ✓ · Cuentas:
+alta de "Laura Gómez / Admin" persiste (5 usuarios) y **la contraseña no se
+guarda** · Planes: toggle Anual→Activo y alta de "Semestral" persisten (6) ·
+Notificaciones: toggle persiste · Datos: CSV de miembros generado con datos
+reales (cédula/teléfono formateados), "Crear copia ahora" sella la fecha ·
+General: editar el nombre persiste · **todo sobrevive recarga** · `npm run lint`
+y `npm run build` limpios · consola sin errores. Screenshots del panel fallaron
+(entorno) → revisión visual fina al usuario.
+
 ## Cómo continuar
 
-**Siguiente fase: 7 — Módulo `settings` (Ajustes, 6 secciones).**
-1. Sub-secciones con el MISMO patrón de registro: un `settingsSections.js`
-   (array), no condicionales — igual que `inventoryTabs.js` y `widgets.js`.
-   Secciones del prototipo: Datos del gimnasio · Módulos · Cuentas y roles ·
-   Planes y precios · Notificaciones · Respaldos y datos.
-2. `services/settingsService.js` YA existe (apariencia + moduleFlags desde la
-   fase 0) — la sección **Apariencia/Módulos** conecta con `ThemeProvider` y
-   `ModulesProvider` (el toggle de módulos opcionales usa `toggleModule`).
-   Ampliar el service para las demás secciones, no duplicarlo.
-3. `services/plansService.js` y `usersService.js` alimentan Planes y Cuentas
-   (el prototipo tiene modales Nuevo plan / Nuevo usuario — ver líneas ~1804
-   y ~1888 del prototipo).
-4. Al cerrar: actualizar este archivo y detenerse para revisión.
+**Siguiente fase: 8 — Módulos opcionales `classes` / `trainers` / `reports`.**
+1. Son OPCIONALES (`core:false`): sus flags ya existen y se togglean desde
+   Ajustes → Módulos. Al registrarlos en `moduleRegistry` con `core:false`,
+   aparecerán en la barra solo si su flag está encendido (ya lo maneja
+   `getVisibleModules`). Entonces `ModulesSection` podrá derivar la lista de
+   opcionales de `MODULES.filter(!core)` en vez de la lista estática `OPTIONAL`.
+2. Markup del prototipo: Clases (líneas ~202-246), Entrenadores (~248-293),
+   Reportes (~295-344). Son más simples (tarjetas + KPIs + barras de progreso).
+3. Al cerrar: actualizar este archivo y detenerse para revisión.
 
 **Piezas que YA existen y hay que reutilizar (no reinventar):**
 - `components/`: KpiCard, Badge, EmptyState, Avatar, Field, MoneyInput,
   SegmentedOptions, ProgressBar, Toggle, Modal, MonthNav, DatePicker, TimePicker.
-- `hooks/`: `useModal` (cierre diferido), `usePopover`, `useSwapAnimation`.
-- **Registros de sub-vistas** ya hechos como plantilla: `widgets.js` (Inicio)
-  e `inventoryTabs.js` (Inventario) — copiar el patrón para `settingsSections.js`.
-- Chrome de modal compartido `modules/inventory/components/InventoryModal.module.css`
-  (si Ajustes necesita modales con la misma cabecera/pie, se puede promover a
-  un componente común o replicar el patrón).
+- `hooks/`: `useModal`, `usePopover`, `useSwapAnimation`.
+- **Registros de sub-vistas** como plantilla: `widgets.js` (Inicio),
+  `inventoryTabs.js` (Inventario), `settingsSections.js` (Ajustes).
+- Chrome de modal compartido: `inventory/.../InventoryModal.module.css` y
+  `settings/components/SettingsModal.module.css` (si hace falta, promover a
+  un componente común).
 
 **Recordatorios de convenciones que ya costaron un bug:**
 - Keyframes usados por CLASES van en el propio `.module.css` (CSS Modules
