@@ -1,0 +1,40 @@
+/* InventoryTabs.module.css — pastillas de sub-navegación del inventario. */
+
+.bar {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: var(--r-btn);
+  background: var(--surface-3);
+  border: 1px solid var(--border-2);
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 15px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.13s;
+}
+.tab:hover {
+  color: var(--text-title);
+}
+
+.active {
+  background: var(--acc-grad);
+  color: #fff;
+  box-shadow: var(--acc-shadow);
+}
+.active:hover {
+  color: #fff;
+}
