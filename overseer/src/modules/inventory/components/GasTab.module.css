@@ -1,0 +1,303 @@
+/* GasTab.module.css — cilindros en uso, historial y filas de uso del modal.
+   Los tres widgets de gas y el modal de historial comparten esta hoja. */
+
+/* ── Tarjeta de cilindro en uso ── */
+.cylCard {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-card);
+  background: linear-gradient(160deg, #111826, var(--surface-3));
+}
+
+.cylHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cylIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex: none;
+}
+
+.cylTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: auto;
+  min-width: 0;
+}
+.cylName {
+  font-size: 14px;
+  font-weight: 700;
+}
+.cylSub {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.cylBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+}
+
+.cylBody {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cylMeta {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.cylGauge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cylBig {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.cylBigNum {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-title);
+}
+.cylBigLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Desglose Turco / Jacuzzi (solo compartido). */
+.cylSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.splitBox {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 13px;
+  border-radius: 11px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-2);
+}
+.splitLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.splitNum {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.cylMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-2);
+}
+.metricLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.metricVal {
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.cylActions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.ghostBtn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.ghostBtn:hover {
+  background: var(--surface-hover);
+  color: var(--text-mid);
+}
+
+.outlineBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border-4);
+  border-radius: var(--r-btn);
+  background: transparent;
+  color: var(--text-mid);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.outlineBtn:hover {
+  background: var(--surface-hover);
+}
+
+.accentBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 15px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  box-shadow: var(--acc-shadow);
+  color: #fff;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.accentBtn:hover {
+  filter: brightness(1.08);
+}
+
+/* Estado vacío (sin cilindro en uso). */
+.cylEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 2px 4px;
+}
+.cylEmptyText {
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Historial de cilindros (rejilla de la tabla) ── */
+.histGrid {
+  grid-template-columns: 1fr 92px 56px 88px 92px;
+}
+.histCompra {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-title);
+  font-family: var(--font-mono);
+}
+.histNum {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.histEstadoCell {
+  display: flex;
+  justify-content: flex-end;
+}
+.histEstado {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+}
+
+/* ── Filas de uso (modal de historial) ── */
+.usoList {
+  display: flex;
+  flex-direction: column;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.usoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border: none;
+  border-bottom: 1px solid var(--surface-2);
+  background: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.usoRow:hover {
+  background: var(--surface-row-hover);
+}
+.usoBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  flex: none;
+}
+.usoInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+}
+.usoFecha {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-title);
+  font-family: var(--font-mono);
+}
+.usoObs {
+  font-size: 11.5px;
+  color: var(--text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.usoEdit {
+  flex: none;
+  color: var(--text-dim);
+  font-size: 13px;
+}

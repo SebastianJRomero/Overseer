@@ -1,0 +1,220 @@
+/* InventoryModal.module.css — chrome COMPARTIDO por los modales del
+   inventario (producto, equipo y los de gas): cabecera con icono, cuerpo,
+   rejilla de dos columnas, pie con Cancelar/Guardar/Eliminar, e inputs.
+
+   Reunir el chrome en un archivo evita repetir ~180 líneas por modal y que
+   se desincronicen (mismo criterio que EventModal). */
+
+/* ── Cabecera ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.headIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--acc-1);
+  background: var(--danger-bg);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--fs-modal-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.close {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 15px;
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--border-1);
+  color: var(--text-title);
+}
+
+/* ── Cuerpo ── */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+}
+
+textarea.input {
+  resize: none;
+  line-height: 1.5;
+}
+
+/* Caja resaltada (precio de compra, resumen de finalizar…). */
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 15px;
+  border-radius: 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-2);
+}
+
+.noteHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.noteTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  margin-right: auto;
+}
+
+.noteTag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--danger-bg);
+  color: var(--acc-1);
+}
+
+.noteRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
+}
+.noteLabel {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.noteValue {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-left: auto;
+}
+.notePct {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--surface-2);
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+}
+
+/* ── Pie ── */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-1);
+}
+
+.delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 15px;
+  border-radius: var(--r-btn);
+  border: 1px solid #5a3328;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: auto;
+}
+.delete:hover {
+  filter: brightness(1.15);
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cancel {
+  height: 36px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-4);
+  background: transparent;
+  color: var(--text-mid);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel:hover {
+  background: var(--surface-hover);
+}
+
+.save {
+  height: 36px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--acc-grad);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--acc-shadow);
+}
+.save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
