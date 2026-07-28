@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **← SIGUIENTE** | |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **← SIGUIENTE** | |
 
 ## Decisiones aprobadas por el usuario
 
@@ -55,6 +55,12 @@ Antes de escribir código, la sesión nueva debería:
 8. **Consolidación financiera → Fase 10** (2026-07-24). El mock reproduce el
    prototipo pantalla por pantalla, sin un "libro mayor" único; se difiere la
    unificación al backend. Ver "Limitaciones conocidas".
+9. **Stack de la Fase 10: Node + Express + SQLite** (2026-07-28). Backend propio
+   en JavaScript (mismo lenguaje que el front). Se reescribe SOLO el interior de
+   `services/` (mock→API vía `fetch`); módulos, hooks y componentes no cambian
+   (ARQUITECTURA §9). SQLite como base de datos (archivo local, sin servidor de
+   BD que administrar). Sigue en pie la decisión #7 (parar y preguntar antes de
+   sumar dependencias que no sean el stack ya acordado).
 
 ## Limitaciones conocidas (se resuelven en la Fase 10, NO son bugs)
 
@@ -677,11 +683,36 @@ TopBar (una regresión que introdujeron los 9 módulos, no un defecto de fase).
 
 ## Cómo continuar
 
-**Siguiente fase: 10 — Backend + Base de datos.** Reescribir el interior de
-`services/` (mock→API) sin tocar módulos ni componentes (ARQUITECTURA §9), y
-resolver lo aplazado (ver "Limitaciones conocidas" y "Peticiones para la Fase
-10"): libro mayor único, sync planes↔alta/renovación, eliminar cuentas (Admin),
-menú avanzado import/reset. Stack a acordar con el cliente antes de empezar.
+**Siguiente fase: 10 — Backend + Base de datos. Stack ACORDADO: Node + Express
++ SQLite** (decisión #9). El frontend (fases 0–9) está completo y mergeado
+(hasta PR #10). El principio rector: se reescribe SOLO el interior de
+`services/` (mock/localStorage → llamadas `fetch` a la API); módulos, hooks y
+componentes NO cambian (ARQUITECTURA §9). Si algún contrato de service necesita
+cambiar, es señal de alto → consultar antes.
+
+Arranque sugerido de la Fase 10:
+1. `git checkout main && git pull`; crear `git checkout -b fase-10-backend`.
+2. **Backend** en una carpeta hermana (p. ej. `server/`): Node + Express +
+   SQLite (`better-sqlite3` o `sqlite3`). Esquema por entidad espejando las
+   semillas de `data/`: members, movements, events, products, equipment, gas
+   cylinders (+ usos), plans, users, settings (gym/notif/backup/appearance).
+3. **Endpoints** que reflejen los contratos actuales de cada service (mirar la
+   cabecera JSDoc de cada archivo en `services/` — ahí está la firma exacta:
+   listMembers/createMember/updateMember/renewMember, listMonth/listDay/
+   createMovement/settleMovement, listCylinders/createPurchase/addUsage/…, etc.).
+4. **Reescribir `services/*`** para hacer `fetch` a esos endpoints, MANTENIENDO
+   las mismas firmas y formas de retorno. `services/storage.js` deja de usarse
+   (o queda solo para caché); el resto de la app no se entera.
+5. **Resolver lo aplazado** (ver "Limitaciones conocidas" y "Peticiones para la
+   Fase 10"), que ahora sí es viable con datos reales: libro mayor único (pagos
+   de miembros/ventas/gastos como asientos del mismo origen), sync
+   planes↔alta/renovación (el wizard lee `plansService`, no `PLAN_OPTIONS`),
+   eliminar cuentas (Admin) con rol real en la sesión, y el menú avanzado
+   import/reset (helpers en el backend).
+6. Auth real: reemplazar el `authService` mock por login contra el backend; la
+   sesión debe traer el ROL del usuario (habilita el gating de Admin).
+
+**Piezas que YA existen y hay que reutilizar (no reinventar):**
 
 **Piezas que YA existen y hay que reutilizar (no reinventar):**
 - `components/`: KpiCard, Badge, EmptyState, Avatar, Field, MoneyInput,
