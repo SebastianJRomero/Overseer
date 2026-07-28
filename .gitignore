@@ -1,2 +1,4 @@
 # Herramientas locales de desarrollo (no se versionan)
 .claude/
+.agents/
+skills-lock.json
