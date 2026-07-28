@@ -1,46 +1,30 @@
 /*
-  services/usersService.js — Cuentas del sistema (mock hoy → API mañana).
+  services/usersService.js — Cuentas del sistema (API real: Node + Express + SQLite).
 
-  Sección Ajustes → Cuentas y roles. Como todos los services: funciones async
-  que ocultan el origen. La contraseña NO se persiste en el mock (en la API
-  real la recibiría el backend, nunca se guarda en el cliente).
+  Sección Ajustes → Cuentas y roles. La contraseña NO viaja ni se guarda
+  (el modal ni la envía). ROLE_LEGEND es una constante estática de UI y se
+  mantiene en el front (se re-exporta desde aquí por comodidad).
 
   Contrato:
     listUsers()        → Promise<User[]>
-    createUser(datos)  → Promise<User[]>   (asigna id)
+    createUser(datos)  → Promise<User[]>   (lista actualizada; asigna id)
 */
 
-import { load, save } from './storage';
-import { newId } from '../lib/id';
-import { SEED_USERS, ROLE_LEGEND } from '../data/seedUsers';
-
-const KEY = 'users';
+import { apiGet, apiPost } from './api';
+import { ROLE_LEGEND } from '../data/seedUsers';
 
 export { ROLE_LEGEND };
 
-/** Lee la lista, sembrando las cuentas de ejemplo la primera vez. */
-function readUsers() {
-  let users = load(KEY, null);
-  if (!users) {
-    users = SEED_USERS;
-    save(KEY, users);
-  }
-  return users;
-}
-
 /** @returns {Promise<Array>} cuentas del sistema */
 export async function listUsers() {
-  return readUsers();
+  return apiGet('/users');
 }
 
 /**
- * Crea una cuenta. La contraseña se descarta en el mock (no se guarda).
+ * Crea una cuenta (la contraseña no se envía).
  * @param {{nombre, email, rol}} datos
  * @returns {Promise<Array>} lista actualizada
  */
 export async function createUser({ nombre, email, rol }) {
-  const record = { id: newId('u'), nombre, email, rol, activity: 'Recién creado', activo: true };
-  const next = [...readUsers(), record];
-  save(KEY, next);
-  return next;
+  return apiPost('/users', { nombre, email, rol });
 }

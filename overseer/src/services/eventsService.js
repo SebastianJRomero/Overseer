@@ -1,108 +1,66 @@
 /*
-  services/eventsService.js — Eventos del calendario (mock hoy → API mañana).
+  services/eventsService.js — Eventos del calendario (API real: Node + Express + SQLite).
 
   Contrato que consume la UI (via useCalendar, nunca directo desde componentes):
     listEvents()               → Promise<map>   { dateKey: Evento[] }
-    saveEvent(dateKey, evento) → Promise<map>   (asigna id si es nuevo)
+    saveEvent(dateKey, evento) → Promise<map>   (upsert; asigna id si es nuevo)
     deleteEvent(dateKey, id)   → Promise<map>
-    getUpcoming(n)             → Promise<Evento[]>  (para el Inicio, fase 5)
+    getUpcoming(n)             → Promise<Evento[]>  (para el Inicio)
 
-  Mock: el mapa completo vive en storage bajo 'events'; si no existe se
-  siembra con los eventos del prototipo (relativos a hoy). Cuando exista API,
-  cada función se vuelve su fetch equivalente y la UI no se entera.
+  Antes: mapa en localStorage. Ahora: fetch a /api/events. `addFromMovement`
+  sigue viviendo aquí (arma el título con formatMoney) y llama a saveEvent.
 
   Evento: { id, title, time ("HH:mm" 24h), type }
 */
 
-import { load, save } from './storage';
-import { buildSeedEvents } from '../data/seedEvents';
-import { newId } from '../lib/id';
-import { dateKey, todayAtMidnight, parseDMY } from '../lib/date';
+import { apiGet, apiPut, apiDelete } from './api';
+import { dateKey, parseDMY } from '../lib/date';
 import { formatMoney } from '../lib/money';
 
-const KEY = 'events';
-
-/** Lee el mapa completo, sembrando los datos de ejemplo la primera vez. */
-function readAll() {
-  let events = load(KEY, null);
-  if (!events) {
-    events = buildSeedEvents();
-    save(KEY, events);
-  }
-  return events;
-}
-
-/**
- * Mapa completo de eventos por día.
- * @returns {Promise<Object>}
- */
+/** Mapa completo de eventos por día. @returns {Promise<Object>} */
 export async function listEvents() {
-  return readAll();
+  return apiGet('/events');
 }
 
 /**
- * Crea o actualiza un evento en un día. Sin id → nuevo (se le asigna uno);
- * con id → reemplaza el existente en ese día.
+ * Crea o actualiza un evento en un día. Sin id → nuevo (el backend le asigna
+ * uno); con id → upsert de ese evento.
  * @param {string} key    fecha "aaaa-mm-dd"
  * @param {{id?, title, time, type}} evento
  * @returns {Promise<Object>} mapa actualizado
  */
 export async function saveEvent(key, evento) {
-  const events = { ...readAll() };
-  const list = (events[key] || []).slice();
-  if (evento.id != null) {
-    const i = list.findIndex((e) => e.id === evento.id);
-    if (i >= 0) list[i] = evento; else list.push(evento);
-  } else {
-    list.push({ ...evento, id: newId('ev') });
-  }
-  events[key] = list;
-  save(KEY, events);
-  return events;
+  return apiPut('/events', { key, evento });
 }
 
 /**
- * Elimina un evento de un día (y limpia el día si queda vacío).
+ * Elimina un evento de un día.
  * @param {string} key fecha "aaaa-mm-dd"
  * @param {string} id
  * @returns {Promise<Object>} mapa actualizado
  */
 export async function deleteEvent(key, id) {
-  const events = { ...readAll() };
-  const list = (events[key] || []).filter((e) => e.id !== id);
-  if (list.length) events[key] = list;
-  else delete events[key];
-  save(KEY, events);
-  return events;
+  return apiDelete(`/events/${key}/${id}`);
 }
 
 /**
- * Próximos `n` eventos desde hoy (los usa el widget del Inicio en la fase 5).
+ * Próximos `n` eventos desde hoy (los usa el widget del Inicio).
  * @param {number} n
  * @returns {Promise<Array>} eventos con su dateKey y timestamp resueltos
  */
 export async function getUpcoming(n = 4) {
-  const events = readAll();
-  const today = todayAtMidnight().getTime();
-  return Object.keys(events)
-    .flatMap((key) => (events[key] || []).map((e) => ({ ...e, dateKey: key })))
-    .map((e) => {
-      const [Y, M, D] = e.dateKey.split('-').map(Number);
-      const [h, min] = (e.time || '00:00').split(':').map(Number);
-      return { ...e, ts: new Date(Y, M - 1, D, h, min).getTime() };
-    })
-    .filter((e) => e.ts >= today)
-    .sort((a, b) => a.ts - b.ts)
-    .slice(0, n);
+  return apiGet(`/events/upcoming?n=${n}`);
 }
 
 /**
  * Agenda un movimiento en el calendario como evento Cobro/Pago.
  *
- * Regla de negocio del prototipo: los movimientos PENDIENTES (cobros/pagos
- * que se harán después) y los RECURRENTES (mensuales) se agendan el día de
- * su fecha, para que aparezcan en el calendario y en "Próximos eventos".
- * Los movimientos normales (ya efectuados) no generan evento.
+ * Regla de negocio del prototipo: los movimientos PENDIENTES y los RECURRENTES
+ * se agendan el día de su fecha, para que aparezcan en el calendario y en
+ * "Próximos eventos". Los movimientos normales no generan evento.
+ *
+ * Se queda en el front porque arma el título con formatMoney; delega la
+ * persistencia en saveEvent (que ahora va al backend).
  *
  * @param {{id, tipo, monto, motivo, fecha, recurrent}} mov
  * @returns {Promise<Object>} mapa de eventos (actualizado o intacto)
@@ -110,7 +68,7 @@ export async function getUpcoming(n = 4) {
 export async function addFromMovement(mov) {
   const pending = mov.tipo === 'entrada_pend' || mov.tipo === 'salida_pend';
   const d = parseDMY(mov.fecha);
-  if ((!pending && !mov.recurrent) || !d) return readAll();
+  if ((!pending && !mov.recurrent) || !d) return listEvents();
 
   const income = mov.tipo === 'entrada' || mov.tipo === 'entrada_pend';
   const base = (mov.motivo || '').trim() || (income ? 'Cobro pendiente' : 'Pago pendiente');
