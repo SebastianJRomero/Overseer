@@ -1,59 +1,31 @@
 /*
-  services/trainersService.js — Entrenadores (mock hoy → API mañana).
+  services/trainersService.js — Entrenadores (API real: Node + Express + SQLite).
 
   Contrato:
     listTrainers()           → Promise<Trainer[]>
-    createTrainer(datos)     → Promise<Trainer[]>   (asigna id; nace disponible)
+    createTrainer(datos)     → Promise<Trainer[]>   (nace disponible; asigna id)
     updateTrainer(id, patch) → Promise<Trainer[]>
     deleteTrainer(id)        → Promise<Trainer[]>
 */
 
-import { load, save } from './storage';
-import { newId } from '../lib/id';
-import { SEED_TRAINERS } from '../data/seedTrainers';
-
-const KEY = 'trainers';
-
-function readAll() {
-  let trainers = load(KEY, null);
-  if (!trainers) {
-    trainers = SEED_TRAINERS;
-    save(KEY, trainers);
-  }
-  return trainers;
-}
+import { apiGet, apiPost, apiPatch, apiDelete } from './api';
 
 /** @returns {Promise<Array>} entrenadores */
 export async function listTrainers() {
-  return readAll();
+  return apiGet('/trainers');
 }
 
 /** Crea un entrenador (nace disponible). @returns {Promise<Array>} */
 export async function createTrainer({ nombre, esp, clientes, clases }) {
-  const record = {
-    id: newId('tr'), nombre, esp,
-    clientes: Number(clientes) || 0, clases: Number(clases) || 0, activo: true,
-  };
-  const next = [...readAll(), record];
-  save(KEY, next);
-  return next;
+  return apiPost('/trainers', { nombre, esp, clientes, clases });
 }
 
 /** Actualiza un entrenador por id. @returns {Promise<Array>} */
 export async function updateTrainer(id, patch) {
-  const clean = {
-    ...patch,
-    ...(patch.clientes != null ? { clientes: Number(patch.clientes) || 0 } : {}),
-    ...(patch.clases != null ? { clases: Number(patch.clases) || 0 } : {}),
-  };
-  const next = readAll().map((t) => (t.id === id ? { ...t, ...clean } : t));
-  save(KEY, next);
-  return next;
+  return apiPatch(`/trainers/${id}`, patch);
 }
 
 /** Elimina un entrenador por id. @returns {Promise<Array>} */
 export async function deleteTrainer(id) {
-  const next = readAll().filter((t) => t.id !== id);
-  save(KEY, next);
-  return next;
+  return apiDelete(`/trainers/${id}`);
 }
