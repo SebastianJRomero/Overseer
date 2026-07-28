@@ -1,17 +1,24 @@
 /*
-  services/settingsService.js — Configuración de la app (mock → API mañana).
+  services/settingsService.js — Configuración de la app (mock/local + API).
 
-  Como todos los services: funciones ASYNC aunque el mock sea síncrono.
-  Así, cuando esto sea un fetch a la API, ni los hooks ni los componentes
-  cambian — solo cambia el interior de este archivo (ARQUITECTURA §9).
+  Fase 10: este service quedó HÍBRIDO a propósito.
 
-  Fase 0: solo apariencia (tema) y flags de módulos.
-  Fase 7 amplía: datos del gimnasio, toggles de notificación y respaldos.
+    · Apariencia (accent/density/roundness) y flags de módulos → siguen en
+      localStorage. Por decisión #2 el tema se persiste local, y ambos se leen
+      AL ARRANCAR (ThemeProvider / ModulesProvider), así que no deben depender
+      de que el servidor esté arriba. Su interior no cambió.
+
+    · Datos del gimnasio, notificaciones y respaldos → ahora van al backend
+      (/api/settings/*). Solo se leen dentro del módulo de Ajustes.
+
+  GYM_FIELDS es metadato estático de UI (labels + defaults) y se queda aquí.
+  Todas las funciones son async (ARQUITECTURA §9).
 */
 
 import { load, save } from './storage';
+import { apiGet, apiPatch, apiPost } from './api';
 
-/* ── Apariencia (Ajustes → Apariencia) ─────────────────────────────────── */
+/* ── Apariencia (local — decisión #2) ──────────────────────────────────── */
 
 /** Valores por defecto = los defaults del prototipo. */
 const DEFAULT_APPEARANCE = {
@@ -20,17 +27,14 @@ const DEFAULT_APPEARANCE = {
   roundness: 'redondeado', // nitido | redondeado | suave
 };
 
-/**
- * @returns {Promise<{accent: string, density: string, roundness: string}>}
- */
+/** @returns {Promise<{accent, density, roundness}>} */
 export async function getAppearance() {
-  // Mezclamos con los defaults por si se guardó una versión vieja incompleta.
   return { ...DEFAULT_APPEARANCE, ...load('apariencia', {}) };
 }
 
 /**
  * Guarda uno o varios ejes de apariencia.
- * @param {Partial<{accent: string, density: string, roundness: string}>} patch
+ * @param {Partial<{accent, density, roundness}>} patch
  * @returns {Promise<object>} la apariencia resultante
  */
 export async function setAppearance(patch) {
@@ -39,21 +43,19 @@ export async function setAppearance(patch) {
   return next;
 }
 
-/* ── Flags de módulos opcionales (Ajustes → Módulos) ───────────────────── */
+/* ── Flags de módulos opcionales (local — se leen al arrancar) ──────────── */
 
 /** Por defecto los tres opcionales están encendidos, como en el prototipo. */
 const DEFAULT_FLAGS = { classes: true, trainers: true, reports: true };
 
-/**
- * @returns {Promise<Record<string, boolean>>} id de módulo → visible
- */
+/** @returns {Promise<Record<string, boolean>>} id de módulo → visible */
 export async function getModuleFlags() {
   return { ...DEFAULT_FLAGS, ...load('moduleFlags', {}) };
 }
 
 /**
  * Enciende/apaga un módulo opcional.
- * @param {string} id  id del módulo ('classes' | 'trainers' | 'reports')
+ * @param {string} id  'classes' | 'trainers' | 'reports'
  * @param {boolean} on
  * @returns {Promise<Record<string, boolean>>} los flags resultantes
  */
@@ -63,9 +65,9 @@ export async function setModuleFlag(id, on) {
   return next;
 }
 
-/* ── Datos del gimnasio (Ajustes → Datos del gimnasio) ─────────────────── */
+/* ── Datos del gimnasio (backend) ──────────────────────────────────────── */
 
-/** Valores por defecto = los del prototipo. `mono` = mostrar en monoespaciada. */
+/** Metadato de los campos (labels + defaults). `mono` = mostrar en monoespaciada. */
 export const GYM_FIELDS = [
   { key: 'nombre', label: 'Nombre del gimnasio', def: 'OVERSEER Fitness Club', mono: false },
   { key: 'direccion', label: 'Dirección', def: 'Cra 43A #7-50, Medellín', mono: false },
@@ -77,62 +79,41 @@ export const GYM_FIELDS = [
   { key: 'zona', label: 'Zona horaria', def: 'GMT-5 · Bogotá', mono: true },
 ];
 
-const DEFAULT_GYM = Object.fromEntries(GYM_FIELDS.map((f) => [f.key, f.def]));
-
-/** @returns {Promise<Object>} datos del gimnasio (con defaults). */
+/** @returns {Promise<Object>} datos del gimnasio (el backend mezcla defaults). */
 export async function getGymInfo() {
-  return { ...DEFAULT_GYM, ...load('gymInfo', {}) };
+  return apiGet('/settings/gym');
 }
 
 /** Guarda un campo de los datos del gimnasio. @returns {Promise<Object>} */
 export async function setGymField(key, value) {
-  const next = { ...(await getGymInfo()), [key]: value };
-  save('gymInfo', next);
-  return next;
+  return apiPatch('/settings/gym', { key, value });
 }
 
-/* ── Notificaciones (Ajustes → Notificaciones) ─────────────────────────── */
-
-/** Interruptores de avisos + canales (por defecto los del prototipo). */
-const DEFAULT_NOTIFICATIONS = {
-  rem3: true, remDay: true, stockLow: true, dailySummary: false,
-  chWhats: true, chMail: true, chSms: false,
-};
+/* ── Notificaciones (backend) ──────────────────────────────────────────── */
 
 /** @returns {Promise<Record<string, boolean>>} */
 export async function getNotifications() {
-  return { ...DEFAULT_NOTIFICATIONS, ...load('notifications', {}) };
+  return apiGet('/settings/notifications');
 }
 
 /** Cambia un interruptor de notificación. @returns {Promise<Object>} */
 export async function setNotification(key, on) {
-  const next = { ...(await getNotifications()), [key]: on };
-  save('notifications', next);
-  return next;
+  return apiPatch('/settings/notifications', { key, on });
 }
 
-/* ── Respaldos (Ajustes → Respaldos y datos) ───────────────────────────── */
-
-const DEFAULT_BACKUP = { auto: true, last: '12/07/2026 · 03:00' };
+/* ── Respaldos (backend) ───────────────────────────────────────────────── */
 
 /** @returns {Promise<{auto: boolean, last: string}>} */
 export async function getBackup() {
-  return { ...DEFAULT_BACKUP, ...load('backup', {}) };
+  return apiGet('/settings/backup');
 }
 
 /** Enciende/apaga la copia automática. @returns {Promise<Object>} */
 export async function setAutoBackup(on) {
-  const next = { ...(await getBackup()), auto: on };
-  save('backup', next);
-  return next;
+  return apiPatch('/settings/backup', { auto: on });
 }
 
 /** Registra una copia "creada ahora" (sella la fecha actual). @returns {Promise<Object>} */
 export async function runBackup() {
-  const d = new Date();
-  const p2 = (n) => String(n).padStart(2, '0');
-  const stamp = `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} · ${p2(d.getHours())}:${p2(d.getMinutes())}`;
-  const next = { ...(await getBackup()), last: stamp };
-  save('backup', next);
-  return next;
+  return apiPost('/settings/backup/run');
 }
