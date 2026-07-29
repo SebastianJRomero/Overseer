@@ -57,7 +57,7 @@
 }
 .close:hover {
   color: var(--text-title);
-  border-color: #2c3650;
+  border-color: var(--border-hover);
 }
 
 .totalRow {
@@ -94,7 +94,7 @@
   gap: 20px;
   padding: 14px 22px;
   border-top: 1px solid var(--border-1);
-  background: #0b0e15;
+  background: var(--surface-3);
 }
 
 .footerCol {

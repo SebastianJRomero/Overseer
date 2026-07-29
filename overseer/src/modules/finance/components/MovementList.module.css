@@ -6,12 +6,12 @@
    azul tenue = cobro (entrada), ámbar tenue = pago (salida). */
 
 @keyframes pendingRowIn {
-  0%, 100% { background-color: rgba(127, 177, 245, 0.05); }
-  50% { background-color: rgba(127, 177, 245, 0.12); }
+  0%, 100% { background-color: var(--pend-in-lo); }
+  50% { background-color: var(--pend-in-hi); }
 }
 @keyframes pendingRowOut {
-  0%, 100% { background-color: rgba(255, 179, 92, 0.05); }
-  50% { background-color: rgba(255, 179, 92, 0.12); }
+  0%, 100% { background-color: var(--pend-out-lo); }
+  50% { background-color: var(--pend-out-hi); }
 }
 
 .panel {
@@ -21,7 +21,7 @@
   border-radius: var(--r-modal);
   background: var(--surface-1);
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--shadow-card);
 }
 
 .header {
@@ -66,7 +66,7 @@
   padding: 0 14px;
   border: none;
   border-radius: var(--r-btn);
-  color: #fff;
+  color: var(--on-acc);
   font-size: var(--fs-small);
   font-weight: 600;
   cursor: pointer;
@@ -146,7 +146,7 @@
   margin-top: -6px;
   font-size: 12.5px;
   font-weight: 100;
-  color: #acbac1bd;
+  color: var(--text-dim);
   line-height: 1;
   text-transform: uppercase;
 }

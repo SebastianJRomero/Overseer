@@ -85,6 +85,6 @@
 
 .greetingName {
   font-size: 13px;
-  color: #7ee2a0;
+  color: var(--ok);
   font-weight: 600;
 }

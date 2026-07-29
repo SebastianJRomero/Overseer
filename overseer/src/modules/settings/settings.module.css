@@ -69,7 +69,7 @@
   font-size: 16px;
   color: var(--acc-1);
   background: var(--danger-bg);
-  border: 1px solid #2a1d1f;
+  border: 1px solid var(--danger-border);
 }
 
 .secHeading {

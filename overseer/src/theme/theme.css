@@ -17,7 +17,7 @@
   --surface-2: #12161f;         /* inputs, filas, iconos */
   --surface-3: #0d1119;         /* paneles hundidos (sub-tabs, cajas internas) */
   --surface-deep: #080a0f;      /* celdas fuera de mes en el calendario */
-  --surface-row-hover: #111622; /* hover de filas de listas/tablas */
+  --surface-row-hover: #18202f; /* hover de filas de listas/tablas (algo más claro) */
   --surface-hover: #141a26;     /* hover de botones ghost y menús */
 
   /* ── Bordes ─────────────────────────────────────────────────────────── */
@@ -43,14 +43,16 @@
   --ok-strong: #3ecf74;
   --ok-bg: #12231b;
   --ok-border: #1d3a2a;
-  --ok-grad: linear-gradient(150deg, #1f9d57, #0f7a3f);
+  --ok-grad: linear-gradient(150deg, #1f9d57, #1f9d57);
   --ok-shadow: 0 3px 12px rgba(31, 157, 87, 0.28);
   /* ámbar = vence pronto / pendiente */
   --warn: #ffb35c;
   --warn-bg: #2a2417;
-  /* coral = vencido / salida de dinero / peligro */
-  --danger: #ff8b6e;
-  --danger-strong: #ff5c38;
+  --warn-border: #3a3020;
+  /* coral = vencido / salida de dinero / peligro (oscuro: coral suave, menos
+     intenso que el bermellón para que "vencidos" no grite). */
+  --danger: #ff7a5c;
+  --danger-strong: #EC3013;
   --danger-bg: #241722;
   --danger-border: #3a2028;
   /* naranja sutil = montos de EGRESO (salidas/gastos), para contrastar con
@@ -66,7 +68,7 @@
   --holiday-bg-hover: rgba(169, 156, 214, 0.12);
 
   /* ── Acento de marca (lo sobreescribe accents.css según data-accent) ── */
-  --acc-grad: linear-gradient(150deg, #ff5c38, #ff2d78);
+  --acc-grad: linear-gradient(150deg, #EC3013, #FF5A2E);
   --acc-1: #ff7a5c;             /* acento sólido para textos/links */
   --acc-soft: rgba(255, 92, 56, 0.3);
   --acc-shadow: 0 3px 12px rgba(255, 60, 90, 0.28); /* sombra de botones de acento */
@@ -79,7 +81,7 @@
   --r-pill: 999px;
 
   /* ── Tipografía ─────────────────────────────────────────────────────── */
-  --font-sans: 'Sora', system-ui, sans-serif;
+  --font-sans: 'Archivo', system-ui, sans-serif;
   --font-mono: 'Geist Mono', monospace;
   /* escala extraída del prototipo */
   --fs-kpi: 28px;         /* cifra grande de KPI */
@@ -99,6 +101,47 @@
   --shadow-menu: 0 20px 50px rgba(0, 0, 0, 0.55);
   --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.28);
   --shadow-card-hover: 0 10px 26px rgba(0, 0, 0, 0.35);
+
+  /* ── Piezas de UI con color propio (antes eran hex sueltos en componentes) ─
+     Se tokenizan para que el modo claro las voltee. En oscuro conservan su
+     valor original del prototipo. */
+  --on-acc: #fff;                 /* texto/glifo sobre rellenos de acento o color */
+  --topbar-bg: rgba(12, 15, 22, 0.9); /* barra superior (con backdrop-blur) */
+  --tab-active-bg: #161d2b;       /* fondo del tab de módulo activo */
+  --avatar-neutral-bg: #161c28;   /* avatar neutro (miembros, vencimientos) */
+  --btn-disabled-bg: #2a2f3d;     /* fondo de botón deshabilitado */
+
+  /* Pulso de filas PENDIENTES (Finanzas/Inicio): azul = cobro, ámbar = pago.
+     Se tokeniza el color del keyframe para poder subir la saturación en claro
+     (sobre blanco el tinte tenue casi no se veía). */
+  --pend-in-lo: rgba(127, 177, 245, 0.05);
+  --pend-in-hi: rgba(127, 177, 245, 0.12);
+  --pend-out-lo: rgba(255, 179, 92, 0.05);
+  --pend-out-hi: rgba(255, 179, 92, 0.12);
+
+  /* Calendario: celda del mes, hover, y huecos fuera de mes (base + trama
+     diagonal). La trama distingue "otro mes" en AMBOS temas, clave en claro. */
+  --cal-cell-bg: #0f141e;
+  --cal-cell-hover: #151b28;
+  --cal-blank-bg: var(--surface-deep);
+  --cal-blank-stripe: rgba(255, 255, 255, 0.028);
+  /* Sombra de las píldoras de evento. En OSCURO un halo claro interior las
+     despega del fondo (una sombra oscura no se vería); en CLARO, una sombra
+     de caída normal (ver bloque claro). */
+  --cal-event-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  /* Historial de Finanzas: identidad AZUL propia (widget con glow + modal).
+     Se tokeniza para conservar ese carácter en ambos temas (azul oscuro en
+     oscuro, azul claro sobre blanco en claro). */
+  --hist-grad: linear-gradient(160deg, #101b2b, #0b1119);
+  --hist-panel: #0e1622;
+  --hist-border: #24354d;
+  --hist-border-hover: #4a7bb3;
+  --hist-icon-bg: #12233a;
+  --hist-info: #7fc9ff;
+  --hist-tx-strong: #eaf2fb;
+  --hist-tx-soft: #9db8d6;
+  --hist-tx-dim: #7c93b3;
 
   /* ── Densidad (la sobreescribe data-density) ────────────────────────── */
   /* Un solo factor multiplica los espaciados "estructurales" de los módulos.
@@ -141,4 +184,114 @@ html[data-density='comodo'] {
 }
 html[data-density='espacioso'] {
   --density: 1.42;
+}
+
+/* ── Modo claro (Ajustes → Apariencia · toggle de la TopBar) ──────────────
+   OVERSEER nació solo-oscuro; el kit "Overseer Modernist" es claro por
+   defecto. Mantenemos OSCURO como default (:root, sin parpadeo antes del JS)
+   y aquí definimos el modo CLARO como override. Son los mismos valores de la
+   paleta clara del kit, mapeados a los nombres de token de OVERSEER.
+   Los degradados (--acc-grad, --ok-grad) se conservan: van sobre rellenos de
+   color, donde el texto sigue siendo --on-acc (blanco). */
+html[data-tema='claro'] {
+  /* Fondos */
+  --bg-app: #eef1f5;
+  --surface-1: #ffffff;
+  --surface-2: #dde2eb;
+  --surface-3: #e2e7ee;
+  --surface-deep: #e5e9f0;
+  --surface-row-hover: #eef1f6;
+  --surface-hover: #e8ecf2;
+
+  /* Bordes */
+  --border-1: #e4e8ee;
+  --border-2: #d8dde5;
+  --border-3: #d0d6df;
+  --border-4: #c4ccd9;
+  --border-hover: #c4ccd9;
+  --border-cal-dashed: #d3d9e2;
+
+  /* Texto (oscuro sobre claro) */
+  --text-strong: #0c1220;
+  --text-title: #111722;
+  --text-mid: #2f3a4c;
+  --text-soft: #525d72;
+  --text-muted: #667287;
+  --text-dim: #707d91;
+  --text-faint: #9aa6b8;
+
+  /* Semánticos — versiones legibles sobre fondo claro */
+  --ok: #15804a;
+  --ok-strong: #1f9d57;
+  --ok-bg: #dcf1e4;
+  --ok-border: #b8e0c8;
+  --ok-shadow: 0 3px 12px rgba(31, 157, 87, 0.22);
+  --warn: #b7770a;
+  --warn-bg: #f4ecd6;
+  --warn-border: #e4d29a;
+  --danger: #EC3013;
+  --danger-strong: #EC3013;
+  --danger-bg: #fbe4de;
+  --danger-border: #f2c6bb;
+  --egreso: #c56a2e;
+  --info: #2160e6;
+  --info-bg: #e4ecff;
+  --holiday: #6f5fbf;
+  /* Findes/festivos: en claro la lavanda debe leerse claramente distinta de
+     los días de semana (más saturada que en oscuro). */
+  --holiday-bg: rgb(180 168 241 / 16%);
+  --holiday-bg-hover: rgba(111, 95, 191, 0.24);
+
+  /* Sombras — suaves y frías, como el kit en claro */
+  --shadow-modal: 0 40px 100px rgba(17, 23, 34, 0.22);
+  --shadow-menu: 0 20px 50px rgba(17, 23, 34, 0.16);
+  --shadow-card: 0 1px 2px rgba(17, 23, 34, 0.06), 0 8px 24px rgba(17, 23, 34, 0.06);
+  --shadow-card-hover: 0 10px 26px rgba(17, 23, 34, 0.1);
+
+  /* Piezas de UI tokenizadas */
+  --on-acc: #fff;
+  --topbar-bg: rgba(255, 255, 255, 0.82);
+  --tab-active-bg: #e2e7ee;
+  --avatar-neutral-bg: #dfe4ec;
+  --btn-disabled-bg: #c9d0da;
+
+  /* Pulso de pendientes en claro: más saturado y con más alfa para que resalte
+     sobre el fondo blanco. */
+  --pend-in-lo: rgba(33, 96, 230, 0.09);
+  --pend-in-hi: rgba(33, 96, 230, 0.2);
+  /* pago pendiente: naranja cercano al acento (en vez del ámbar), para que
+     resalte sobre el blanco. */
+  --pend-out-lo: rgba(232, 99, 31, 0.11);
+  --pend-out-hi: rgba(232, 99, 31, 0.24);
+
+  /* Calendario en claro: celda blanca; los huecos de otro mes van claramente
+     más oscuros que el fondo (#eef1f5) + trama diagonal para no confundirlos. */
+  --cal-cell-bg: #ffffff;
+  --cal-cell-hover: #f1f4f8;
+  --cal-blank-bg: #e6eaf1;
+  --cal-blank-stripe: rgba(17, 23, 34, 0.045);
+  /* En claro basta una sombra de caída sutil (sobre blanco sí se ve). */
+  --cal-event-shadow: 0 1px 3px rgba(17, 23, 34, 0.12);
+
+  /* Historial de Finanzas en claro: azul claro sobre blanco, texto azul oscuro. */
+  --hist-grad: linear-gradient(160deg, #eaf1fb, #dce8f6);
+  --hist-panel: #f3f7fc;
+  --hist-border: #cddbec;
+  --hist-border-hover: #8fb0d8;
+  --hist-icon-bg: #dce9fb;
+  --hist-info: #2160e6;
+  --hist-tx-strong: #12233c;
+  --hist-tx-soft: #3d566f;
+  --hist-tx-dim: #6a7f9c;
+}
+
+/* Acento en claro: el coral del prototipo se ve lavado sobre blanco, así que
+   en modo claro se satura para conservar el contraste (el degradado no cambia).
+   El selector combina tema+acento → gana en especificidad a accents.css.
+   NOTA: por ahora solo el acento por defecto (coral); los otros acentos en
+   claro se afinan al propagar el reskin a Ajustes → Apariencia. */
+html[data-tema='claro'][data-accent='coral'] {
+  --acc-1: #e0431f;
+  --acc-soft: rgba(224, 67, 31, 0.12);
+  --acc-shadow: 0 3px 12px rgba(224, 67, 31, 0.18);
 }

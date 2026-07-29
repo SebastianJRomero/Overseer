@@ -21,7 +21,7 @@
 /* Acento de marca: botones principales (Agregar, Guardar, Registrar salida). */
 .accent {
   background: var(--acc-grad);
-  color: #fff;
+  color: var(--on-acc);
   box-shadow: var(--acc-shadow);
 }
 .accent:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
@@ -29,7 +29,7 @@
 /* Verde: SIEMPRE es entrada de dinero (Registrar entrada), no depende del acento. */
 .green {
   background: var(--ok-grad);
-  color: #fff;
+  color: var(--on-acc);
   box-shadow: var(--ok-shadow);
 }
 .green:hover:not(:disabled) { filter: brightness(1.08); }
@@ -45,14 +45,14 @@
 /* Ghost: acciones terciarias (Historial) — solo texto hasta el hover. */
 .ghost {
   background: transparent;
-  color: #7a869c;
+  color: var(--text-muted);
 }
 .ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-mid); }
 
 /* Deshabilitado: gris plano y sin sombra, igual que el prototipo. */
 .button:disabled {
-  background: #2a2f3d;
-  color: #fff;
+  background: var(--btn-disabled-bg);
+  color: var(--on-acc);
   opacity: 0.5;
   cursor: not-allowed;
   box-shadow: none;

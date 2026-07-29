@@ -18,7 +18,7 @@ import * as settingsService from '../services/settingsService';
 const ThemeContext = createContext(null);
 
 /** Valores iniciales mientras carga lo guardado (defaults del prototipo). */
-const INITIAL = { accent: 'coral', density: 'comodo', roundness: 'redondeado' };
+const INITIAL = { tema: 'oscuro', accent: 'coral', density: 'comodo', roundness: 'redondeado' };
 
 export default function ThemeProvider({ children }) {
   const [appearance, setAppearanceState] = useState(INITIAL);
@@ -32,6 +32,7 @@ export default function ThemeProvider({ children }) {
   // El CSS hace el resto — ningún componente conoce los colores concretos.
   useEffect(() => {
     const html = document.documentElement;
+    html.dataset.tema = appearance.tema;
     html.dataset.accent = appearance.accent;
     html.dataset.density = appearance.density;
     html.dataset.roundness = appearance.roundness;

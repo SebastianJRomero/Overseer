@@ -21,8 +21,8 @@
   height: 178px;
   padding: 0;
   border-radius: 20px;
-  background: linear-gradient(150deg, #1a2130, #141a26);
-  border: 1px dashed #2c3650;
+  background: linear-gradient(150deg, var(--surface-2), var(--surface-1));
+  border: 1px dashed var(--border-4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -137,7 +137,7 @@
 }
 .editBtn:hover {
   background: var(--border-1);
-  color: #ff8b6e;
+  color: var(--acc-1);
 }
 
 .badges {

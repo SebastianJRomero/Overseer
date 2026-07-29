@@ -81,7 +81,7 @@
   padding: 0 13px;
   border: none;
   border-radius: var(--r-btn);
-  color: #fff;
+  color: var(--on-acc);
   font-size: var(--fs-small);
   font-weight: 600;
   cursor: pointer;
