@@ -8,16 +8,17 @@
 }
 
 .gridLine {
-  stroke: #1e2a3b;
+  stroke: var(--hist-border);
   stroke-width: 1;
   stroke-dasharray: 3 5;
   vector-effect: non-scaling-stroke;
 }
 
 .axisLabel {
-  fill: #5a7089;
+  fill: var(--hist-tx-dim);
   font-size: 10.5px;
   font-family: var(--font-mono);
+  text-anchor: end; /* alineadas a la derecha, junto al plot, sin invadir los datos */
 }
 
 .incLabel,
@@ -28,19 +29,19 @@
 }
 
 .incLabel {
-  fill: #bfe0ff;
+  fill: var(--hist-info);
   font-size: 11px;
   font-weight: 700;
 }
 
 .expLabel {
-  fill: #f0a878;
+  fill: var(--egreso);
   font-size: 11px;
   font-weight: 700;
 }
 
 .monthLabel {
-  fill: #8296b2;
+  fill: var(--hist-tx-soft);
   font-size: 12px;
   font-weight: 600;
 }

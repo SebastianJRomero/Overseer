@@ -30,7 +30,7 @@ import styles from './MovementModal.module.css';
 /* Estilo del acento según el tipo de movimiento. */
 function accentFor(kind) {
   return kind === 'salida'
-    ? { color: 'var(--danger)', bg: 'var(--danger-bg)', border: '#5a3328', solid: 'var(--acc-grad)', icon: '↘', title: 'Registrar salida', sub: 'Egreso de dinero de la caja del gimnasio', footer: 'Total salida', save: 'Registrar salida', pendDesc: 'Para pagos a proveedores que harás después — se agenda en el calendario.' }
+    ? { color: 'var(--danger)', bg: 'var(--danger-bg)', border: 'var(--danger-border)', solid: 'var(--acc-grad)', icon: '↘', title: 'Registrar salida', sub: 'Egreso de dinero de la caja del gimnasio', footer: 'Total salida', save: 'Registrar salida', pendDesc: 'Para pagos a proveedores que harás después — se agenda en el calendario.' }
     : { color: 'var(--ok)', bg: 'var(--ok-bg)', border: 'var(--ok-border)', solid: 'var(--ok-grad)', icon: '↗', title: 'Registrar entrada', sub: 'Ingreso de dinero a la caja del gimnasio', footer: 'Total entrada', save: 'Registrar entrada', pendDesc: 'Para clientes que pagarán después — se agenda en el calendario.' };
 }
 
@@ -134,7 +134,7 @@ export default function MovementModal({ controller, initial, onSave }) {
           <button type="button" className={styles.pendToggle} style={pend ? { background: 'var(--info-bg)', borderColor: 'var(--info)' } : undefined} onClick={() => setPend(!pend)}>
             <span className={styles.pendCheck} style={pend ? { background: 'linear-gradient(150deg,#5b9bf0,#7fb1f5)', borderColor: 'transparent' } : undefined}>{pend ? '✓' : ''}</span>
             <div className={styles.pendTexts}>
-              <span className={styles.pendTitle} style={pend ? { color: '#a9c9f5' } : undefined}>Marcar como pago pendiente</span>
+              <span className={styles.pendTitle} style={pend ? { color: 'var(--info)' } : undefined}>Marcar como pago pendiente</span>
               <span className={styles.pendDesc}>{accent.pendDesc}</span>
             </div>
           </button>
@@ -165,7 +165,7 @@ export default function MovementModal({ controller, initial, onSave }) {
           <span className={styles.footerAmount} style={{ color: accent.color }}>{formatMoney(monto || 0)}</span>
         </span>
         <button type="button" className={styles.cancel} onClick={() => controller.close()}>Cancelar</button>
-        <button type="button" className={styles.save} style={canSave ? { background: accent.solid } : { background: '#2a2f3d', opacity: 0.5, cursor: 'not-allowed' }} onClick={save}>
+        <button type="button" className={styles.save} style={canSave ? { background: accent.solid } : { background: 'var(--btn-disabled-bg)', opacity: 0.5, cursor: 'not-allowed' }} onClick={save}>
           {accent.save}
         </button>
       </div>

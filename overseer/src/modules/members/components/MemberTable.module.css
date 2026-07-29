@@ -21,7 +21,7 @@
 
 .headRow {
   border-bottom: 1px solid var(--border-2);
-  background: #10141f;
+  background: var(--surface-2);
 }
 
 .th {
@@ -36,12 +36,12 @@
 }
 
 .row {
-  border-bottom: 1px solid #141a26;
+  border-bottom: 1px solid var(--border-1);
   transition: background 0.12s;
   cursor: pointer;
 }
 .row:hover {
-  background: #11161f;
+  background: var(--surface-row-hover);
 }
 
 .cell {
@@ -78,13 +78,20 @@
   height: 28px;
   flex: none;
   border-radius: var(--r-btn);
-  background: #1a2130;
+  background: var(--avatar-neutral-bg);
   color: var(--text-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--fs-label);
   font-weight: 600;
+  /* Micro-realce muy suave al pasar el mouse por la fila (ver .row:hover). */
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+/* Un leve agrandamiento (un poco más notorio) y una sombra tenue — sin rebote. */
+.row:hover .avatar {
+  transform: scale(1.07);
+  box-shadow: 0 3px 10px rgba(17, 23, 34, 0.14);
 }
 
 .name {
@@ -93,7 +100,7 @@
   transition: color 0.12s;
 }
 .row:hover .name {
-  color: #ff8b6e;
+  color: var(--info);
 }
 
 .empty {

@@ -55,7 +55,7 @@
   border-radius: var(--r-btn);
   background: var(--acc-grad);
   box-shadow: var(--acc-shadow);
-  color: #fff;
+  color: var(--on-acc);
   font-size: var(--fs-small);
   font-weight: 600;
   cursor: pointer;

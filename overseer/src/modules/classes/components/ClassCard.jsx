@@ -24,7 +24,10 @@ export default function ClassCard({ clase, onEdit }) {
   return (
     <button type="button" className={styles.card} onClick={() => onEdit(clase)} title="Editar clase">
       <div className={styles.head}>
-        <span className={styles.icon} style={{ color: clase.color, background: clase.bg }}>◷</span>
+        {/* Fondo = tinte del color de la clase mezclado con la superficie: se
+            adapta al tema (claro sobre blanco, oscuro sobre el panel oscuro),
+            en vez del `bg` oscuro fijo de la semilla que rompía el tema claro. */}
+        <span className={styles.icon} style={{ color: clase.color, background: `color-mix(in srgb, ${clase.color} 16%, var(--surface-1))` }}>◷</span>
         <div className={styles.info}>
           <span className={styles.nombre}>{clase.nombre}</span>
           <span className={styles.coach}>{clase.coach}</span>

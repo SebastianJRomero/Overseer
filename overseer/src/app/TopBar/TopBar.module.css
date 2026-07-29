@@ -8,7 +8,7 @@
   height: 58px;
   padding: 0 18px;
   border-bottom: 1px solid var(--border-1);
-  background: rgba(12, 15, 22, 0.9);
+  background: var(--topbar-bg);
   backdrop-filter: blur(10px);
 }
 
@@ -35,7 +35,7 @@
 .logoLetter {
   font-weight: 800;
   font-size: 14px;
-  color: #fff;
+  color: var(--on-acc);
   transform: skewX(-8deg);
 }
 
@@ -74,7 +74,7 @@
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
-  color: #7a869c;
+  color: var(--text-muted);
   background: transparent;
   transition: all 0.13s;
 }
@@ -85,7 +85,7 @@
 
 .tabActive {
   color: var(--text-title);
-  background: #161d2b;
+  background: var(--tab-active-bg);
   border-color: var(--border-4);
 }
 
@@ -113,13 +113,13 @@
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: #c7cfdd;
+  color: var(--text-mid);
 }
 
 .clockDate {
   font-size: 10.5px;
   letter-spacing: 0.08em;
-  color: #7486a6;
+  color: var(--text-dim);
 }
 
 .divider {

@@ -65,7 +65,7 @@ export default function MovementRow({ mv, onConfirm }) {
             type="button"
             className={styles.confirm}
             style={isSalidaPend
-              ? { color: 'var(--danger)', background: 'var(--danger-bg)', borderColor: '#5a3328' }
+              ? { color: 'var(--danger)', background: 'var(--danger-bg)', borderColor: 'var(--danger-border)' }
               : { color: 'var(--ok)', background: 'var(--ok-bg)', borderColor: 'var(--ok-border)' }}
             title="Marcar como saldada"
             onClick={() => onConfirm(mv.id)}

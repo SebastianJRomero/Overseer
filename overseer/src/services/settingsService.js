@@ -22,6 +22,7 @@ import { apiGet, apiPatch, apiPost } from './api';
 
 /** Valores por defecto = los defaults del prototipo. */
 const DEFAULT_APPEARANCE = {
+  tema: 'oscuro',         // oscuro | claro  (OVERSEER nació solo-oscuro)
   accent: 'coral',        // coral | electrico | oceano | purpura
   density: 'comodo',      // compacto | comodo | espacioso
   roundness: 'redondeado', // nitido | redondeado | suave
