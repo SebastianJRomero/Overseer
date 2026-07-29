@@ -42,6 +42,7 @@ Antes de escribir código, la sesión nueva debería:
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
 | 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** (backend + services con paridad) hecho — **pendiente de revisión**. Tramo B (libro mayor, sync, auth, admin, menú) pendiente | 2026-07-28 |
+| 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
 
@@ -825,3 +826,53 @@ Arranque sugerido de la Fase 10:
   ancestro con `transform` rompe `position: fixed`.
 - Guardar los componentes de gráficos/derivados contra datos vacíos del
   primer render (el `Sparkline` tumbó la app por eso).
+
+## Fase 11 — detalle (2026-07-29, rama `fase-11-reskin`)
+
+Reskin al sistema de diseño **"Overseer Modernist"** (kit del cliente). Rama
+independiente creada desde `main`, en paralelo a la Fase 10 (no depende del
+backend; corre con el mock). Principio: cambiar el TEMA, no la arquitectura.
+
+**Hallazgo clave:** el modo oscuro de OVERSEER ya ERA la paleta del kit (mismos
+neutros). El grueso del trabajo fue **añadir el modo claro** (que no existía).
+
+**Fundación:**
+- Fuente **Archivo** (reemplaza Sora) en `index.html` + `--font-sans`.
+- Nuevo eje **`tema`** (claro | oscuro, default oscuro) en `ThemeProvider` +
+  `settingsService`; estampa `data-tema` en `<html>`. `theme.css` mantiene el
+  OSCURO en `:root` y define el CLARO como override `html[data-tema='claro']`
+  (mapea la paleta clara del kit a los nombres de token de OVERSEER).
+- Toggle claro/oscuro en el **menú de usuario** (TopBar → Cuenta), justo antes
+  de "Cambiar de usuario".
+- Acento retintado a **bermellón** (`#EC3013`) en `accents.css`/`theme.css`.
+
+**Propagación (tokenización para que el modo claro voltee):** se tokenizaron
+todos los colores oscuros hardcodeados de componentes y mapas JS (TopBar,
+Button, Avatar, MonthNav, DatePicker, PlanDropdown, MemberTable/Wizard/Detail,
+SettingsNav, UserMenu, FormModal, InventoryModal, GasTab, y Finanzas —incl. la
+identidad AZUL del historial con tokens `--hist-*`—). Nuevos tokens: `--on-acc`,
+`--topbar-bg`, `--tab-active-bg`, `--avatar-neutral-bg`, `--btn-disabled-bg`,
+`--warn-border`, familia `--cal-*` (celda/hueco/trama/sombra de evento),
+`--hist-*` (azul del historial) y `--pend-*` (pulso de pendientes).
+
+**Login reskineado:** tokenizado, ahora sigue el tema (claro/oscuro).
+
+**Nuevo — modal de eventos del día** (`DayEventsModal`): al clicar un día CON
+eventos abre la lista del día (con degradado sutil por categoría) para editar
+uno o agregar; un día vacío abre "Nuevo evento" directo.
+
+**Refinamientos por feedback del cliente:** calendario (días fuera de mes con
+trama diagonal + tono sutil en claro; findes/festivos más marcados; halo claro
+en oscuro para que las píldoras no se camuflen); Clases con colores más
+saturados; hover del nombre de Miembros en azul (`--info`) + micro-realce del
+avatar; naranja de "vencidos" suavizado en oscuro; pulso de pago pendiente en
+naranja en claro; eje Y del historial separado del primer mes; y más.
+
+**Verificado:** `npm run lint` y `npm run build` limpios; barrido en tema claro
+sin elementos oscuros residuales (salvo scrim intencional de modales); modo
+oscuro preservado byte-a-byte (los tokens `:root` resuelven a los hex
+originales). Consola sin errores.
+
+**Nota:** los colores de Clases se guardan en `localStorage`, así que el cambio
+de paleta aplica al resembrar (borrar `overseer:classes`) o en instalación
+fresca. `server/` NO forma parte de esta rama (es de la Fase 10 / PR #12).

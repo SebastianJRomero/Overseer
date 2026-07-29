@@ -25,7 +25,7 @@
   text-align: left;
 }
 .trigger:hover {
-  border-color: #2c3650;
+  border-color: var(--border-hover);
 }
 .triggerOpen {
   border-color: var(--acc-1);

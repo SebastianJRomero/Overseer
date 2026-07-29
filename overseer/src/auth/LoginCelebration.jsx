@@ -25,7 +25,7 @@ export default function LoginCelebration({ userName }) {
           <path
             className={styles.checkPath}
             d="M14 27 L23 36 L39 18"
-            stroke="#7ee2a0"
+            stroke="var(--ok)"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"

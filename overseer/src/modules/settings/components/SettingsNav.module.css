@@ -27,7 +27,7 @@
 }
 
 .active {
-  background: #161d2b;
+  background: var(--tab-active-bg);
   border-color: var(--border-4);
 }
 

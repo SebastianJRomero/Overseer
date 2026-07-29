@@ -8,7 +8,7 @@
 */
 
 export const ROLE_STYLES = {
-  Admin: { color: 'var(--acc-1)', bg: '#2a1d29' },
+  Admin: { color: 'var(--acc-1)', bg: 'var(--acc-soft)' },
   Recepción: { color: 'var(--info)', bg: 'var(--info-bg)' },
-  Entrenador: { color: 'var(--ok)', bg: '#1a2a22' },
+  Entrenador: { color: 'var(--ok)', bg: 'var(--ok-bg)' },
 };

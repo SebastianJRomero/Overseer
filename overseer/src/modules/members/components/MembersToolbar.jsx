@@ -20,7 +20,7 @@ import styles from './MembersToolbar.module.css';
 /* Definición de los 3 chips: clave de filtro, etiqueta y color. */
 const CHIPS = [
   { key: 'activos', label: 'activos', color: 'var(--ok)', bg: 'var(--ok-bg)', border: 'var(--ok-border)' },
-  { key: 'pronto', label: 'vencen pronto', color: 'var(--warn)', bg: 'var(--warn-bg)', border: '#3a3020' },
+  { key: 'pronto', label: 'vencen pronto', color: 'var(--warn)', bg: 'var(--warn-bg)', border: 'var(--warn-border)' },
   { key: 'vencidos', label: 'vencidos', color: 'var(--danger)', bg: 'var(--danger-bg)', border: 'var(--danger-border)' },
 ];
 

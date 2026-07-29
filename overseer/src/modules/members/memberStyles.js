@@ -38,11 +38,11 @@ export const ESTADO_STYLES = {
 
 /** Pareja color/fondo de cada plan (badges "Membresía" del prototipo). */
 export const PLAN_STYLES = {
-  'Quincena': { color: '#9daabf', bg: '#1c1f2b' },
+  'Quincena': { color: 'var(--text-soft)', bg: 'var(--surface-3)' },
   '1 mes': { color: 'var(--info)', bg: 'var(--info-bg)' },
-  '2 meses': { color: 'var(--ok)', bg: '#1a2a22' },
+  '2 meses': { color: 'var(--ok)', bg: 'var(--ok-bg)' },
   '3 meses': { color: 'var(--danger)', bg: 'var(--danger-bg)' },
-  'Especial': { color: '#c39bf5', bg: '#221a33' },
+  'Especial': { color: 'var(--holiday)', bg: 'var(--surface-3)' },
 };
 
 /** Estilo de plan con fallback (planes nuevos aún sin color propio). */

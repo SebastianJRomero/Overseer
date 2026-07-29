@@ -50,7 +50,7 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #ff5c38, #ff2d78);
+  background: var(--acc-grad);
   border-radius: var(--r-pill);
   transition: width 0.25s ease;
 }
@@ -74,7 +74,7 @@
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #dddddd;
+  color: var(--text-title);
 }
 
 .stepHint {
@@ -161,7 +161,7 @@
   gap: 12px;
   padding: 10px 14px;
   border: none;
-  border-bottom: 1px solid #141a26;
+  border-bottom: 1px solid var(--border-1);
   background: transparent;
   cursor: pointer;
   transition: background 0.12s;
@@ -171,7 +171,7 @@
   border-bottom: none;
 }
 .summaryRow:hover {
-  background: #11161f;
+  background: var(--surface-row-hover);
 }
 
 .summaryLabel {
@@ -223,7 +223,7 @@
   cursor: pointer;
 }
 .backBtn:hover {
-  background: #161d2b;
+  background: var(--surface-hover);
   color: var(--text-title);
 }
 
@@ -239,10 +239,10 @@
 .kbd {
   font-family: var(--font-mono);
   background: var(--border-1);
-  border: 1px solid #232c40;
+  border: 1px solid var(--border-2);
   padding: 2px 7px;
   border-radius: 5px;
-  color: #6b7893;
+  color: var(--text-muted);
   font-size: 11px;
 }
 
@@ -254,7 +254,7 @@
   border: none;
   border-radius: var(--r-btn);
   background: var(--acc-grad);
-  color: #fff;
+  color: var(--on-acc);
   font-size: var(--fs-small);
   font-weight: 600;
   cursor: pointer;

@@ -15,9 +15,9 @@ export const PRODUCT_STATUS_STYLES = {
 /** Categoría del producto → pareja color/fondo del badge. */
 export const CATEGORY_STYLES = {
   'Bebidas': { color: 'var(--info)', bg: 'var(--info-bg)' },
-  'Suplementos': { color: 'var(--ok)', bg: '#1a2a22' },
-  'Accesorios': { color: '#9daabf', bg: '#1c1f2b' },
-  'Otros': { color: '#c6a0f5', bg: '#221b2e' },
+  'Suplementos': { color: 'var(--ok)', bg: 'var(--ok-bg)' },
+  'Accesorios': { color: 'var(--text-soft)', bg: 'var(--surface-3)' },
+  'Otros': { color: 'var(--holiday)', bg: 'var(--surface-3)' },
 };
 
 /** Estado del equipo → color, fondo y punto. */

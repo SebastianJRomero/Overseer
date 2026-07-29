@@ -31,7 +31,7 @@
 .card:hover {
   transform: translateY(-3px);
   border-color: var(--border-hover);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .cardTop {
@@ -96,8 +96,8 @@
   gap: 9px;
   padding: 16px 18px;
   border-radius: var(--r-card);
-  background: linear-gradient(160deg, #101b2b, #0b1119);
-  border: 1px solid #24354d;
+  background: var(--hist-grad);
+  border: 1px solid var(--hist-border);
   cursor: pointer;
   text-align: left;
   animation: glowPulseBlue 3.6s ease-in-out infinite;
@@ -105,7 +105,7 @@
 }
 .histWidget:hover {
   transform: translateY(-3px);
-  border-color: #4a7bb3;
+  border-color: var(--hist-border-hover);
 }
 
 .histTop {
@@ -118,7 +118,7 @@
   font-size: var(--fs-meta);
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #9db8d6;
+  color: var(--hist-tx-soft);
 }
 
 .histIcon {
@@ -129,9 +129,9 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #7fc9ff;
-  background: #12233a;
-  border: 1px solid #24354d;
+  color: var(--hist-info);
+  background: var(--hist-icon-bg);
+  border: 1px solid var(--hist-border);
 }
 
 .histValue {
@@ -144,13 +144,13 @@
   font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #eaf2fb;
+  color: var(--hist-tx-strong);
   font-family: var(--font-mono);
 }
 
 .histSub {
   font-size: 10.5px;
-  color: #6f86a6;
+  color: var(--hist-tx-dim);
 }
 
 .histChart {
@@ -162,6 +162,6 @@
   align-items: center;
   gap: 5px;
   font-size: 10.5px;
-  color: #6f8bb0;
+  color: var(--hist-tx-dim);
   font-weight: 600;
 }

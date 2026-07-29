@@ -26,10 +26,10 @@ export default function FinanceHistoryModal({ controller, history }) {
   const netTotal = history.reduce((s, h) => s + (h[1] - h[2]), 0);
 
   const stats = [
-    { label: 'Promedio entradas', value: formatMoney(avgInc), sub: 'por mes', color: '#6fb8ff' },
-    { label: 'Promedio salidas', value: formatMoney(avgExp), sub: 'por mes', color: '#f0a878' },
-    { label: 'Mejor mes', value: best[0], sub: 'neto ' + formatMoneyShort(best[1] - best[2]), color: '#eaf2fb' },
-    { label: 'Balance acumulado', value: (netTotal >= 0 ? '+' : '−') + formatMoneyShort(Math.abs(netTotal)), sub: '6 meses', color: netTotal >= 0 ? '#6fb8ff' : '#f0a878' },
+    { label: 'Promedio entradas', value: formatMoney(avgInc), sub: 'por mes', color: 'var(--hist-info)' },
+    { label: 'Promedio salidas', value: formatMoney(avgExp), sub: 'por mes', color: 'var(--egreso)' },
+    { label: 'Mejor mes', value: best[0], sub: 'neto ' + formatMoneyShort(best[1] - best[2]), color: 'var(--hist-tx-strong)' },
+    { label: 'Balance acumulado', value: (netTotal >= 0 ? '+' : '−') + formatMoneyShort(Math.abs(netTotal)), sub: '6 meses', color: netTotal >= 0 ? 'var(--hist-info)' : 'var(--egreso)' },
   ];
 
   return (
@@ -41,8 +41,8 @@ export default function FinanceHistoryModal({ controller, history }) {
           <span className={styles.subtitle}>Desempeño mes a mes · últimos 6 meses</span>
         </div>
         <div className={styles.legend}>
-          <span className={styles.legendItem}><span className={styles.legendLine} style={{ background: '#6fb8ff' }} />Entradas</span>
-          <span className={styles.legendItem}><span className={styles.legendLine} style={{ background: '#f0a878' }} />Salidas</span>
+          <span className={styles.legendItem}><span className={styles.legendLine} style={{ background: 'var(--hist-info)' }} />Entradas</span>
+          <span className={styles.legendItem}><span className={styles.legendLine} style={{ background: 'var(--egreso)' }} />Salidas</span>
         </div>
         <button type="button" className={styles.close} onClick={() => controller.close()}>✕</button>
       </div>

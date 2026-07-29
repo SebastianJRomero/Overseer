@@ -18,11 +18,11 @@ const router = Router();
 
 /* Paleta categórica para las clases nuevas (rota por índice), igual que el mock. */
 const PALETTE = [
-  { color: '#7fb1f5', bg: '#16233a' },
-  { color: '#7ee2a0', bg: '#1a2a22' },
-  { color: '#c6a0f5', bg: '#221b2e' },
-  { color: '#ffb35c', bg: '#2a2417' },
-  { color: '#ff8b6e', bg: '#241722' },
+  { color: '#3f8bf5', bg: '#16233a' },
+  { color: '#25c877', bg: '#1a2a22' },
+  { color: '#a86ff0', bg: '#221b2e' },
+  { color: '#ff9e2e', bg: '#2a2417' },
+  { color: '#ff6a47', bg: '#241722' },
 ];
 
 const COLS = 'id, nombre, coach, dias, hora, inscritos, cupo, color, bg';
