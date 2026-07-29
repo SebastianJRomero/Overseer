@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **← SIGUIENTE** | |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** (backend + services con paridad) hecho — **pendiente de revisión**. Tramo B (libro mayor, sync, auth, admin, menú) pendiente | 2026-07-28 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -62,6 +62,16 @@ Antes de escribir código, la sesión nueva debería:
    (ARQUITECTURA §9). SQLite como base de datos (archivo local, sin servidor de
    BD que administrar). Sigue en pie la decisión #7 (parar y preguntar antes de
    sumar dependencias que no sean el stack ya acordado).
+10. **Driver SQLite: `better-sqlite3`; CORS a mano** (2026-07-28). Se eligió
+    `better-sqlite3` (API síncrona, legible, binario precompilado para Node 22
+    en Windows). El backend son 2 dependencias: `express` + `better-sqlite3`.
+    El CORS se resuelve a mano (5 líneas) para NO sumar la librería `cors`,
+    respetando la decisión #7.
+11. **La Fase 10 se parte en dos tramos** (2026-07-28). **Tramo A** (hecho):
+    backend + reescritura de `services/` con **paridad total** (la app se
+    comporta igual que hoy). **Tramo B** (pendiente): libro mayor único, sync
+    Planes↔alta/renovación, auth real con rol, eliminar cuentas (Admin) y menú
+    avanzado import/reset. Checkpoint de revisión entre ambos.
 
 ## Limitaciones conocidas (se resuelven en la Fase 10, NO son bugs)
 
@@ -682,10 +692,94 @@ problema real.
 **Resultado:** fidelidad confirmada; el único cambio de la fase es el fix de la
 TopBar (una regresión que introdujeron los 9 módulos, no un defecto de fase).
 
+## Fase 10 — Tramo A — detalle (2026-07-28, rama `fase-10-backend`)
+
+Backend propio + reescritura de `services/` con **paridad total**: la app se
+comporta EXACTAMENTE igual que con el mock, pero los datos ahora viven en
+SQLite vía una API Express. Ningún módulo, hook ni componente cambió
+(ARQUITECTURA §9); solo el interior de `services/*`.
+
+**Creado — `server/` (carpeta hermana de `overseer/`):**
+- `package.json` (2 deps: `express` + `better-sqlite3`), `.gitignore`
+  (node_modules + `*.db`), `README.md` (cómo correr, endpoints, reset).
+- `src/index.js` — arranca Express, **CORS a mano** (sin dep `cors`), monta un
+  router por entidad bajo `/api`, healthcheck, manejador de errores.
+- `src/db.js` — conexión SQLite (`overseer.db`, WAL, FK on) + esquema
+  (`migrate`) con una tabla por entidad + `gas_usos` + `settings`. Columna
+  `ord` uniforme para replicar el orden del mock (anteponer vs anexar): al
+  insertar "arriba" `MIN(ord)-1`, "al final" `MAX(ord)+1`, se lee `ORDER BY ord`.
+- `src/seed.js` — siembra por-tabla si está vacía, espejando `data/` con las
+  MISMAS fechas relativas a hoy (miembros, eventos y gas anclados a la fecha
+  real). Idempotente y envuelto en transacción.
+- `src/finance.js` — generador demo determinista (PRNG por mes) + `toUserDomain`
+  + constantes de ejemplo (desglose, gastos fijos, historial) portadas de
+  `seedFinance`. Se mantiene para la PARIDAD; desaparece en el Tramo B.
+- `src/lib/` — `date.js`, `id.js`, `seededRandom.js` (portados del front).
+- `src/routes/` — `members`, `movements`, `events`, `inventory`
+  (products/equipment/gas), `plans`, `users`, `settings`, `classes`, `trainers`.
+  Cada endpoint devuelve **exactamente** la forma que espera el service que lo
+  consume (misma firma y forma de retorno que el mock).
+
+**Modificado — `overseer/src/services/`:**
+- `api.js` (NUEVO) — cliente `fetch` mínimo (apiGet/Post/Patch/Put/Delete);
+  base `VITE_API_URL || http://localhost:3001` + `/api`. Es el nuevo "único
+  punto de contacto con el origen" (antes lo era `storage.js`).
+- Reescritos a `fetch`, mismas firmas: `membersService`, `movementsService`,
+  `eventsService` (`addFromMovement` se queda: arma el título con `formatMoney`
+  y delega en `saveEvent`), `inventoryService`, `plansService`, `usersService`
+  (re-exporta `ROLE_LEGEND`), `classesService`, `trainersService`.
+- `settingsService` quedó **híbrido**: apariencia y flags de módulos siguen en
+  `localStorage` (decisión #2 + se leen al arrancar, no deben depender del
+  server); gimnasio/notificaciones/respaldos van al backend. `GYM_FIELDS` se
+  queda como constante de UI.
+- **Sin tocar (paridad):** `authService`, `reportsService`, `storage.js`
+  (storage lo siguen usando apariencia/flags y la sesión). Auth y reportes
+  reales son Tramo B.
+
+**Eliminado (mock muerto, su data vive ahora en `server/src/seed.js`):**
+`data/seed{Members,Events,Finance,Products,Equipment,Gas,Plans,Classes,Trainers}.js`
+y `lib/seededRandom.js`. Se conservan `data/seedUsers.js` (ROLE_LEGEND) y
+`data/seedReports.js` (reportsService, sin cambios). Motivo: evitar dos fuentes
+de verdad que se desincronicen. `lib/id.js` se conserva (utilidad genérica).
+
+**Verificado:** `npm run lint` y `npm run build` del front limpios (los 3
+warnings de fast-refresh son preexistentes). Backend probado por fetch directo
+(create/settle/apply-sale/uso de gas/upsert de evento) y **E2E en navegador**:
+login → Inicio con KPIs y vencimientos derivados del backend (Mateo=Vencido,
+Luisa=Vence pronto), Miembros (6, conteos 5/1/1, cédula/teléfono formateados),
+Finanzas (13 movs generados deterministas, entradas $617k/salidas $3.015k/
+balance −$2.398k, desglose 52/30/8/10). **Escritura E2E:** registrar una entrada
+→ `POST /movements` 201 + preflight CORS 204 + refresh; al quedar como
+`entrada_pend` se comprobó que **no suma a totales** ($617k intacto) y que
+**agenda el evento Cobro** en el calendario (sync `addFromMovement`); persiste
+en SQLite (confirmado tras recarga). Consola del navegador **sin errores**. La
+BD se dejó reseteada (semilla limpia) para la revisión.
+
+**Cómo correr ahora (2 procesos):** `cd server && npm install && npm start`
+(API en :3001) y en otra terminal `cd overseer && npm run dev` (Vite en :5173).
+Ver `server/README.md`.
+
 ## Cómo continuar
 
-**Siguiente fase: 10 — Backend + Base de datos. Stack ACORDADO: Node + Express
-+ SQLite** (decisión #9). El frontend (fases 0–9) está completo y mergeado
+**Fase 10 — Tramo B (pendiente).** El Tramo A (backend + services con paridad)
+está hecho y **pendiente de tu revisión**; NO commiteado aún. El Tramo B
+resuelve lo aplazado, ahora viable con datos reales (ver "Limitaciones
+conocidas" y "Peticiones para la Fase 10"):
+1. **Libro mayor único:** pagos de miembros, ventas y gastos como asientos del
+   mismo origen; retirar el generador demo (`server/src/finance.js`) y las
+   semillas fijas de Finanzas; agregación histórica real en `getHistory`/
+   `getIncomeBreakdown`.
+2. **Sync Planes↔alta/renovación:** el wizard de Miembros lee
+   `plansService.listActivePlans()` (precio precargado) en vez de `PLAN_OPTIONS`.
+3. **Auth real:** login contra el backend; la sesión trae el ROL (habilita el
+   gating de Admin).
+4. **Eliminar cuentas (solo Admin)** con rol real en la sesión.
+5. **Menú avanzado / secreto:** import de configuración, borrado selectivo y
+   reset total (helpers en el backend).
+
+### Referencia del Tramo A (contexto original de la fase)
+
+**Stack ACORDADO: Node + Express + SQLite** (decisión #9). El frontend (fases 0–9) está completo y mergeado
 (hasta PR #10). El principio rector: se reescribe SOLO el interior de
 `services/` (mock/localStorage → llamadas `fetch` a la API); módulos, hooks y
 componentes NO cambian (ARQUITECTURA §9). Si algún contrato de service necesita

@@ -1,0 +1,6 @@
+# Dependencias y base de datos local (no se versionan)
+node_modules/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
