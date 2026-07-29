@@ -1,0 +1,37 @@
+/*
+  routes/users.js — Endpoints de cuentas del sistema.
+
+  Espejan services/usersService.js:
+    GET   /users   → User[]                    (listUsers)
+    POST  /users   → User[] (lista actualizada) (createUser)
+
+  La contraseña NUNCA llega ni se guarda (el modal ni la envía). ROLE_LEGEND
+  es una constante estática de UI y se queda en el front.
+
+  User: { id, nombre, email, rol, activity, activo(boolean) }
+*/
+
+import { Router } from 'express';
+import { db, nextOrd } from '../db.js';
+import { newId } from '../lib/id.js';
+
+const router = Router();
+
+const toUser = (r) => ({ id: r.id, nombre: r.nombre, email: r.email, rol: r.rol, activity: r.activity, activo: !!r.activo });
+
+function listAll() {
+  return db.prepare('SELECT * FROM users ORDER BY ord ASC').all().map(toUser);
+}
+
+router.get('/', (req, res) => res.json(listAll()));
+
+router.post('/', (req, res) => {
+  const { nombre, email, rol } = req.body || {};
+  const record = { id: newId('u'), nombre, email, rol, activity: 'Recién creado', activo: 1 };
+  db.prepare(`INSERT INTO users (id, ord, nombre, email, rol, activity, activo)
+    VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo)`)
+    .run({ ...record, ord: nextOrd('users', 'end') });
+  res.status(201).json(listAll());
+});
+
+export default router;
