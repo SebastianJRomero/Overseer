@@ -21,12 +21,15 @@ import CalendarToolbar from './components/CalendarToolbar';
 import CalendarGrid from './components/CalendarGrid';
 import CalendarLegend from './components/CalendarLegend';
 import EventModal from './components/EventModal';
+import DayEventsModal from './components/DayEventsModal';
 import styles from './calendar.module.css';
 
 export default function CalendarModule() {
   const { events, cursor, isCurrentMonth, prevMonth, nextMonth, goToday, saveEvent, deleteEvent } = useCalendar();
   const eventModal = useModal();
+  const dayModal = useModal();
   const [editing, setEditing] = useState(null); // { dateKey, id, title, time, type }
+  const [dayView, setDayView] = useState(null);  // { dateKey, events } del modal de día
   const [modalKey, setModalKey] = useState(0);   // remonta el modal en cada apertura
 
   // Celdas del mes visible (se recalculan al cambiar mes o eventos).
@@ -40,6 +43,16 @@ export default function CalendarModule() {
     setEditing({ dateKey, id: null, title: '', time: '', type: 'Reserva' });
     setModalKey((k) => k + 1);
     eventModal.open();
+  };
+
+  // Clic en un día: si ya tiene eventos, abrimos la lista del día; si está
+  // vacío, vamos directo a "Nuevo evento" (más rápido, sin pasos de más).
+  const openDay = (dateKey) => {
+    const dayEvents = events[dateKey] || [];
+    if (dayEvents.length === 0) { openNew(dateKey); return; }
+    setDayView({ dateKey, events: dayEvents });
+    setModalKey((k) => k + 1);
+    dayModal.open();
   };
 
   const openEdit = (dateKey, ev) => {
@@ -69,18 +82,29 @@ export default function CalendarModule() {
       />
 
       <div style={{ animation: monthSwap }}>
-        <CalendarGrid cells={cells} onDayClick={openNew} onEventClick={openEdit} />
+        <CalendarGrid cells={cells} onDayClick={openDay} onEventClick={openEdit} />
       </div>
 
       <CalendarLegend />
 
       {editing && (
         <EventModal
-          key={modalKey}
+          key={`ev-${modalKey}`}
           controller={eventModal}
           initial={editing}
           onSave={handleSave}
           onDelete={handleDelete}
+        />
+      )}
+
+      {dayView && (
+        <DayEventsModal
+          key={`day-${modalKey}`}
+          controller={dayModal}
+          dateKey={dayView.dateKey}
+          events={dayView.events}
+          onSelect={(ev) => { dayModal.close(); openEdit(dayView.dateKey, ev); }}
+          onAdd={() => { dayModal.close(); openNew(dayView.dateKey); }}
         />
       )}
     </div>

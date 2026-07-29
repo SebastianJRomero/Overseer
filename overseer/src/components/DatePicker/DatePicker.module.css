@@ -124,13 +124,13 @@
   transition: background 0.1s;
 }
 .day:hover {
-  background: #1a2130;
+  background: var(--surface-hover);
 }
 
 /* Día elegido: gradiente de acento (manda sobre el hover). */
 .daySelected {
   background: var(--acc-grad);
-  color: #fff;
+  color: var(--on-acc);
 }
 .daySelected:hover {
   background: var(--acc-grad);
@@ -138,6 +138,6 @@
 
 /* Hoy (sin seleccionar): tinte suave de acento como referencia visual. */
 .dayToday {
-  background: rgba(255, 92, 56, 0.14);
-  color: #ff9d85;
+  background: var(--acc-soft);
+  color: var(--acc-1);
 }

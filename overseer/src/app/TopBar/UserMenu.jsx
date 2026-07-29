@@ -17,13 +17,16 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from '../../context/SessionProvider';
+import { useTheme } from '../../theme/ThemeProvider';
 import { getInitials } from '../../lib/initials';
 import styles from './UserMenu.module.css';
 
 export default function UserMenu() {
   const { user, logout, switchUser } = useSession();
+  const { tema, setAppearance } = useTheme();
   const [open, setOpen] = useState(false);
   const name = user || 'Admin';
+  const isDark = tema !== 'claro';
 
   const close = () => setOpen(false);
 
@@ -53,6 +56,11 @@ export default function UserMenu() {
             </div>
 
             <div className={styles.actions}>
+              {/* Toggle de tema — alterna claro/oscuro sin cerrar el menú. */}
+              <button type="button" className={styles.action} onClick={() => setAppearance({ tema: isDark ? 'claro' : 'oscuro' })}>
+                <span className={styles.actionIcon}>{isDark ? '☀' : '☾'}</span>
+                <span>{isDark ? 'Modo claro' : 'Modo oscuro'}</span>
+              </button>
               <button type="button" className={styles.action} onClick={() => { close(); switchUser(); }}>
                 <span className={styles.actionIcon}>⇄</span>
                 <span>Cambiar de usuario</span>

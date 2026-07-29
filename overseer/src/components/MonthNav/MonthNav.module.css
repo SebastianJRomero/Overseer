@@ -53,6 +53,6 @@
 .todayOn {
   background: var(--acc-grad);
   border-color: transparent;
-  color: #fff;
+  color: var(--on-acc);
   box-shadow: var(--acc-shadow);
 }

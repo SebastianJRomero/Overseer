@@ -9,7 +9,7 @@
   padding: 20px;
   border: 1px solid var(--border-2);
   border-radius: var(--r-card);
-  background: linear-gradient(160deg, #111826, var(--surface-3));
+  background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
 }
 
 .cylHead {

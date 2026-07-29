@@ -15,7 +15,7 @@
 
 /* Coral — tema por defecto (marca OVERSEER) */
 html[data-accent='coral'] {
-  --acc-grad: linear-gradient(150deg, #ff5c38, #ff2d78);
+  --acc-grad: linear-gradient(150deg, #EC3013, #FF5A2E);
   --acc-1: #ff7a5c;
   --acc-soft: rgba(255, 92, 56, 0.3);
 }

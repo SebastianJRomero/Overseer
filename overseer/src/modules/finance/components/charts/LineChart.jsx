@@ -14,9 +14,13 @@ import { formatMoneyShort } from '../../../../lib/money';
 import { buildPaths } from './chartPaths';
 import styles from './LineChart.module.css';
 
-const INCOME_COLOR = '#6fb8ff';
-const EXPENSE_COLOR = '#f0a878';
-const BOX = { w: 760, h: 240, padX: 46, padTop: 18, padBot: 26 };
+/* Colores de las series por token del historial (coherentes en claro y oscuro):
+   entradas = azul del historial, salidas = naranja de egresos (cercano al acento). */
+const INCOME_COLOR = 'var(--hist-info)';
+const EXPENSE_COLOR = 'var(--egreso)';
+/* Fondo/anillo de los puntos = panel del historial (claro en claro, oscuro en oscuro). */
+const DOT_CONTRAST = 'var(--hist-panel)';
+const BOX = { w: 760, h: 240, padX: 88, padTop: 18, padBot: 26 };
 const GRID_FRACTIONS = [0, 0.25, 0.5, 0.75, 1];
 
 export default function LineChart({ history }) {
@@ -51,7 +55,7 @@ export default function LineChart({ history }) {
       {grid.map((g, i) => (
         <g key={i}>
           <line x1={BOX.padX} x2={BOX.w} y1={g.y} y2={g.y} className={styles.gridLine} />
-          <text x={0} y={g.y - 3} className={styles.axisLabel}>{g.label}</text>
+          <text x={BOX.padX - 36} y={g.y - 3} className={styles.axisLabel}>{g.label}</text>
         </g>
       ))}
 
@@ -66,13 +70,13 @@ export default function LineChart({ history }) {
       {/* Puntos + valores */}
       {exp.points.map((p, i) => (
         <g key={`e${i}`}>
-          <circle cx={p.x} cy={p.y} r="4" fill="#0e1622" stroke={EXPENSE_COLOR} strokeWidth="2.4" />
+          <circle cx={p.x} cy={p.y} r="4" fill={DOT_CONTRAST} stroke={EXPENSE_COLOR} strokeWidth="2.4" />
           <text x={p.x} y={p.y + 15} className={styles.expLabel}>{formatMoneyShort(expense[i])}</text>
         </g>
       ))}
       {inc.points.map((p, i) => (
         <g key={`i${i}`}>
-          <circle cx={p.x} cy={p.y} r="4.4" fill={INCOME_COLOR} stroke="#0e1622" strokeWidth="2.4" />
+          <circle cx={p.x} cy={p.y} r="4.4" fill={INCOME_COLOR} stroke={DOT_CONTRAST} strokeWidth="2.4" />
           <text x={p.x} y={p.y - 10} className={styles.incLabel}>{formatMoneyShort(income[i])}</text>
         </g>
       ))}

@@ -5,7 +5,7 @@
   align-items: center;
   gap: 13px;
   padding: 20px 22px 16px;
-  border-bottom: 1px solid #161f2c;
+  border-bottom: 1px solid var(--hist-border);
   background: linear-gradient(150deg, rgba(111, 184, 255, 0.1), transparent 65%);
 }
 
@@ -18,9 +18,9 @@
   align-items: center;
   justify-content: center;
   font-size: 17px;
-  color: #7fc9ff;
-  background: #12233a;
-  border: 1px solid #24354d;
+  color: var(--hist-info);
+  background: var(--hist-icon-bg);
+  border: 1px solid var(--hist-border);
 }
 
 .heading {
@@ -34,12 +34,12 @@
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.015em;
-  color: #eaf2fb;
+  color: var(--hist-tx-strong);
 }
 
 .subtitle {
   font-size: 12px;
-  color: #7c93b3;
+  color: var(--hist-tx-dim);
 }
 
 .legend {
@@ -54,7 +54,7 @@
   align-items: center;
   gap: 7px;
   font-size: 12px;
-  color: #c6d5ea;
+  color: var(--hist-tx-soft);
   font-weight: 600;
 }
 
@@ -73,13 +73,13 @@
   align-items: center;
   justify-content: center;
   font-size: 15px;
-  color: #9db8d6;
+  color: var(--hist-tx-soft);
   background: var(--surface-2);
-  border: 1px solid #24354d;
+  border: 1px solid var(--hist-border);
   cursor: pointer;
 }
 .close:hover {
-  background: #1a2740;
+  background: var(--hist-icon-bg);
 }
 
 .body {
@@ -90,9 +90,9 @@
 }
 
 .chartCard {
-  border: 1px solid #1a2434;
+  border: 1px solid var(--hist-border);
   border-radius: 14px;
-  background: #0e1622;
+  background: var(--hist-panel);
   padding: 18px 20px 14px;
 }
 
@@ -108,14 +108,14 @@
   gap: 5px;
   padding: 15px 16px;
   border-radius: 12px;
-  background: #0e1622;
-  border: 1px solid #1a2434;
+  background: var(--hist-panel);
+  border: 1px solid var(--hist-border);
 }
 
 .statLabel {
   font-size: 11px;
   font-weight: 600;
-  color: #7c93b3;
+  color: var(--hist-tx-dim);
   letter-spacing: 0.02em;
 }
 
@@ -128,5 +128,5 @@
 
 .statSub {
   font-size: 10.5px;
-  color: #516481;
+  color: var(--hist-tx-dim);
 }

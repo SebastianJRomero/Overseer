@@ -13,14 +13,14 @@
 
 /* Fondo neutro: miembros, usuarios, vencimientos. */
 .neutral {
-  background: #161c28;
+  background: var(--avatar-neutral-bg);
   color: var(--text-mid);
 }
 
 /* Fondo de marca: el usuario de la sesión (topbar y menú de usuario). */
 .accent {
   background: var(--acc-grad);
-  color: #fff;
+  color: var(--on-acc);
   font-weight: 700;
   box-shadow: 0 4px 14px rgba(255, 60, 90, 0.35);
 }

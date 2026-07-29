@@ -37,8 +37,8 @@
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(1100px 620px at 50% -8%, rgba(255, 92, 56, 0.14), transparent 62%),
-    #08090d;
+    radial-gradient(1100px 620px at 50% -8%, var(--acc-soft), transparent 62%),
+    var(--bg-app);
   overflow: hidden;
 }
 
@@ -72,9 +72,9 @@
   position: relative;
   width: min(390px, 100%);
   border-radius: var(--r-modal);
-  background: rgba(14, 18, 27, 0.94);
+  background: var(--surface-1);
   border: 1px solid var(--border-3);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.65);
+  box-shadow: var(--shadow-modal);
   backdrop-filter: blur(14px);
   padding: 36px 32px 30px;
 }
@@ -103,7 +103,7 @@
 .logoLetter {
   font-weight: 800;
   font-size: 24px;
-  color: #fff;
+  color: var(--on-acc);
   transform: skewX(-8deg);
 }
 
@@ -118,17 +118,17 @@
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #e0e0e0;
+  color: var(--text-title);
 }
 
 .subtitle {
   font-size: var(--fs-small);
-  color: #6b7893;
+  color: var(--text-soft);
 }
 
 .wordmark {
   font-style: normal;
-  color: #ff9d85;
+  color: var(--acc-1);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -159,7 +159,7 @@
   height: 46px;
   padding: 0 14px;
   border-radius: 12px;
-  background: #0a0d15;
+  background: var(--surface-2);
   border: 1px solid var(--border-2);
   transition: border-color 0.16s, box-shadow 0.16s;
 }
@@ -196,13 +196,13 @@
   border: none;
   font-size: 11px;
   font-weight: 600;
-  color: #7486a6;
+  color: var(--text-dim);
   cursor: pointer;
   user-select: none;
   padding: 2px 4px;
 }
 .passToggle:hover {
-  color: #ff9d85;
+  color: var(--acc-1);
 }
 
 /* ── Error ── */
@@ -213,16 +213,16 @@
   margin-top: 10px;
   padding: 9px 12px;
   border-radius: var(--r-btn);
-  background: rgba(255, 60, 90, 0.09);
-  border: 1px solid rgba(255, 60, 90, 0.28);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
   font-size: var(--fs-meta);
-  color: #ff8a6e;
+  color: var(--danger);
   animation: shake 0.45s ease;
 }
 
 .errorIcon {
   font-size: 12px;
-  color: #ff6b52;
+  color: var(--danger-strong);
 }
 
 /* ── Opciones ── */
@@ -250,7 +250,7 @@
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: #fff;
+  color: var(--on-acc);
   background: transparent;
   border: 1px solid var(--border-hover);
   transition: all 0.14s;
@@ -267,10 +267,10 @@
 
 .forgot {
   font-size: 12px;
-  color: #7486a6;
+  color: var(--text-dim);
 }
 .forgot:hover {
-  color: #ff9d85;
+  color: var(--acc-1);
 }
 
 /* ── Botón de ingreso ── */
@@ -284,12 +284,12 @@
   border: none;
   border-radius: 12px;
   background: var(--acc-grad);
-  color: #fff;
+  color: var(--on-acc);
   font-size: var(--fs-body);
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(255, 60, 90, 0.32);
+  box-shadow: var(--acc-shadow);
   transition: transform 0.14s, box-shadow 0.14s;
   animation: fieldIn 0.5s ease 0.34s both;
 }
