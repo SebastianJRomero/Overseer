@@ -18,8 +18,9 @@
 
 import { useState } from 'react';
 import useMembers from './useMembers';
+import useActivePlans from '../../hooks/useActivePlans';
 import useModal from '../../hooks/useModal';
-import { PLAN_OPTIONS } from '../../lib/memberStatus';
+import { SPECIAL_PLAN } from '../../lib/memberStatus';
 import { onlyDigits } from '../../lib/format';
 import MembersToolbar from './components/MembersToolbar';
 import MemberTable from './components/MemberTable';
@@ -30,6 +31,9 @@ import styles from './members.module.css';
 
 export default function MembersModule() {
   const { members, counts, createMember, updateMember, renewMember } = useMembers();
+  const plans = useActivePlans();
+  // Para la ficha (PlanDropdown): nombres de planes activos + "Especial".
+  const planNames = [...plans.map((p) => p.nombre), SPECIAL_PLAN];
 
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(null);
@@ -102,7 +106,7 @@ export default function MembersModule() {
       <MemberDetailModal
         controller={detailModal}
         member={selected}
-        planOptions={PLAN_OPTIONS}
+        planOptions={planNames}
         onUpdate={updateMember}
         onRenew={openRenew}
       />
@@ -112,7 +116,7 @@ export default function MembersModule() {
         controller={wizModal}
         mode={wizard.mode}
         member={wizard.member}
-        planOptions={PLAN_OPTIONS}
+        plans={plans}
         onSave={saveWizard}
       />
 

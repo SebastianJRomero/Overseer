@@ -101,10 +101,13 @@
   flex: none;
 }
 
+/* Reloj apilado (hora sobre fecha): ocupa menos ancho que en fila, para que la
+   zona derecha no empuje los tabs y el módulo activo quede mejor centrado. */
 .clock {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
   font-family: var(--font-mono);
   white-space: nowrap;
 }
@@ -117,7 +120,7 @@
 }
 
 .clockDate {
-  font-size: 10.5px;
+  font-size: 9.5px;
   letter-spacing: 0.08em;
   color: var(--text-dim);
 }

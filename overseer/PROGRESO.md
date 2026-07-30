@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frente 1 (libro mayor único)** hecho — **pendiente de revisión**. Frentes 2–5 (sync Planes, auth real, eliminar cuentas Admin, menú avanzado) pendientes | 2026-07-29 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (frente 1 mergeado en PR #14; resto en **PR #15** abierto). **Tramo C** (pendiente): frente 5 menú avanzado import/reset + enforcement de permisos por rol | 2026-07-30 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -816,26 +816,194 @@ Front renderiza en modo oscuro (reskin) sin errores de consola; `npm run lint`
 (solo los 3 warnings de fast-refresh preexistentes) y `npm run build` limpios. BD
 dejada reseteada (semilla limpia) para tu revisión.
 
+## Fase 10 — Tramo B · frente 2 (sync Planes↔alta/renovación) — detalle (2026-07-29, rama `fase-10-tramo-b`)
+
+El wizard de alta/renovación y el dropdown de la ficha dejan de usar la lista
+fija `PLAN_OPTIONS` y leen el **catálogo real** (`plansService.listActivePlans()`,
+Ajustes → Planes). Así activar/ocultar/crear/eliminar un plan en Ajustes se
+refleja al instante al crear o renovar una membresía, con el **precio
+precargado**. Ajustes es la única fuente del catálogo (petición del cliente #1).
+
+**Front modificado (`overseer/src/`):**
+- `hooks/useActivePlans.js` (NUEVO) — trae los planes activos al montar; lo usan
+  los dos sitios que abren los modales de Miembros (el módulo y el Inicio).
+- `lib/memberStatus.js` — `computeFin(tipo, inicio, duracionDias)` gana el 3er
+  parámetro: los planes ESTÁNDAR siguen sumando meses calendario (regla del
+  gimnasio), y los planes del catálogo sin preset caen a `duracionDias`. Se
+  exporta `SPECIAL_PLAN` ('Especial'); `PLAN_OPTIONS` queda solo como respaldo.
+- `components/WizardStepPlanDates.jsx` — recibe `plans` (objetos); las opciones
+  son los planes activos **+ "Especial"** (tipo sin fin, no vive en el catálogo);
+  elegir un plan **precarga el valor** con su precio y recalcula el fin. Si el
+  catálogo no cargó, respaldo a `PLAN_OPTIONS`.
+- `components/MemberWizard.jsx` — prop `plans` (antes `planOptions`); el alta
+  arranca en el plan por defecto con su precio; la renovación conserva plan/valor
+  anteriores y elegir uno los actualiza al precio del catálogo.
+- `modules/members/MembersModule.jsx` y
+  `modules/dashboard/components/MemberModalsHost.jsx` — usan `useActivePlans`;
+  pasan `plans` (objetos) al wizard y los nombres (activos + Especial) a la ficha.
+
+**Decisiones:** "Especial" se conserva como opción especial anexada (no es plan
+del catálogo — coherente con la Fase 2). La ficha (`MemberDetailModal`) sigue
+mostrando el `member.tipo` aunque su plan ya no esté activo (el `PlanDropdown`
+pinta siempre el valor actual). Sin cambios de contrato en services/endpoints.
+
+**Verificado (E2E en navegador):** el wizard ofrece los planes ACTIVOS
+(Quincena/1 mes/2 meses/3 meses) + Especial, **sin Anual** (oculto en el
+catálogo); elegir "3 meses" precarga **$180.000** y "1 mes" da fin a mes
+calendario (29/07→29/08). **Fuente única:** activar Anual en Ajustes → Planes lo
+hace aparecer en el alta al instante, con fin +365 días (`duracionDias`) y precio
+**$620.000** precargado. Consola sin errores; `npm run lint` y `npm run build`
+limpios. Anual se dejó de nuevo oculto (semilla limpia).
+
+## Fase 10 — Tramo B · frente 3 (auth real con rol) — detalle (2026-07-30, rama `fase-10-tramo-b`)
+
+El login deja de ser un mock local y valida contra el backend, que resuelve la
+cuenta y su **ROL**. La sesión ahora expone `role`, lo que habilita el gating de
+Admin (frente 4). Las cuentas NO guardan contraseña (decisión del proyecto), así
+que la clave solo se exige no vacía; lo que importa es que la sesión traiga el rol.
+
+**Backend (`server/`):**
+- `routes/auth.js` (NUEVO) — `POST /auth/login { user, pass }`. Busca una cuenta
+  ACTIVA por email o nombre (case-insensitive); si coincide devuelve
+  `{ id, nombre, email, rol }` con su rol real. Registrado en `index.js` bajo
+  `/api/auth`.
+- **Decisión (reversible en 1 línea):** login **permisivo con rol** — si el
+  usuario no coincide con ninguna cuenta, entra igual con rol `Admin` (preserva
+  el acceso rápido de siempre: escribir cualquier usuario entra). Para auth
+  estricta, devolver `{ ok: false }` en ese caso. Credenciales vacías → `ok:false`.
+
+**Front (`overseer/src/`):**
+- `services/authService.js` — `login()` hace `POST /auth/login`; devuelve `user`
+  como **objeto** `{ id, nombre, email, rol }`. `getSession()` lee ese objeto de
+  storage (respeta "Recordarme"). Las sesiones viejas (formato string) se
+  invalidan solas (se pide re-login una vez).
+- `context/SessionProvider.jsx` — guarda la cuenta; expone `user` = **nombre**
+  (compat con toda la UI, sin cambios en consumidores), y añade `role`, `userId`
+  y `account`. `enter(cuenta)` recibe el objeto.
+- `app/TopBar/UserMenu.jsx` — el rol del encabezado sale de `role` (antes
+  "Administrador" hardcodeado).
+- `auth/LoginScreen.jsx` — el saludo de la celebración usa el **nombre real** de
+  la cuenta (antes el texto tecleado, que podía ser un email).
+
+**Verificado (E2E):** por API — `admin@overseer.gym`→Admin (Andrés Ríos),
+`recepcion@overseer.gym`→Recepción (Paula Méndez), usuario libre→Admin (fallback),
+vacío→`ok:false`. En navegador: login con `recepcion@overseer.gym` → saluda
+"Buenos días, Paula Méndez" y el menú de usuario muestra **"Recepción"** (rol real,
+ya no hardcodeado). `npm run lint` (3 warnings preexistentes) y `npm run build`
+limpios; sin errores nuevos de consola.
+
+## Fase 10 — Tramo B · frente 4 (eliminar cuentas · solo Admin) — detalle (2026-07-30, rama `fase-10-tramo-b`)
+
+La gestión de cuentas (crear + eliminar) queda **gated por rol Admin**, usando el
+`role` real que la sesión ya trae (frente 3). Petición del cliente #2.
+
+**Backend (`server/`):**
+- `routes/users.js` — `DELETE /users/:id` borra la cuenta y devuelve la lista
+  actualizada (espejo del de planes).
+
+**Front (`overseer/src/`):**
+- `services/usersService.js` — `deleteUser(id)` (`apiDelete`).
+- `modules/settings/useSettings.js` — acción `deleteUser` que refresca la lista.
+- `modules/settings/components/AccountsSection.jsx` — usa `useSession()`:
+  - `role === 'Admin'` habilita el botón **"＋ Nuevo usuario"** y un botón
+    **"Eliminar"** por fila; para los demás roles la sección es de **solo
+    lectura** (nota "Solo un administrador puede crear o eliminar cuentas").
+  - **Nunca** se puede eliminar la propia cuenta (`u.id !== userId`).
+  - Eliminar pide **confirmación inline** (¿Eliminar? Sí / No) antes de borrar.
+  - Estilos danger (`--danger*`, tokens que voltean en modo claro).
+
+**Decisión:** se gatea crear **y** eliminar (gestión de cuentas = Admin), coherente
+con "cuentas y roles solo Admin"; si se prefiere gatear solo el borrado, es quitar
+la condición del botón de alta.
+
+**Verificado (E2E en navegador):** como **Admin** (`admin@overseer.gym` → Andrés
+Ríos) aparecen "Nuevo usuario" y "Eliminar" en cada fila salvo la propia; eliminar
+a Carlos Vega con confirmación inline lo quita de la lista (persistido). Como
+**Recepción** (`recepcion@overseer.gym`) NO hay botones de crear/eliminar y se ve
+la nota de solo lectura. `DELETE /users/:id` probado por API. Lint y build limpios.
+
+## Ajustes por feedback (2026-07-30, rama `fase-10-tramo-b`)
+
+Dos refinamientos pedidos antes de arrancar el frente 5:
+
+1. **Modal "Nuevo usuario" enriquecido (estilo ficha de miembro).** Reutiliza el
+   patrón de `MemberDetailModal`: columna de **foto subible** + badge del rol, y
+   una grilla con **nombre, usuario o correo, cédula, teléfono, contraseña**, el
+   selector de rol y una **checklist de accesos del rol** (solo lectura) que
+   cambia al elegir el rol, para que el Admin vea qué concede.
+   - Backend: `users` gana columnas `cedula`, `telefono`, `foto` (migración
+     idempotente + en el `CREATE TABLE`); `routes/users.js` (POST) y `seed.js`
+     los incluyen. `usersService.createUser` los envía.
+   - Front: `UserModal.jsx` + `UserModal.module.css` reescritos; nuevo
+     `modules/settings/rolePermissions.js` (`ROLE_ACCESS`/`roleCan`) para la
+     checklist. La etiqueta "Usuario o correo" se guarda en `email` (el login
+     matchea por email o nombre). Cédula/teléfono/foto son opcionales; obligatorios
+     nombre + usuario/correo + contraseña. (La app aún no restringe módulos por
+     rol; la checklist es referencia visual, no enforcement.)
+   - Verificado E2E: crear "Sofía UI" (usuario `sofia.ui`, rol Admin) la agrega a
+     la lista; la checklist muestra 3 accesos para Recepción y 8 para Admin.
+
+2. **Reloj del header apilado (hora sobre fecha).** Solo CSS
+   (`TopBar.module.css` → `.clock` en columna, alineado a la derecha): la zona
+   derecha ocupa menos ancho y el bloque de tabs queda mejor centrado respecto al
+   módulo activo (de ~33px a ~13px del centro del viewport). Sin tocar módulos.
+
+3. **Cuentas editables + permisos por usuario (2ª tanda).** La sección de Cuentas
+   pasa a comportarse como la tabla de Miembros:
+   - **Filas clicables** (solo Admin) que abren el modal en modo **editar**
+     (datos precargados); hover recicla el de `MemberTable` (nombre en azul
+     `--info` + micro-realce del avatar).
+   - **Checklist de permisos EDITABLE por usuario:** cada función es un toggle;
+     elegir un rol precarga sus accesos por defecto y luego se afinan a mano.
+     Se guardan por cuenta (`users.permisos`, JSON). *Aún no restringen la
+     navegación (enforcement pendiente, a decidir aparte).*
+   - **Eliminar movido al modal** (pie, con confirmación inline); ya no hay botón
+     por fila. Sigue gated por Admin y nunca sobre la propia cuenta.
+   - Backend: `users.permisos` (migración + seed por rol) y **`PATCH /users/:id`**
+     nuevo; `usersService.updateUser` + `useSettings.updateUser`. `UserModal`
+     reescrito a crear/editar.
+   - Verificado E2E: editar Paula (activar Finanzas → persiste), eliminar Carlos
+     desde el modal (4→3), toggles y precarga de permisos correctos.
+
+`npm run lint` (3 warnings preexistentes) y `npm run build` limpios.
+
 ## Cómo continuar
 
-**Fase 10 — Tramo B (en curso, por checkpoints).** El Tramo A está mergeado
-(PR #12). El Tramo B se hace **frente por frente**, con revisión tuya entre cada
-uno. Estado:
-1. ✅ **Libro mayor único (frente 1)** — hecho, **pendiente de tu revisión**; NO
-   commiteado aún (rama `fase-10-tramo-b`). Ver el detalle abajo.
-2. ⏳ **Sync Planes↔alta/renovación:** el wizard de Miembros lee
-   `plansService.listActivePlans()` (precio precargado) en vez de `PLAN_OPTIONS`
-   (`overseer/src/lib/memberStatus.js`).
-3. ⏳ **Auth real:** login contra el backend; la sesión trae el ROL (habilita el
-   gating de Admin). Hoy `authService`/`SessionProvider` solo guardan el nombre.
-4. ⏳ **Eliminar cuentas (solo Admin)** con rol real en la sesión (`usersService`
-   solo tiene list/create; falta `deleteUser` + gating).
-5. ⏳ **Menú avanzado / secreto:** import de configuración, borrado selectivo y
-   reset total (helpers en el backend).
+**Fase 10 — Tramo B: CERRADO, en revisión.** El Tramo A está mergeado (PR #12).
+El Tramo B se hizo **frente por frente** en la rama `fase-10-tramo-b`. ⚠ El
+**PR #14 se mergeó cuando la rama solo tenía el frente 1**; el resto (frentes
+2–4 + refinamientos) va en el **PR #15** (abierto hacia `main`, falta mergear).
+Entregado:
+1. ✅ **Libro mayor único (frente 1).** Detalle abajo.
+2. ✅ **Sync Planes↔alta/renovación (frente 2).** El wizard/ficha de Miembros leen
+   `plansService.listActivePlans()` (precio precargado). Detalle abajo.
+3. ✅ **Auth real con rol (frente 3).** Login contra el backend (`POST /auth/login`);
+   la sesión trae el ROL. Detalle abajo.
+4. ✅ **Eliminar/editar cuentas (solo Admin) + permisos por usuario (frente 4).**
+   `DELETE`/`PATCH /users/:id`, modal crear/editar con checklist de permisos
+   editable, gating por Admin. Detalle abajo.
+   · **Refinamientos de UI** (2 tandas): modal de usuario estilo ficha de miembro,
+   reloj del header apilado, filas de Cuentas clicables, quitar "Apariencia" y
+   "Cambiar de usuario". Detalle abajo.
 
-**Retomar el frente 2:** en la rama `fase-10-tramo-b` (ya creada desde `main`
-con reskin + backend). Correr los 2 procesos como abajo. La BD quedó reseteada
-(semilla limpia del libro mayor) para revisión.
+**Fase 10 — Tramo C (PENDIENTE, nueva rama desde `main` cuando se mergee PR #15).**
+Lo que se movió aquí para no seguir engordando el Tramo B:
+1. ⏳ **Menú avanzado / secreto (frente 5):** import de configuración, borrado
+   selectivo por entidad y reset total. **Debe pedir confirmación fuerte.** Nota
+   técnica: exponer helpers en el backend (export/import/reset por entidad); en
+   el front, `services/storage.js` usa prefijo `overseer:` para lo que aún vive
+   local (apariencia/tema/flags).
+2. ⏳ **Enforcement de permisos por rol/usuario:** hoy `users.permisos` se guarda
+   y edita, pero la app **no restringe** la navegación. Falta que la sesión traiga
+   los `permisos` del usuario logueado y que `moduleRegistry`/la TopBar/ModuleHost
+   filtren los módulos visibles según ellos (respetando `core`), más el gating de
+   acciones sensibles. Ver la nota de alcance del frente 4.
+
+**Cómo retomar el Tramo C en una sesión nueva:** ver `HANDOFF.md` (raíz del repo)
+y la sección **"▶ Retomar en una sesión nueva"** al inicio de este archivo. En
+corto: mergear **PR #15**, sincronizar `main` (o partir de `fase-10-tramo-b` si
+aún no se mergea), crear `git checkout -b fase-10-tramo-c`, correr los 2 procesos
+(`server` y `overseer`) y empezar por el frente 5. La BD se regenera del seed.
 
 ### Referencia del Tramo A (contexto original de la fase)
 
