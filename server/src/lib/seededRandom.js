@@ -1,12 +1,11 @@
 /*
   lib/seededRandom.js — PRNG determinista (backend).
 
-  Réplica exacta del LCG del front. El generador de movimientos demo de
-  Finanzas necesita que el MISMO mes muestre SIEMPRE los mismos datos, así que
-  la semilla es fija por (año, mes). Con el backend seguimos generando esos
-  movimientos de ejemplo del lado del servidor para MANTENER LA PARIDAD con el
-  mock (mismo comportamiento que hoy). En el Tramo B, cuando exista el libro
-  mayor real, este generador desaparece.
+  Réplica exacta del LCG del front. Lo usa el SEED del libro mayor para generar
+  un histórico de movimientos estable: misma semilla por (año, mes) → los mismos
+  asientos de ejemplo cada vez que se resiembra la BD. A diferencia del Tramo A,
+  ya no se calcula al vuelo: estos asientos se PERSISTEN como filas reales del
+  libro (fuente única de verdad).
 */
 
 /**

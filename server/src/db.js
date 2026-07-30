@@ -41,7 +41,8 @@ export function migrate() {
       id TEXT PRIMARY KEY, ord REAL NOT NULL,
       tipo TEXT, monto INTEGER, motivo TEXT, fecha TEXT,
       recurrent INTEGER DEFAULT 0, settled INTEGER DEFAULT 0,
-      items TEXT DEFAULT '{}'
+      items TEXT DEFAULT '{}',
+      categoria TEXT DEFAULT 'otro'   -- clasificación del asiento (libro mayor, Tramo B)
     );
 
     CREATE TABLE IF NOT EXISTS events (
@@ -97,6 +98,24 @@ export function migrate() {
       key TEXT PRIMARY KEY, value TEXT
     );
   `);
+
+  // Migraciones aditivas para BDs creadas antes del Tramo B (libro mayor):
+  // CREATE TABLE IF NOT EXISTS no añade columnas a una tabla ya existente, así
+  // que las agregamos a mano solo si faltan (idempotente).
+  ensureColumn('movements', 'categoria', "TEXT DEFAULT 'otro'");
+}
+
+/**
+ * Añade una columna a una tabla solo si aún no existe (ALTER idempotente).
+ * @param {string} table
+ * @param {string} col   nombre de la columna
+ * @param {string} decl  tipo + default, p. ej. "TEXT DEFAULT 'otro'"
+ */
+function ensureColumn(table, col, decl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === col)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${decl}`);
+  }
 }
 
 /**
