@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frente 1 (libro mayor único)** hecho — **pendiente de revisión**. Frentes 2–5 (sync Planes, auth real, eliminar cuentas Admin, menú avanzado) pendientes | 2026-07-29 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1 (libro mayor único) y 2 (sync Planes↔alta/renovación)** hechos — **pendientes de revisión** (PR #14). Frentes 3–5 (auth real, eliminar cuentas Admin, menú avanzado) pendientes | 2026-07-29 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -816,16 +816,54 @@ Front renderiza en modo oscuro (reskin) sin errores de consola; `npm run lint`
 (solo los 3 warnings de fast-refresh preexistentes) y `npm run build` limpios. BD
 dejada reseteada (semilla limpia) para tu revisión.
 
+## Fase 10 — Tramo B · frente 2 (sync Planes↔alta/renovación) — detalle (2026-07-29, rama `fase-10-tramo-b`)
+
+El wizard de alta/renovación y el dropdown de la ficha dejan de usar la lista
+fija `PLAN_OPTIONS` y leen el **catálogo real** (`plansService.listActivePlans()`,
+Ajustes → Planes). Así activar/ocultar/crear/eliminar un plan en Ajustes se
+refleja al instante al crear o renovar una membresía, con el **precio
+precargado**. Ajustes es la única fuente del catálogo (petición del cliente #1).
+
+**Front modificado (`overseer/src/`):**
+- `hooks/useActivePlans.js` (NUEVO) — trae los planes activos al montar; lo usan
+  los dos sitios que abren los modales de Miembros (el módulo y el Inicio).
+- `lib/memberStatus.js` — `computeFin(tipo, inicio, duracionDias)` gana el 3er
+  parámetro: los planes ESTÁNDAR siguen sumando meses calendario (regla del
+  gimnasio), y los planes del catálogo sin preset caen a `duracionDias`. Se
+  exporta `SPECIAL_PLAN` ('Especial'); `PLAN_OPTIONS` queda solo como respaldo.
+- `components/WizardStepPlanDates.jsx` — recibe `plans` (objetos); las opciones
+  son los planes activos **+ "Especial"** (tipo sin fin, no vive en el catálogo);
+  elegir un plan **precarga el valor** con su precio y recalcula el fin. Si el
+  catálogo no cargó, respaldo a `PLAN_OPTIONS`.
+- `components/MemberWizard.jsx` — prop `plans` (antes `planOptions`); el alta
+  arranca en el plan por defecto con su precio; la renovación conserva plan/valor
+  anteriores y elegir uno los actualiza al precio del catálogo.
+- `modules/members/MembersModule.jsx` y
+  `modules/dashboard/components/MemberModalsHost.jsx` — usan `useActivePlans`;
+  pasan `plans` (objetos) al wizard y los nombres (activos + Especial) a la ficha.
+
+**Decisiones:** "Especial" se conserva como opción especial anexada (no es plan
+del catálogo — coherente con la Fase 2). La ficha (`MemberDetailModal`) sigue
+mostrando el `member.tipo` aunque su plan ya no esté activo (el `PlanDropdown`
+pinta siempre el valor actual). Sin cambios de contrato en services/endpoints.
+
+**Verificado (E2E en navegador):** el wizard ofrece los planes ACTIVOS
+(Quincena/1 mes/2 meses/3 meses) + Especial, **sin Anual** (oculto en el
+catálogo); elegir "3 meses" precarga **$180.000** y "1 mes" da fin a mes
+calendario (29/07→29/08). **Fuente única:** activar Anual en Ajustes → Planes lo
+hace aparecer en el alta al instante, con fin +365 días (`duracionDias`) y precio
+**$620.000** precargado. Consola sin errores; `npm run lint` y `npm run build`
+limpios. Anual se dejó de nuevo oculto (semilla limpia).
+
 ## Cómo continuar
 
 **Fase 10 — Tramo B (en curso, por checkpoints).** El Tramo A está mergeado
-(PR #12). El Tramo B se hace **frente por frente**, con revisión tuya entre cada
-uno. Estado:
-1. ✅ **Libro mayor único (frente 1)** — hecho, **pendiente de tu revisión**; NO
-   commiteado aún (rama `fase-10-tramo-b`). Ver el detalle abajo.
-2. ⏳ **Sync Planes↔alta/renovación:** el wizard de Miembros lee
-   `plansService.listActivePlans()` (precio precargado) en vez de `PLAN_OPTIONS`
-   (`overseer/src/lib/memberStatus.js`).
+(PR #12). El Tramo B se hace **frente por frente** en la rama `fase-10-tramo-b`
+(PR #14), con revisión tuya entre cada uno. Estado:
+1. ✅ **Libro mayor único (frente 1)** — hecho, **pendiente de revisión**. Detalle abajo.
+2. ✅ **Sync Planes↔alta/renovación (frente 2)** — hecho, **pendiente de revisión**.
+   El wizard/ficha de Miembros leen `plansService.listActivePlans()` (precio
+   precargado) en vez de `PLAN_OPTIONS`. Detalle abajo.
 3. ⏳ **Auth real:** login contra el backend; la sesión trae el ROL (habilita el
    gating de Admin). Hoy `authService`/`SessionProvider` solo guardan el nombre.
 4. ⏳ **Eliminar cuentas (solo Admin)** con rol real en la sesión (`usersService`
@@ -833,9 +871,8 @@ uno. Estado:
 5. ⏳ **Menú avanzado / secreto:** import de configuración, borrado selectivo y
    reset total (helpers en el backend).
 
-**Retomar el frente 2:** en la rama `fase-10-tramo-b` (ya creada desde `main`
-con reskin + backend). Correr los 2 procesos como abajo. La BD quedó reseteada
-(semilla limpia del libro mayor) para revisión.
+**Retomar el frente 3:** en la rama `fase-10-tramo-b`. Correr los 2 procesos
+como abajo. La BD quedó reseteada (semilla limpia) para revisión.
 
 ### Referencia del Tramo A (contexto original de la fase)
 
