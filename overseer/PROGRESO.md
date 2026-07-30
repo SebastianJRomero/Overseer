@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar cuentas Admin) hechos — **pendientes de revisión** (PR #14). Frente 5 (menú avanzado) pendiente | 2026-07-30 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (PR #14). **Tramo C** (pendiente): frente 5 menú avanzado import/reset + enforcement de permisos por rol | 2026-07-30 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -969,25 +969,39 @@ Dos refinamientos pedidos antes de arrancar el frente 5:
 
 ## Cómo continuar
 
-**Fase 10 — Tramo B (en curso, por checkpoints).** El Tramo A está mergeado
-(PR #12). El Tramo B se hace **frente por frente** en la rama `fase-10-tramo-b`
-(PR #14), con revisión tuya entre cada uno. Estado:
-1. ✅ **Libro mayor único (frente 1)** — hecho, **pendiente de revisión**. Detalle abajo.
-2. ✅ **Sync Planes↔alta/renovación (frente 2)** — hecho, **pendiente de revisión**.
-   El wizard/ficha de Miembros leen `plansService.listActivePlans()` (precio
-   precargado) en vez de `PLAN_OPTIONS`. Detalle abajo.
-3. ✅ **Auth real con rol (frente 3)** — hecho, **pendiente de revisión**. Login
-   contra el backend (`POST /auth/login`); la sesión trae el ROL. Detalle abajo.
-4. ✅ **Eliminar cuentas (solo Admin) (frente 4)** — hecho, **pendiente de
-   revisión**. `DELETE /users/:id` + gating por Admin en `AccountsSection`.
-   Detalle abajo.
-5. ⏳ **Menú avanzado / secreto:** import de configuración, borrado selectivo y
-   reset total (helpers en el backend). **Debe pedir confirmación fuerte.** Nota
-   técnica: `services/storage.js` usa prefijo `overseer:`; conviene exponer
-   helpers de backend para exportar/importar/resetear por entidad.
+**Fase 10 — Tramo B: CERRADO, en revisión (PR #14).** El Tramo A está mergeado
+(PR #12). El Tramo B se hizo **frente por frente** en la rama `fase-10-tramo-b`
+(PR #14). Entregado:
+1. ✅ **Libro mayor único (frente 1).** Detalle abajo.
+2. ✅ **Sync Planes↔alta/renovación (frente 2).** El wizard/ficha de Miembros leen
+   `plansService.listActivePlans()` (precio precargado). Detalle abajo.
+3. ✅ **Auth real con rol (frente 3).** Login contra el backend (`POST /auth/login`);
+   la sesión trae el ROL. Detalle abajo.
+4. ✅ **Eliminar/editar cuentas (solo Admin) + permisos por usuario (frente 4).**
+   `DELETE`/`PATCH /users/:id`, modal crear/editar con checklist de permisos
+   editable, gating por Admin. Detalle abajo.
+   · **Refinamientos de UI** (2 tandas): modal de usuario estilo ficha de miembro,
+   reloj del header apilado, filas de Cuentas clicables, quitar "Apariencia" y
+   "Cambiar de usuario". Detalle abajo.
 
-**Retomar el frente 5 (último):** en la rama `fase-10-tramo-b`. Correr los 2
-procesos como abajo. La BD quedó reseteada (semilla limpia) para revisión.
+**Fase 10 — Tramo C (PENDIENTE, nueva rama desde `main` cuando se mergee PR #14).**
+Lo que se movió aquí para no seguir engordando el PR #14:
+1. ⏳ **Menú avanzado / secreto (frente 5):** import de configuración, borrado
+   selectivo por entidad y reset total. **Debe pedir confirmación fuerte.** Nota
+   técnica: exponer helpers en el backend (export/import/reset por entidad); en
+   el front, `services/storage.js` usa prefijo `overseer:` para lo que aún vive
+   local (apariencia/tema/flags).
+2. ⏳ **Enforcement de permisos por rol/usuario:** hoy `users.permisos` se guarda
+   y edita, pero la app **no restringe** la navegación. Falta que la sesión traiga
+   los `permisos` del usuario logueado y que `moduleRegistry`/la TopBar/ModuleHost
+   filtren los módulos visibles según ellos (respetando `core`), más el gating de
+   acciones sensibles. Ver la nota de alcance del frente 4.
+
+**Cómo retomar el Tramo C en una sesión nueva:** ver la sección
+**"▶ Retomar en una sesión nueva"** al inicio de este archivo. En corto: sincronizar
+`main`, mergear PR #14 (o partir de `fase-10-tramo-b` si aún no se mergea), crear
+`git checkout -b fase-10-tramo-c`, correr los 2 procesos (`server` y `overseer`) y
+empezar por el frente 5. La BD queda reseteada (semilla limpia) para revisión.
 
 ### Referencia del Tramo A (contexto original de la fase)
 
