@@ -1,0 +1,141 @@
+/* UserModal.module.css — modal "Nuevo usuario" con foto + campos + accesos.
+   Toma el patrón de dos columnas de la ficha de miembro (MemberDetailModal). */
+
+.body {
+  display: flex;
+  gap: 18px;
+  padding: 20px;
+}
+
+/* ── Columna izquierda: foto + badge de rol ── */
+.photoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 124px;
+  flex: none;
+}
+
+.photo {
+  width: 100%;
+  height: 150px;
+  padding: 0;
+  border-radius: 18px;
+  background: linear-gradient(150deg, var(--surface-2), var(--surface-1));
+  border: 1px dashed var(--border-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.13s;
+}
+.photo:hover {
+  border-color: var(--acc-1);
+}
+
+.photoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoInitials {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-soft);
+  letter-spacing: -0.02em;
+}
+
+.photoLabel {
+  font-size: 9px;
+  letter-spacing: var(--ls-label);
+  color: var(--text-dim);
+}
+
+/* Badge del rol elegido, centrado bajo la foto. */
+.roleBadge {
+  align-self: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+}
+
+/* ── Columna derecha ── */
+.mainCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Campo a lo ancho de la grilla (nombre, usuario/correo, contraseña). */
+.full {
+  grid-column: 1 / -1;
+}
+
+/* ── Accesos del rol (checklist de solo lectura) ── */
+.access {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-btn);
+  background: var(--surface-3);
+  border: 1px solid var(--border-1);
+}
+
+.accessTitle {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.accessGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.accessItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Función a la que SÍ tiene acceso el rol. */
+.accessOn {
+  color: var(--text-title);
+}
+
+.check {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  background: var(--border-1);
+}
+.accessOn .check {
+  color: #fff;
+  background: var(--ok, #25c877);
+}
