@@ -9,7 +9,7 @@
   La contraseña NUNCA llega ni se guarda (el modal ni la envía). ROLE_LEGEND
   es una constante estática de UI y se queda en el front.
 
-  User: { id, nombre, email, rol, activity, activo(boolean) }
+  User: { id, nombre, email, rol, activity, activo(boolean), cedula, telefono, foto }
 */
 
 import { Router } from 'express';
@@ -18,7 +18,11 @@ import { newId } from '../lib/id.js';
 
 const router = Router();
 
-const toUser = (r) => ({ id: r.id, nombre: r.nombre, email: r.email, rol: r.rol, activity: r.activity, activo: !!r.activo });
+const toUser = (r) => ({
+  id: r.id, nombre: r.nombre, email: r.email, rol: r.rol,
+  activity: r.activity, activo: !!r.activo,
+  cedula: r.cedula || '', telefono: r.telefono || '', foto: r.foto || '',
+});
 
 function listAll() {
   return db.prepare('SELECT * FROM users ORDER BY ord ASC').all().map(toUser);
@@ -27,10 +31,13 @@ function listAll() {
 router.get('/', (req, res) => res.json(listAll()));
 
 router.post('/', (req, res) => {
-  const { nombre, email, rol } = req.body || {};
-  const record = { id: newId('u'), nombre, email, rol, activity: 'Recién creado', activo: 1 };
-  db.prepare(`INSERT INTO users (id, ord, nombre, email, rol, activity, activo)
-    VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo)`)
+  const { nombre, email, rol, cedula, telefono, foto } = req.body || {};
+  const record = {
+    id: newId('u'), nombre, email, rol, activity: 'Recién creado', activo: 1,
+    cedula: cedula ?? '', telefono: telefono ?? '', foto: foto ?? '',
+  };
+  db.prepare(`INSERT INTO users (id, ord, nombre, email, rol, activity, activo, cedula, telefono, foto)
+    VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo, @cedula, @telefono, @foto)`)
     .run({ ...record, ord: nextOrd('users', 'end') });
   res.status(201).json(listAll());
 });

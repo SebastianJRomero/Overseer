@@ -922,6 +922,34 @@ a Carlos Vega con confirmación inline lo quita de la lista (persistido). Como
 **Recepción** (`recepcion@overseer.gym`) NO hay botones de crear/eliminar y se ve
 la nota de solo lectura. `DELETE /users/:id` probado por API. Lint y build limpios.
 
+## Ajustes por feedback (2026-07-30, rama `fase-10-tramo-b`)
+
+Dos refinamientos pedidos antes de arrancar el frente 5:
+
+1. **Modal "Nuevo usuario" enriquecido (estilo ficha de miembro).** Reutiliza el
+   patrón de `MemberDetailModal`: columna de **foto subible** + badge del rol, y
+   una grilla con **nombre, usuario o correo, cédula, teléfono, contraseña**, el
+   selector de rol y una **checklist de accesos del rol** (solo lectura) que
+   cambia al elegir el rol, para que el Admin vea qué concede.
+   - Backend: `users` gana columnas `cedula`, `telefono`, `foto` (migración
+     idempotente + en el `CREATE TABLE`); `routes/users.js` (POST) y `seed.js`
+     los incluyen. `usersService.createUser` los envía.
+   - Front: `UserModal.jsx` + `UserModal.module.css` reescritos; nuevo
+     `modules/settings/rolePermissions.js` (`ROLE_ACCESS`/`roleCan`) para la
+     checklist. La etiqueta "Usuario o correo" se guarda en `email` (el login
+     matchea por email o nombre). Cédula/teléfono/foto son opcionales; obligatorios
+     nombre + usuario/correo + contraseña. (La app aún no restringe módulos por
+     rol; la checklist es referencia visual, no enforcement.)
+   - Verificado E2E: crear "Sofía UI" (usuario `sofia.ui`, rol Admin) la agrega a
+     la lista; la checklist muestra 3 accesos para Recepción y 8 para Admin.
+
+2. **Reloj del header apilado (hora sobre fecha).** Solo CSS
+   (`TopBar.module.css` → `.clock` en columna, alineado a la derecha): la zona
+   derecha ocupa menos ancho y el bloque de tabs queda mejor centrado respecto al
+   módulo activo (de ~33px a ~13px del centro del viewport). Sin tocar módulos.
+
+`npm run lint` (3 warnings preexistentes) y `npm run build` limpios.
+
 ## Cómo continuar
 
 **Fase 10 — Tramo B (en curso, por checkpoints).** El Tramo A está mergeado

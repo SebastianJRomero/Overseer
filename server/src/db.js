@@ -80,7 +80,8 @@ export function migrate() {
 
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY, ord REAL NOT NULL,
-      nombre TEXT, email TEXT, rol TEXT, activity TEXT, activo INTEGER DEFAULT 1
+      nombre TEXT, email TEXT, rol TEXT, activity TEXT, activo INTEGER DEFAULT 1,
+      cedula TEXT DEFAULT '', telefono TEXT DEFAULT '', foto TEXT DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS classes (
@@ -103,6 +104,10 @@ export function migrate() {
   // CREATE TABLE IF NOT EXISTS no añade columnas a una tabla ya existente, así
   // que las agregamos a mano solo si faltan (idempotente).
   ensureColumn('movements', 'categoria', "TEXT DEFAULT 'otro'");
+  // Datos extra de las cuentas (frente 4.1): cédula, teléfono y foto (data URL).
+  ensureColumn('users', 'cedula', "TEXT DEFAULT ''");
+  ensureColumn('users', 'telefono', "TEXT DEFAULT ''");
+  ensureColumn('users', 'foto', "TEXT DEFAULT ''");
 }
 
 /**

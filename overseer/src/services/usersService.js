@@ -22,12 +22,13 @@ export async function listUsers() {
 }
 
 /**
- * Crea una cuenta (la contraseña no se envía).
- * @param {{nombre, email, rol}} datos
+ * Crea una cuenta (la contraseña no se envía). `email` guarda el usuario o
+ * correo (el login matchea por ambos). Cédula, teléfono y foto son opcionales.
+ * @param {{nombre, email, rol, cedula?, telefono?, foto?}} datos
  * @returns {Promise<Array>} lista actualizada
  */
-export async function createUser({ nombre, email, rol }) {
-  return apiPost('/users', { nombre, email, rol });
+export async function createUser({ nombre, email, rol, cedula, telefono, foto }) {
+  return apiPost('/users', { nombre, email, rol, cedula, telefono, foto });
 }
 
 /**
