@@ -8,6 +8,12 @@
     POST   /members/:id/renew  → Member[] (lista actualizada) (renewMember)
 
   El ESTADO (vigente/pronto/vencido) NO se guarda: lo deriva la UI de `fin`.
+
+  Libro mayor (Tramo B): dar de alta y RENOVAR son eventos de pago, así que
+  además de escribir el miembro insertamos un asiento en `movements`
+  (entrada · categoría 'membresia'). Editar datos con PATCH no es un pago y NO
+  crea asiento. Es un acoplamiento del backend a `movements` a propósito: el
+  front (membersService) no cambia y el pago por fin llega a Finanzas.
 */
 
 import { Router } from 'express';
@@ -21,6 +27,21 @@ const COLS = 'id, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, ob
 /** Lee la lista completa en el orden de la UI (más nuevos arriba). */
 function listAll() {
   return db.prepare(`SELECT ${COLS} FROM members ORDER BY ord ASC`).all();
+}
+
+/**
+ * Registra el pago de una membresía como asiento del libro mayor.
+ * Se omite si no hay monto (plan "Especial" o valor 0): no hubo cobro.
+ * @param {{nombre, tipo, valor, inicio}} m  datos del miembro (alta o renovación)
+ */
+function addMembershipEntry({ nombre, tipo, valor, inicio }) {
+  if (!valor || valor <= 0) return;
+  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria)
+    VALUES (@id, @ord, 'entrada', @monto, @motivo, @fecha, 0, 1, '{}', 'membresia')`)
+    .run({
+      id: newId('mv'), ord: nextOrd('movements', 'top'),
+      monto: valor, motivo: `Membresía ${tipo || ''} · ${nombre || ''}`.trim(), fecha: inicio || '',
+    });
 }
 
 router.get('/', (req, res) => {
@@ -38,6 +59,7 @@ router.post('/', (req, res) => {
   db.prepare(`INSERT INTO members (id, ord, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, obs)
     VALUES (@id, @ord, @nombre, @cedula, @telefono, @inicio, @fin, @tipo, @recibo, @valor, @obs)`)
     .run({ ...member, ord: nextOrd('members', 'top') });
+  addMembershipEntry(member); // el pago del alta entra al libro mayor
   res.status(201).json(member); // createMember devuelve el miembro creado
 });
 
@@ -57,7 +79,12 @@ router.patch('/:id', (req, res) => {
 });
 
 router.post('/:id/renew', (req, res) => {
-  res.json(applyPatch(req.params.id, req.body));
+  const list = applyPatch(req.params.id, req.body);
+  // Renovar es un pago: leemos el miembro ya actualizado y asentamos el cobro
+  // (nombre viene del registro; tipo/valor/inicio, de la renovación aplicada).
+  const m = list.find((x) => x.id === req.params.id);
+  if (m) addMembershipEntry(m);
+  res.json(list);
 });
 
 export default router;

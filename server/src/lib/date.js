@@ -3,8 +3,8 @@
 
   Subconjunto portado del `lib/date.js` del front, con la MISMA lógica: la app
   maneja fechas en formato colombiano `dd/mm/aaaa`. El backend las necesita
-  para (a) sembrar las semillas relativas a hoy igual que el mock y (b) el
-  generador de movimientos demo. No se añaden librerías: solo Date nativo.
+  para sembrar las semillas relativas a hoy igual que el mock, incluidos los
+  asientos históricos del libro mayor. No se añaden librerías: solo Date nativo.
 */
 
 export const MONTH_ABBR = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];

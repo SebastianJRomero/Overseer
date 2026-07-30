@@ -46,13 +46,15 @@ a:hover {
   background: var(--acc-soft);
 }
 
-/* Scrollbars oscuros, finos, como en el prototipo. */
+/* Scrollbars finos, como en el prototipo. El thumb sale de un token para que
+   siga el tema (oscuro por defecto, gris claro en modo claro) — mismo token que
+   usa el scrollbar del TimePicker. */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1c2230;
+  background: var(--border-4);
   border-radius: 8px;
 }
 

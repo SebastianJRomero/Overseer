@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** (backend + services con paridad) hecho — **pendiente de revisión**. Tramo B (libro mayor, sync, auth, admin, menú) pendiente | 2026-07-28 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frente 1 (libro mayor único)** hecho — **pendiente de revisión**. Frentes 2–5 (sync Planes, auth real, eliminar cuentas Admin, menú avanzado) pendientes | 2026-07-29 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -74,6 +74,16 @@ Antes de escribir código, la sesión nueva debería:
     avanzado import/reset. Checkpoint de revisión entre ambos.
 
 ## Limitaciones conocidas (se resuelven en la Fase 10, NO son bugs)
+
+> **✅ RESUELTAS en la Fase 10 · Tramo B · frente 1 (libro mayor único,
+> 2026-07-29):** ya existe una sola fuente de verdad de caja (la tabla
+> `movements`). Los pagos de miembros SÍ llegan a Finanzas (alta/renovación
+> crean un asiento), el desglose y el historial se **agregan del libro real**
+> (concuerdan con "Entradas del mes"), y se retiró el generador demo. Queda una
+> diferencia **deliberada**: el KPI de Inicio sigue siendo `Σ members.valor`
+> (valor de membresías activas), métrica distinta de "caja recibida este mes" de
+> Finanzas — ver la nota en el detalle del frente 1. El texto de abajo se
+> conserva como contexto histórico.
 
 El mock guarda el dinero en **silos independientes** fieles al prototipo; no
 existe una sola fuente de verdad de caja. Consecuencias que el cliente ya
@@ -759,23 +769,73 @@ BD se dejó reseteada (semilla limpia) para la revisión.
 (API en :3001) y en otra terminal `cd overseer && npm run dev` (Vite en :5173).
 Ver `server/README.md`.
 
+## Fase 10 — Tramo B · frente 1 (libro mayor único) — detalle (2026-07-29, rama `fase-10-tramo-b`)
+
+Se convierte la tabla `movements` en el **libro mayor único**: pagos de
+membresía, ventas y gastos son asientos del mismo origen, y el desglose/historial
+se **agregan del libro real**. Finanzas queda internamente consistente. **No se
+tocó nada del front** (módulos/hooks/componentes/services): mismas firmas y
+formas de retorno de todos los endpoints (ARQUITECTURA §9). Todo el cambio es
+interior del backend + seed + la ruta de miembros.
+
+**Backend modificado (`server/`):**
+- `src/db.js` — nueva columna `categoria` en `movements` (clasifica el asiento de
+  ingreso) + helper idempotente `ensureColumn` (ALTER seguro para BDs ya creadas).
+- `src/routes/members.js` — alta (`POST /`) y renovación (`POST /:id/renew`)
+  insertan un asiento `entrada`/`categoria:'membresia'` (`valor > 0`; se omite
+  "Especial") con `fecha = inicio`. El PATCH de edición NO crea asiento.
+  Acoplamiento backend a `movements` a propósito; el front no se entera.
+- `src/finance.js` — **retirado** el generador demo (`genMonth`) y las semillas
+  fijas (`INCOME_SOURCES`, `PAID_THIS_MONTH`, `HISTORY_MONTHS`, `FIXED_UPCOMING`,
+  `MEMBERSHIP_PRICES`). Se conservan `sign`/`toUserDomain`/`dueLabel` y se añade
+  `CATEGORY_META`/`CATEGORY_ORDER` (etiqueta+color por categoría de ingreso).
+- `src/routes/movements.js` — `listMonth` lee solo la tabla; `getHistory(y,m)`
+  agrega 6 meses reales; `getIncomeBreakdown` agrega el **mes calendario actual**
+  por categoría (el front lo llama sin mes); `getUpcomingExpenses` usa salidas
+  pendientes + recurrentes del libro (sin lista hardcodeada). `POST /` infiere la
+  categoría (con artículos → `venta`; si no, `otro`). **Mismas formas de retorno.**
+- `src/seed.js` — nuevo `seedMovements()`: (1) asiento de cada miembro semilla
+  (fecha = su `inicio`), (2) histórico determinista de 6 meses persistido como
+  filas reales (reemplaza al generador al vuelo), (3) gastos fijos recurrentes
+  (Nómina, Arriendo). Se corre tras `seedMembers`.
+
+**Nota de alcance (a tu decisión antes de cerrar el Tramo B):** el KPI "Ingresos
+del mes" del **Inicio** sigue = `Σ members.valor` (valor de membresías activas),
+métrica DISTINTA de "Entradas del mes" de Finanzas (caja recibida este mes, ahora
+del libro). Este frente hizo Finanzas consistente y enrutó los pagos al libro; no
+forzó el KPI de Inicio a ser idéntico porque miden cosas distintas. Se puede
+igualar (leer el KPI del libro) si lo prefieres.
+
+**Verificado (E2E):** BD reseteada → `npm start` resembró. **Concordancia:** el
+desglose "Origen de las entradas" suma **$752.000 = "Entradas del mes"**
+(Membresías 53% · Inscripciones 11% · Clases 20% · Otros 15%); el historial
+muestra 6 meses con curva real; "Gastos próximos" trae Nómina + Arriendo
+recurrentes. **Pago→libro:** `POST /members` (1 mes $70.000) → entradas
+$752k→$822k y aparece "Membresía 1 mes · <nombre>". Sin movimientos `gen-*`.
+Front renderiza en modo oscuro (reskin) sin errores de consola; `npm run lint`
+(solo los 3 warnings de fast-refresh preexistentes) y `npm run build` limpios. BD
+dejada reseteada (semilla limpia) para tu revisión.
+
 ## Cómo continuar
 
-**Fase 10 — Tramo B (pendiente).** El Tramo A (backend + services con paridad)
-está hecho y **pendiente de tu revisión**; NO commiteado aún. El Tramo B
-resuelve lo aplazado, ahora viable con datos reales (ver "Limitaciones
-conocidas" y "Peticiones para la Fase 10"):
-1. **Libro mayor único:** pagos de miembros, ventas y gastos como asientos del
-   mismo origen; retirar el generador demo (`server/src/finance.js`) y las
-   semillas fijas de Finanzas; agregación histórica real en `getHistory`/
-   `getIncomeBreakdown`.
-2. **Sync Planes↔alta/renovación:** el wizard de Miembros lee
-   `plansService.listActivePlans()` (precio precargado) en vez de `PLAN_OPTIONS`.
-3. **Auth real:** login contra el backend; la sesión trae el ROL (habilita el
-   gating de Admin).
-4. **Eliminar cuentas (solo Admin)** con rol real en la sesión.
-5. **Menú avanzado / secreto:** import de configuración, borrado selectivo y
+**Fase 10 — Tramo B (en curso, por checkpoints).** El Tramo A está mergeado
+(PR #12). El Tramo B se hace **frente por frente**, con revisión tuya entre cada
+uno. Estado:
+1. ✅ **Libro mayor único (frente 1)** — hecho, **pendiente de tu revisión**; NO
+   commiteado aún (rama `fase-10-tramo-b`). Ver el detalle abajo.
+2. ⏳ **Sync Planes↔alta/renovación:** el wizard de Miembros lee
+   `plansService.listActivePlans()` (precio precargado) en vez de `PLAN_OPTIONS`
+   (`overseer/src/lib/memberStatus.js`).
+3. ⏳ **Auth real:** login contra el backend; la sesión trae el ROL (habilita el
+   gating de Admin). Hoy `authService`/`SessionProvider` solo guardan el nombre.
+4. ⏳ **Eliminar cuentas (solo Admin)** con rol real en la sesión (`usersService`
+   solo tiene list/create; falta `deleteUser` + gating).
+5. ⏳ **Menú avanzado / secreto:** import de configuración, borrado selectivo y
    reset total (helpers en el backend).
+
+**Retomar el frente 2:** en la rama `fase-10-tramo-b` (ya creada desde `main`
+con reskin + backend). Correr los 2 procesos como abajo. La BD quedó reseteada
+(semilla limpia del libro mayor) para revisión.
 
 ### Referencia del Tramo A (contexto original de la fase)
 
