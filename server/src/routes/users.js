@@ -2,8 +2,9 @@
   routes/users.js — Endpoints de cuentas del sistema.
 
   Espejan services/usersService.js:
-    GET   /users   → User[]                    (listUsers)
-    POST  /users   → User[] (lista actualizada) (createUser)
+    GET    /users      → User[]                    (listUsers)
+    POST   /users      → User[] (lista actualizada) (createUser)
+    DELETE /users/:id  → User[] (lista actualizada) (deleteUser · solo Admin en la UI)
 
   La contraseña NUNCA llega ni se guarda (el modal ni la envía). ROLE_LEGEND
   es una constante estática de UI y se queda en el front.
@@ -32,6 +33,13 @@ router.post('/', (req, res) => {
     VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo)`)
     .run({ ...record, ord: nextOrd('users', 'end') });
   res.status(201).json(listAll());
+});
+
+// Eliminar una cuenta. La UI solo ofrece esta acción a un Admin (y nunca sobre
+// la propia cuenta); aquí el borrado es directo por id.
+router.delete('/:id', (req, res) => {
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  res.json(listAll());
 });
 
 export default router;
