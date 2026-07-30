@@ -22,10 +22,11 @@ import { getInitials } from '../../lib/initials';
 import styles from './UserMenu.module.css';
 
 export default function UserMenu() {
-  const { user, logout, switchUser } = useSession();
+  const { user, role, logout, switchUser } = useSession();
   const { tema, setAppearance } = useTheme();
   const [open, setOpen] = useState(false);
   const name = user || 'Admin';
+  const roleLabel = role || 'Administrador';
   const isDark = tema !== 'claro';
 
   const close = () => setOpen(false);
@@ -51,7 +52,7 @@ export default function UserMenu() {
               <span className={styles.headerAvatar}>{getInitials(name)}</span>
               <div className={styles.headerTexts}>
                 <span className={styles.headerName}>{name}</span>
-                <span className={styles.headerRole}>Administrador</span>
+                <span className={styles.headerRole}>{roleLabel}</span>
               </div>
             </div>
 

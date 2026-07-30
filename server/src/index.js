@@ -14,6 +14,7 @@ import express from 'express';
 import { migrate } from './db.js';
 import { seedAll } from './seed.js';
 
+import authRouter from './routes/auth.js';
 import membersRouter from './routes/members.js';
 import movementsRouter from './routes/movements.js';
 import eventsRouter from './routes/events.js';
@@ -43,6 +44,7 @@ app.use((req, res, next) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+app.use('/api/auth', authRouter);
 app.use('/api/members', membersRouter);
 app.use('/api/movements', movementsRouter);
 app.use('/api/events', eventsRouter);
