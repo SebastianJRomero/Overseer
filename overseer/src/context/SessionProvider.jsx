@@ -12,7 +12,7 @@
     - justIn: true durante ~600 ms tras el login — AppShell lo usa para
       reproducir la animación de entrada `appEnter` SOLO al venir del login
       (no en cada recarga).
-    - enter(cuenta) / logout() / switchUser().
+    - enter(cuenta) / logout().
 
   La validación de credenciales NO vive aquí: eso es de authService (contra el
   backend, que resuelve el rol). Este provider solo refleja el resultado.
@@ -58,11 +58,6 @@ export default function SessionProvider({ children }) {
     setStatus('anonimo');
   };
 
-  // En el prototipo "cambiar de usuario" y "cerrar sesión" hacen lo mismo
-  // (volver al login); se mantienen separados porque con auth real el
-  // switch podría conservar la lista de cuentas del dispositivo.
-  const switchUser = logout;
-
   return (
     <SessionContext.Provider value={{
       status,
@@ -70,7 +65,7 @@ export default function SessionProvider({ children }) {
       role: account?.rol ?? null,
       userId: account?.id ?? null,
       account,
-      justIn, enter, logout, switchUser,
+      justIn, enter, logout,
     }}
     >
       {children}
