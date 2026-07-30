@@ -1,20 +1,26 @@
 /*
-  UserModal — Ajustes → Cuentas → Nuevo usuario (modal 560px).
+  UserModal — Crear / editar una cuenta (modal 560px), al estilo de la ficha de
+  miembro: columna de FOTO subible + badge de rol, y a la derecha una grilla de
+  campos (nombre, usuario o correo, cédula, teléfono, [contraseña solo al crear])
+  y una CHECKLIST de accesos EDITABLE (activar/desactivar por función).
 
-  Toma el patrón de la ficha de miembro: columna de FOTO (subible) + badge del
-  rol a la izquierda, y a la derecha una grilla de campos (nombre, usuario o
-  correo, cédula, teléfono, contraseña), el selector de rol y una CHECKLIST de
-  solo lectura con los accesos que concede ese rol (para que el Admin controle
-  qué está otorgando).
+  Elegir un rol precarga sus accesos por defecto (rolePermissions); luego el
+  Admin puede afinar función por función para dar más o menos permisos a esa
+  cuenta concreta. Los permisos se guardan por usuario (aún no restringen la
+  navegación — eso sería enforcement, fuera de alcance).
 
-  - "Usuario o correo" se guarda en el campo `email` (el login matchea por
-    email o por nombre). La contraseña no se persiste.
-  - Cédula, teléfono y foto son opcionales; obligatorios: nombre, usuario/correo
-    y contraseña.
+  - "Usuario o correo" se guarda en `email` (el login matchea por email o nombre).
+  - En edición, el botón Eliminar vive en el pie del modal (solo Admin, nunca la
+    propia cuenta) con confirmación.
 
   Recibe:
     - controller: useModal
-    - onSave: ({ nombre, email, rol, cedula, telefono, foto }) => void
+    - mode: 'add' | 'edit'
+    - user: cuenta a editar (solo edit)
+    - canDelete: boolean (edit): muestra Eliminar
+    - onSave:   (datos) => void        (crear)
+    - onUpdate: (id, patch) => void     (editar)
+    - onDelete: (id) => void            (eliminar)
 */
 
 import { useRef, useState } from 'react';
@@ -25,7 +31,7 @@ import Icon from '../../../components/Icon/Icon';
 import { getInitials } from '../../../lib/initials';
 import { onlyDigits } from '../../../lib/format';
 import { ROLE_STYLES } from '../roleStyles';
-import { ACCESS_FUNCTIONS, roleCan } from '../rolePermissions';
+import { ACCESS_FUNCTIONS, ROLE_ACCESS } from '../rolePermissions';
 import chrome from './SettingsModal.module.css';
 import styles from './UserModal.module.css';
 
@@ -35,20 +41,28 @@ const ROLE_OPTIONS = ['Admin', 'Recepción', 'Entrenador'].map((r) => ({
 
 const mono = { fontFamily: 'var(--font-mono)' };
 
-export default function UserModal({ controller, onSave }) {
-  const [nombre, setNombre] = useState('');
-  const [email, setEmail] = useState('');
+export default function UserModal({ controller, mode = 'add', user, canDelete, onSave, onUpdate, onDelete }) {
+  const isEdit = mode === 'edit';
+  const [nombre, setNombre] = useState(user?.nombre || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [pass, setPass] = useState('');
-  const [cedula, setCedula] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [foto, setFoto] = useState('');
-  const [rol, setRol] = useState('Recepción');
+  const [cedula, setCedula] = useState(user?.cedula || '');
+  const [telefono, setTelefono] = useState(user?.telefono || '');
+  const [foto, setFoto] = useState(user?.foto || '');
+  const [rol, setRol] = useState(user?.rol || 'Recepción');
+  const [permisos, setPermisos] = useState(
+    () => (user?.permisos?.length ? user.permisos : (ROLE_ACCESS[user?.rol || 'Recepción'] || [])),
+  );
+  const [confirmDel, setConfirmDel] = useState(false);
   const fileRef = useRef(null);
 
-  const canSave = nombre.trim() && email.trim() && pass.length > 0;
   const rs = ROLE_STYLES[rol] || ROLE_STYLES.Recepción;
+  const canSave = nombre.trim() && email.trim() && (isEdit || pass.length > 0);
 
-  // Foto: se lee como data URL y se muestra al instante (igual que en Miembros).
+  // Elegir rol precarga sus accesos por defecto (luego se afinan a mano).
+  const pickRole = (r) => { setRol(r); setPermisos(ROLE_ACCESS[r] || []); };
+  const togglePermiso = (fn) => setPermisos((p) => (p.includes(fn) ? p.filter((x) => x !== fn) : [...p, fn]));
+
   const onPhotoPick = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -59,7 +73,9 @@ export default function UserModal({ controller, onSave }) {
 
   const save = () => {
     if (!canSave) return;
-    onSave({ nombre: nombre.trim(), email: email.trim(), rol, cedula, telefono, foto });
+    const datos = { nombre: nombre.trim(), email: email.trim(), rol, cedula, telefono, foto, permisos };
+    if (isEdit) onUpdate(user.id, datos);
+    else onSave(datos);
   };
 
   return (
@@ -67,8 +83,8 @@ export default function UserModal({ controller, onSave }) {
       <div className={chrome.header}>
         <span className={chrome.headIcon}><Icon name="members" /></span>
         <div className={chrome.heading}>
-          <span className={chrome.title}>Nuevo usuario</span>
-          <span className={chrome.subtitle}>Crea una cuenta de acceso al sistema</span>
+          <span className={chrome.title}>{isEdit ? 'Editar usuario' : 'Nuevo usuario'}</span>
+          <span className={chrome.subtitle}>{isEdit ? 'Actualiza los datos y accesos de la cuenta' : 'Crea una cuenta de acceso al sistema'}</span>
         </div>
         <button type="button" className={chrome.close} onClick={() => controller.close()}>✕</button>
       </div>
@@ -109,28 +125,35 @@ export default function UserModal({ controller, onSave }) {
             <Field label="Teléfono">
               <input value={telefono} onChange={(e) => setTelefono(onlyDigits(e.target.value))} placeholder="Solo números" style={mono} inputMode="numeric" />
             </Field>
-            <div className={styles.full}>
-              <Field label="Contraseña">
-                <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="••••••••" style={mono} />
-              </Field>
-            </div>
+            {!isEdit && (
+              <div className={styles.full}>
+                <Field label="Contraseña">
+                  <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="••••••••" style={mono} />
+                </Field>
+              </div>
+            )}
           </div>
 
           <Field label="Rol">
-            <SegmentedOptions options={ROLE_OPTIONS} value={rol} onChange={setRol} columns={3} />
+            <SegmentedOptions options={ROLE_OPTIONS} value={rol} onChange={pickRole} columns={3} />
           </Field>
 
-          {/* Accesos del rol (solo lectura): qué puede usar el rol elegido. */}
+          {/* Accesos EDITABLES: activar/desactivar cada función para esta cuenta. */}
           <div className={styles.access}>
-            <span className={styles.accessTitle}>Accesos de este rol</span>
+            <span className={styles.accessTitle}>Accesos de la cuenta · clic para activar o desactivar</span>
             <div className={styles.accessGrid}>
               {ACCESS_FUNCTIONS.map((fn) => {
-                const on = roleCan(rol, fn);
+                const on = permisos.includes(fn);
                 return (
-                  <span key={fn} className={on ? `${styles.accessItem} ${styles.accessOn}` : styles.accessItem}>
+                  <button
+                    type="button"
+                    key={fn}
+                    className={on ? `${styles.accessItem} ${styles.accessOn}` : styles.accessItem}
+                    onClick={() => togglePermiso(fn)}
+                  >
                     <span className={styles.check}>{on ? '✓' : '·'}</span>
                     {fn}
-                  </span>
+                  </button>
                 );
               })}
             </div>
@@ -139,9 +162,22 @@ export default function UserModal({ controller, onSave }) {
       </div>
 
       <div className={chrome.footer}>
+        {/* Eliminar (edición · Admin · no la propia cuenta) con confirmación. */}
+        {isEdit && canDelete && (confirmDel ? (
+          <span className={styles.confirmDel}>
+            <span className={styles.confirmText}>¿Eliminar cuenta?</span>
+            <button type="button" className={styles.yes} onClick={() => onDelete(user.id)}>Sí</button>
+            <button type="button" className={styles.no} onClick={() => setConfirmDel(false)}>No</button>
+          </span>
+        ) : (
+          <button type="button" className={styles.delBtn} onClick={() => setConfirmDel(true)}>Eliminar cuenta</button>
+        ))}
+
         <div className={chrome.actions}>
           <button type="button" className={chrome.cancel} onClick={() => controller.close()}>Cancelar</button>
-          <button type="button" className={chrome.save} disabled={!canSave} onClick={save}>Crear usuario</button>
+          <button type="button" className={chrome.save} disabled={!canSave} onClick={save}>
+            {isEdit ? 'Guardar cambios' : 'Crear usuario'}
+          </button>
         </div>
       </div>
     </Modal>

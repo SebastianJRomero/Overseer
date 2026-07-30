@@ -37,6 +37,7 @@ export default function useSettings() {
 
     setGymField: async (k, v) => setGym(await settingsService.setGymField(k, v)),
     createUser: async (d) => setUsers(await usersService.createUser(d)),
+    updateUser: async (id, patch) => setUsers(await usersService.updateUser(id, patch)),
     deleteUser: async (id) => setUsers(await usersService.deleteUser(id)),
     createPlan: async (d) => setPlans(await plansService.createPlan(d)),
     togglePlan: async (id) => setPlans(await plansService.togglePlan(id)),

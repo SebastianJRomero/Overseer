@@ -151,6 +151,14 @@ function seedPlans() {
 }
 
 /* ══════════════════ USUARIOS ══════════════════ */
+// Accesos por defecto de cada rol (espeja rolePermissions.js del front). Se
+// usa para sembrar el `permisos` inicial de cada cuenta; el Admin lo ajusta.
+const ROLE_ACCESS = {
+  Admin: ['Miembros', 'Calendario', 'Finanzas', 'Inventario', 'Clases', 'Reportes', 'Ajustes', 'Cuentas'],
+  Recepción: ['Miembros', 'Calendario', 'Finanzas'],
+  Entrenador: ['Miembros', 'Calendario', 'Clases'],
+};
+
 function seedUsers() {
   if (!isEmpty('users')) return;
   const rows = [
@@ -159,9 +167,9 @@ function seedUsers() {
     { id: 'u-carlos', nombre: 'Carlos Vega', email: 'recepcion2@overseer.gym', rol: 'Recepción', activity: 'Ayer', activo: 1, cedula: '71998233', telefono: '3004471180' },
     { id: 'u-diana', nombre: 'Diana López', email: 'entrenador@overseer.gym', rol: 'Entrenador', activity: 'Hace 3 días', activo: 0, cedula: '1152009943', telefono: '3159087744' },
   ];
-  const stmt = db.prepare(`INSERT INTO users (id, ord, nombre, email, rol, activity, activo, cedula, telefono, foto)
-    VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo, @cedula, @telefono, '')`);
-  rows.forEach((r, i) => stmt.run({ ...r, ord: i + 1 }));
+  const stmt = db.prepare(`INSERT INTO users (id, ord, nombre, email, rol, activity, activo, cedula, telefono, foto, permisos)
+    VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo, @cedula, @telefono, '', @permisos)`);
+  rows.forEach((r, i) => stmt.run({ ...r, ord: i + 1, permisos: JSON.stringify(ROLE_ACCESS[r.rol] || []) }));
 }
 
 /* ══════════════════ CLASES ══════════════════ */
