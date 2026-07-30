@@ -23,7 +23,8 @@
 
 import { useEffect, useState } from 'react';
 import useModal from '../../../hooks/useModal';
-import { PLAN_OPTIONS } from '../../../lib/memberStatus';
+import useActivePlans from '../../../hooks/useActivePlans';
+import { SPECIAL_PLAN } from '../../../lib/memberStatus';
 import MemberFilterModal from '../../members/components/MemberFilterModal';
 import MemberDetailModal from '../../members/components/MemberDetailModal';
 import MemberWizard from '../../members/components/MemberWizard';
@@ -32,6 +33,8 @@ export default function MemberModalsHost({ request, members, onCreate, onUpdate,
   const filterModal = useModal();
   const detailModal = useModal();
   const wizModal = useModal();
+  const plans = useActivePlans();
+  const planNames = [...plans.map((p) => p.nombre), SPECIAL_PLAN];
 
   const [filter, setFilter] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -85,7 +88,7 @@ export default function MemberModalsHost({ request, members, onCreate, onUpdate,
       <MemberDetailModal
         controller={detailModal}
         member={selected}
-        planOptions={PLAN_OPTIONS}
+        planOptions={planNames}
         onUpdate={onUpdate}
         onRenew={openRenew}
       />
@@ -95,7 +98,7 @@ export default function MemberModalsHost({ request, members, onCreate, onUpdate,
         controller={wizModal}
         mode={wizard.mode}
         member={wizard.member}
-        planOptions={PLAN_OPTIONS}
+        plans={plans}
         onSave={saveWizard}
       />
     </>
