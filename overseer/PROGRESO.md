@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (PR #14). **Tramo C** (pendiente): frente 5 menú avanzado import/reset + enforcement de permisos por rol | 2026-07-30 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (frente 1 mergeado en PR #14; resto en **PR #15** abierto). **Tramo C** (pendiente): frente 5 menú avanzado import/reset + enforcement de permisos por rol | 2026-07-30 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -969,9 +969,11 @@ Dos refinamientos pedidos antes de arrancar el frente 5:
 
 ## Cómo continuar
 
-**Fase 10 — Tramo B: CERRADO, en revisión (PR #14).** El Tramo A está mergeado
-(PR #12). El Tramo B se hizo **frente por frente** en la rama `fase-10-tramo-b`
-(PR #14). Entregado:
+**Fase 10 — Tramo B: CERRADO, en revisión.** El Tramo A está mergeado (PR #12).
+El Tramo B se hizo **frente por frente** en la rama `fase-10-tramo-b`. ⚠ El
+**PR #14 se mergeó cuando la rama solo tenía el frente 1**; el resto (frentes
+2–4 + refinamientos) va en el **PR #15** (abierto hacia `main`, falta mergear).
+Entregado:
 1. ✅ **Libro mayor único (frente 1).** Detalle abajo.
 2. ✅ **Sync Planes↔alta/renovación (frente 2).** El wizard/ficha de Miembros leen
    `plansService.listActivePlans()` (precio precargado). Detalle abajo.
@@ -984,8 +986,8 @@ Dos refinamientos pedidos antes de arrancar el frente 5:
    reloj del header apilado, filas de Cuentas clicables, quitar "Apariencia" y
    "Cambiar de usuario". Detalle abajo.
 
-**Fase 10 — Tramo C (PENDIENTE, nueva rama desde `main` cuando se mergee PR #14).**
-Lo que se movió aquí para no seguir engordando el PR #14:
+**Fase 10 — Tramo C (PENDIENTE, nueva rama desde `main` cuando se mergee PR #15).**
+Lo que se movió aquí para no seguir engordando el Tramo B:
 1. ⏳ **Menú avanzado / secreto (frente 5):** import de configuración, borrado
    selectivo por entidad y reset total. **Debe pedir confirmación fuerte.** Nota
    técnica: exponer helpers en el backend (export/import/reset por entidad); en
@@ -997,11 +999,11 @@ Lo que se movió aquí para no seguir engordando el PR #14:
    filtren los módulos visibles según ellos (respetando `core`), más el gating de
    acciones sensibles. Ver la nota de alcance del frente 4.
 
-**Cómo retomar el Tramo C en una sesión nueva:** ver la sección
-**"▶ Retomar en una sesión nueva"** al inicio de este archivo. En corto: sincronizar
-`main`, mergear PR #14 (o partir de `fase-10-tramo-b` si aún no se mergea), crear
-`git checkout -b fase-10-tramo-c`, correr los 2 procesos (`server` y `overseer`) y
-empezar por el frente 5. La BD queda reseteada (semilla limpia) para revisión.
+**Cómo retomar el Tramo C en una sesión nueva:** ver `HANDOFF.md` (raíz del repo)
+y la sección **"▶ Retomar en una sesión nueva"** al inicio de este archivo. En
+corto: mergear **PR #15**, sincronizar `main` (o partir de `fase-10-tramo-b` si
+aún no se mergea), crear `git checkout -b fase-10-tramo-c`, correr los 2 procesos
+(`server` y `overseer`) y empezar por el frente 5. La BD se regenera del seed.
 
 ### Referencia del Tramo A (contexto original de la fase)
 
