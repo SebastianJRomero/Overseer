@@ -23,7 +23,7 @@
     - controller: useModal
     - mode: 'add' | 'renew'
     - member: miembro a renovar (solo renew)
-    - planOptions: planes activos
+    - plans: planes activos del catálogo (Ajustes → Planes) [{ nombre, duracionDias, precio }]
     - onSave: (datos) => void — el módulo decide si es create o renew
 */
 
@@ -34,7 +34,7 @@ import WizardStepPlanDates from './WizardStepPlanDates';
 import WizardStepPago from './WizardStepPago';
 import WizardSummary from './WizardSummary';
 import { todayDMY, isValidDMY } from '../../../lib/date';
-import { computeFin } from '../../../lib/memberStatus';
+import { computeFin, SPECIAL_PLAN } from '../../../lib/memberStatus';
 import { parseMoney } from '../../../lib/money';
 import { onlyDigits } from '../../../lib/format';
 import styles from './MemberWizard.module.css';
@@ -62,35 +62,48 @@ function fieldValid(field, data) {
     case 'cedula': return onlyDigits(data.cedula).length > 0;
     case 'telefono': return onlyDigits(data.telefono).length > 0;
     // El plan "Especial" no tiene fin: solo se exige un inicio válido.
-    case 'plan': return isValidDMY(data.inicio) && (data.tipo === 'Especial' || isValidDMY(data.fin));
+    case 'plan': return isValidDMY(data.inicio) && (data.tipo === SPECIAL_PLAN || isValidDMY(data.fin));
     case 'recibo': return String(data.recibo || '').trim().length > 0;
     case 'valor': return parseMoney(data.valor) > 0;
     default: return true;
   }
 }
 
+/** Plan por defecto del catálogo: el preferido si existe, si no el primero. */
+function pickDefaultPlan(plans, preferName) {
+  if (!plans || plans.length === 0) return null;
+  return plans.find((p) => p.nombre === preferName) || plans[0];
+}
+
 /** Datos iniciales según el modo (renew presetea con el miembro anterior). */
-function initialData(mode, member) {
+function initialData(mode, member, plans) {
   const hoy = todayDMY();
   if (mode === 'renew') {
     const inicio = isValidDMY(member?.fin) ? member.fin : hoy;
+    // Conserva el plan y el valor anteriores (el cliente pidió precargar lo que
+    // pagó); elegir un plan en el paso los actualiza al precio del catálogo.
+    const plan = plans?.find((p) => p.nombre === member?.tipo);
+    const tipo = member?.tipo || '1 mes';
     return {
-      tipo: '1 mes', inicio, fin: computeFin('1 mes', inicio),
+      tipo, inicio, fin: computeFin(tipo, inicio, plan?.duracionDias),
       valor: member?.valor ?? null, recibo: '', obs: member?.obs || '',
     };
   }
+  // Alta: arranca en el plan por defecto del catálogo con su precio precargado.
+  const plan = pickDefaultPlan(plans, '1 mes');
+  const tipo = plan?.nombre || '1 mes';
   return {
     nombre: '', cedula: '', telefono: '',
-    tipo: '1 mes', inicio: hoy, fin: computeFin('1 mes', hoy),
-    recibo: '', valor: '', obs: '',
+    tipo, inicio: hoy, fin: computeFin(tipo, hoy, plan?.duracionDias),
+    recibo: '', valor: plan ? plan.precio : '', obs: '',
   };
 }
 
-export default function MemberWizard({ controller, mode, member, planOptions, onSave }) {
+export default function MemberWizard({ controller, mode, member, plans, onSave }) {
   const isRenew = mode === 'renew';
   const totalSteps = isRenew ? 2 : ADD_STEPS.length;
   const [step, setStep] = useState(0);
-  const [data, setData] = useState(() => initialData(mode, member));
+  const [data, setData] = useState(() => initialData(mode, member, plans));
 
   const patch = (p) => setData((d) => ({ ...d, ...p }));
   const isSummary = !isRenew && step >= ADD_STEPS.length;
@@ -171,13 +184,13 @@ export default function MemberWizard({ controller, mode, member, planOptions, on
 
       {/* Paso actual */}
       {isRenew && step === 0 && (
-        <WizardStepPlanDates data={data} onPatch={patch} planOptions={planOptions} />
+        <WizardStepPlanDates data={data} onPatch={patch} plans={plans} />
       )}
       {isRenew && step === 1 && (
         <WizardStepPago data={data} onPatch={patch} onNext={next} />
       )}
       {current && (current.field === 'plan' ? (
-        <WizardStepPlanDates data={data} onPatch={patch} planOptions={planOptions} />
+        <WizardStepPlanDates data={data} onPatch={patch} plans={plans} />
       ) : (
         <WizardStepText
           {...current}

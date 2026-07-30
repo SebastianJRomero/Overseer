@@ -45,7 +45,6 @@ const GLYPHS = {
   download: '↓',
   grid: '◱',
   brand: '◈',
-  appearance: '◑',   // Ajustes → Apariencia (contraste = tema)
   notification: '◔', // Ajustes → Notificaciones
 };
 

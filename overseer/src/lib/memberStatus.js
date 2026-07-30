@@ -41,31 +41,47 @@ export function getMemberStatus(member, today = todayAtMidnight()) {
 }
 
 /*
-  Presets de duración por plan (los 5 planes del prototipo).
+  "Especial" NO es un plan del catálogo (Ajustes → Planes): es un tipo de
+  membresía sin fecha de fin. El wizard lo ofrece aparte, además de los planes
+  activos del catálogo.
+*/
+export const SPECIAL_PLAN = 'Especial';
+
+/*
+  Presets de duración de los planes ESTÁNDAR del prototipo.
   "Quincena" suma días; los planes de meses suman meses CALENDARIO
   (1 mes = mismo día del mes siguiente, no 30 días — así cobra el gimnasio).
-  "Especial" no tiene fin predeterminado.
+  Se conservan para NO cambiar esa regla en los planes estándar; los planes
+  personalizados del catálogo (con su propio `duracionDias`) caen al cálculo
+  por días. "Especial" no tiene fin predeterminado.
 */
 const PLAN_PRESETS = {
   'Quincena': (inicio) => addDays(inicio, 15),
   '1 mes': (inicio) => addMonths(inicio, 1),
   '2 meses': (inicio) => addMonths(inicio, 2),
   '3 meses': (inicio) => addMonths(inicio, 3),
-  'Especial': () => '', // sin fecha de fin
+  [SPECIAL_PLAN]: () => '', // sin fecha de fin
 };
 
-/** Lista de planes en el orden en que se muestran en la UI. */
-export const PLAN_OPTIONS = ['Quincena', '1 mes', '2 meses', '3 meses', 'Especial'];
+/**
+ * Lista de respaldo de planes (solo si el catálogo del backend no cargó).
+ * La fuente real es `plansService.listActivePlans()` — Ajustes → Planes.
+ */
+export const PLAN_OPTIONS = ['Quincena', '1 mes', '2 meses', '3 meses', SPECIAL_PLAN];
 
 /**
- * Calcula la fecha de fin automática según el plan.
- * Devuelve '' si el inicio no es válido o el plan no tiene fin (Especial):
- * la UI muestra el campo vacío y el usuario puede fijarlo a mano.
- * @param {string} tipo   nombre del plan ('1 mes', 'Quincena', ...)
- * @param {string} inicio fecha "dd/mm/aaaa"
+ * Calcula la fecha de fin automática de un plan.
+ * - Plan estándar (o "Especial") → preset de meses calendario (regla del gimnasio).
+ * - Plan del catálogo sin preset → suma `duracionDias` (plan personalizado).
+ * Devuelve '' si el plan no tiene fin (Especial) o el inicio no es válido; la
+ * UI muestra el campo vacío y el usuario puede fijarlo a mano.
+ * @param {string} tipo            nombre del plan ('1 mes', 'Quincena', ...)
+ * @param {string} inicio          fecha "dd/mm/aaaa"
+ * @param {number} [duracionDias]  duración del plan del catálogo (fallback)
  * @returns {string}
  */
-export function computeFin(tipo, inicio) {
-  const preset = PLAN_PRESETS[tipo] || PLAN_PRESETS['1 mes'];
-  return preset(inicio);
+export function computeFin(tipo, inicio, duracionDias) {
+  if (PLAN_PRESETS[tipo]) return PLAN_PRESETS[tipo](inicio);
+  if (duracionDias > 0) return addDays(inicio, duracionDias);
+  return PLAN_PRESETS['1 mes'](inicio);
 }

@@ -2,9 +2,9 @@
   UserMenu — Avatar de la TopBar + popover de cuenta.
 
   El botón muestra las iniciales del usuario logueado; al hacer clic se
-  abre un popover (animación menuIn) con la cabecera de la cuenta y dos
-  acciones: "Cambiar de usuario" y "Cerrar sesión" — ambas vuelven al
-  login limpiando la sesión (via SessionProvider → authService).
+  abre un popover (animación menuIn) con la cabecera de la cuenta (nombre +
+  rol), el toggle de tema claro/oscuro y "Cerrar sesión" (vuelve al login
+  limpiando la sesión via SessionProvider → authService).
 
   IMPORTANTE — por qué un PORTAL: la TopBar usa backdrop-filter, que crea
   un "contexto de apilamiento". Cualquier z-index de un hijo (como este
@@ -22,10 +22,11 @@ import { getInitials } from '../../lib/initials';
 import styles from './UserMenu.module.css';
 
 export default function UserMenu() {
-  const { user, logout, switchUser } = useSession();
+  const { user, role, logout } = useSession();
   const { tema, setAppearance } = useTheme();
   const [open, setOpen] = useState(false);
   const name = user || 'Admin';
+  const roleLabel = role || 'Administrador';
   const isDark = tema !== 'claro';
 
   const close = () => setOpen(false);
@@ -51,7 +52,7 @@ export default function UserMenu() {
               <span className={styles.headerAvatar}>{getInitials(name)}</span>
               <div className={styles.headerTexts}>
                 <span className={styles.headerName}>{name}</span>
-                <span className={styles.headerRole}>Administrador</span>
+                <span className={styles.headerRole}>{roleLabel}</span>
               </div>
             </div>
 
@@ -60,10 +61,6 @@ export default function UserMenu() {
               <button type="button" className={styles.action} onClick={() => setAppearance({ tema: isDark ? 'claro' : 'oscuro' })}>
                 <span className={styles.actionIcon}>{isDark ? '☀' : '☾'}</span>
                 <span>{isDark ? 'Modo claro' : 'Modo oscuro'}</span>
-              </button>
-              <button type="button" className={styles.action} onClick={() => { close(); switchUser(); }}>
-                <span className={styles.actionIcon}>⇄</span>
-                <span>Cambiar de usuario</span>
               </button>
               <button type="button" className={`${styles.action} ${styles.actionDanger}`} onClick={() => { close(); logout(); }}>
                 <span className={`${styles.actionIcon} ${styles.actionIconDanger}`}>⏻</span>

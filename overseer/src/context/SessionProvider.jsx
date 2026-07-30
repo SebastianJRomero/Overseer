@@ -5,14 +5,17 @@
     - status: 'cargando' | 'anonimo' | 'autenticado'
         'cargando' existe porque recuperar la sesión recordada es async;
         App muestra un frame vacío en vez de parpadear el login.
-    - user: nombre del usuario logueado (o null).
+    - user: nombre del usuario logueado (o null) — compat con toda la UI.
+    - role: rol del usuario ('Admin' | 'Recepción' | ...) — para el gating.
+    - userId: id de la cuenta (o null si es una sesión de demo sin cuenta).
+    - account: la cuenta completa { id, nombre, email, rol } (o null).
     - justIn: true durante ~600 ms tras el login — AppShell lo usa para
       reproducir la animación de entrada `appEnter` SOLO al venir del login
       (no en cada recarga).
-    - login(user, remember) / logout() / switchUser().
+    - enter(cuenta) / logout().
 
-  La validación de credenciales NO vive aquí: eso es de authService.
-  Este provider solo refleja el resultado en React.
+  La validación de credenciales NO vive aquí: eso es de authService (contra el
+  backend, que resuelve el rol). Este provider solo refleja el resultado.
 */
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
@@ -22,7 +25,7 @@ const SessionContext = createContext(null);
 
 export default function SessionProvider({ children }) {
   const [status, setStatus] = useState('cargando');
-  const [user, setUser] = useState(null);
+  const [account, setAccount] = useState(null); // { id, nombre, email, rol } | null
   const [justIn, setJustIn] = useState(false);
   const justInTimer = useRef(null);
 
@@ -30,7 +33,7 @@ export default function SessionProvider({ children }) {
   useEffect(() => {
     authService.getSession().then((session) => {
       if (session) {
-        setUser(session.user);
+        setAccount(session);
         setStatus('autenticado');
       } else {
         setStatus('anonimo');
@@ -40,8 +43,8 @@ export default function SessionProvider({ children }) {
   }, []);
 
   /** Marca la sesión como iniciada (LoginScreen ya validó con authService). */
-  const enter = (userName) => {
-    setUser(userName);
+  const enter = (cuenta) => {
+    setAccount(cuenta);
     setStatus('autenticado');
     // Ventana corta para que el shell entre con appEnter y luego se limpia.
     setJustIn(true);
@@ -51,17 +54,20 @@ export default function SessionProvider({ children }) {
 
   const logout = async () => {
     await authService.logout();
-    setUser(null);
+    setAccount(null);
     setStatus('anonimo');
   };
 
-  // En el prototipo "cambiar de usuario" y "cerrar sesión" hacen lo mismo
-  // (volver al login); se mantienen separados porque con auth real el
-  // switch podría conservar la lista de cuentas del dispositivo.
-  const switchUser = logout;
-
   return (
-    <SessionContext.Provider value={{ status, user, justIn, enter, logout, switchUser }}>
+    <SessionContext.Provider value={{
+      status,
+      user: account?.nombre ?? null, // compat: la UI usa `user` como el nombre
+      role: account?.rol ?? null,
+      userId: account?.id ?? null,
+      account,
+      justIn, enter, logout,
+    }}
+    >
       {children}
     </SessionContext.Provider>
   );
