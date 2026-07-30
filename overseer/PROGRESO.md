@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1 (libro mayor único) y 2 (sync Planes↔alta/renovación)** hechos — **pendientes de revisión** (PR #14). Frentes 3–5 (auth real, eliminar cuentas Admin, menú avanzado) pendientes | 2026-07-29 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1 (libro mayor), 2 (sync Planes) y 3 (auth real con rol)** hechos — **pendientes de revisión** (PR #14). Frentes 4–5 (eliminar cuentas Admin, menú avanzado) pendientes | 2026-07-30 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -855,6 +855,43 @@ hace aparecer en el alta al instante, con fin +365 días (`duracionDias`) y prec
 **$620.000** precargado. Consola sin errores; `npm run lint` y `npm run build`
 limpios. Anual se dejó de nuevo oculto (semilla limpia).
 
+## Fase 10 — Tramo B · frente 3 (auth real con rol) — detalle (2026-07-30, rama `fase-10-tramo-b`)
+
+El login deja de ser un mock local y valida contra el backend, que resuelve la
+cuenta y su **ROL**. La sesión ahora expone `role`, lo que habilita el gating de
+Admin (frente 4). Las cuentas NO guardan contraseña (decisión del proyecto), así
+que la clave solo se exige no vacía; lo que importa es que la sesión traiga el rol.
+
+**Backend (`server/`):**
+- `routes/auth.js` (NUEVO) — `POST /auth/login { user, pass }`. Busca una cuenta
+  ACTIVA por email o nombre (case-insensitive); si coincide devuelve
+  `{ id, nombre, email, rol }` con su rol real. Registrado en `index.js` bajo
+  `/api/auth`.
+- **Decisión (reversible en 1 línea):** login **permisivo con rol** — si el
+  usuario no coincide con ninguna cuenta, entra igual con rol `Admin` (preserva
+  el acceso rápido de siempre: escribir cualquier usuario entra). Para auth
+  estricta, devolver `{ ok: false }` en ese caso. Credenciales vacías → `ok:false`.
+
+**Front (`overseer/src/`):**
+- `services/authService.js` — `login()` hace `POST /auth/login`; devuelve `user`
+  como **objeto** `{ id, nombre, email, rol }`. `getSession()` lee ese objeto de
+  storage (respeta "Recordarme"). Las sesiones viejas (formato string) se
+  invalidan solas (se pide re-login una vez).
+- `context/SessionProvider.jsx` — guarda la cuenta; expone `user` = **nombre**
+  (compat con toda la UI, sin cambios en consumidores), y añade `role`, `userId`
+  y `account`. `enter(cuenta)` recibe el objeto.
+- `app/TopBar/UserMenu.jsx` — el rol del encabezado sale de `role` (antes
+  "Administrador" hardcodeado).
+- `auth/LoginScreen.jsx` — el saludo de la celebración usa el **nombre real** de
+  la cuenta (antes el texto tecleado, que podía ser un email).
+
+**Verificado (E2E):** por API — `admin@overseer.gym`→Admin (Andrés Ríos),
+`recepcion@overseer.gym`→Recepción (Paula Méndez), usuario libre→Admin (fallback),
+vacío→`ok:false`. En navegador: login con `recepcion@overseer.gym` → saluda
+"Buenos días, Paula Méndez" y el menú de usuario muestra **"Recepción"** (rol real,
+ya no hardcodeado). `npm run lint` (3 warnings preexistentes) y `npm run build`
+limpios; sin errores nuevos de consola.
+
 ## Cómo continuar
 
 **Fase 10 — Tramo B (en curso, por checkpoints).** El Tramo A está mergeado
@@ -864,14 +901,15 @@ limpios. Anual se dejó de nuevo oculto (semilla limpia).
 2. ✅ **Sync Planes↔alta/renovación (frente 2)** — hecho, **pendiente de revisión**.
    El wizard/ficha de Miembros leen `plansService.listActivePlans()` (precio
    precargado) en vez de `PLAN_OPTIONS`. Detalle abajo.
-3. ⏳ **Auth real:** login contra el backend; la sesión trae el ROL (habilita el
-   gating de Admin). Hoy `authService`/`SessionProvider` solo guardan el nombre.
-4. ⏳ **Eliminar cuentas (solo Admin)** con rol real en la sesión (`usersService`
-   solo tiene list/create; falta `deleteUser` + gating).
+3. ✅ **Auth real con rol (frente 3)** — hecho, **pendiente de revisión**. Login
+   contra el backend (`POST /auth/login`); la sesión trae el ROL. Detalle abajo.
+4. ⏳ **Eliminar cuentas (solo Admin)** — ahora viable: `useSession().role` ya da
+   el rol real. Falta `deleteUser` en backend/`usersService` + gating por Admin
+   en `AccountsSection`.
 5. ⏳ **Menú avanzado / secreto:** import de configuración, borrado selectivo y
    reset total (helpers en el backend).
 
-**Retomar el frente 3:** en la rama `fase-10-tramo-b`. Correr los 2 procesos
+**Retomar el frente 4:** en la rama `fase-10-tramo-b`. Correr los 2 procesos
 como abajo. La BD quedó reseteada (semilla limpia) para revisión.
 
 ### Referencia del Tramo A (contexto original de la fase)

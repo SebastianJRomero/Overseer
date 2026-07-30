@@ -33,6 +33,7 @@ export default function LoginScreen() {
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState(false);
   const [phase, setPhase] = useState('formulario'); // formulario | celebrando | saliendo
+  const [account, setAccount] = useState(null);      // cuenta devuelta por el backend
   const timers = useRef([]);
 
   const submit = async () => {
@@ -43,6 +44,7 @@ export default function LoginScreen() {
       return;
     }
     // Coreografía: celebrar → fundir → entrar al shell.
+    setAccount(result.user);
     setPhase('celebrando');
     timers.current.push(setTimeout(() => setPhase('saliendo'), CELEBRATION_MS));
     timers.current.push(setTimeout(() => enter(result.user), CELEBRATION_MS + FADE_MS));
@@ -146,7 +148,7 @@ export default function LoginScreen() {
         <div className={styles.footer}>Panel de administración · Acceso restringido</div>
       </div>
 
-      {phase !== 'formulario' && <LoginCelebration userName={user.trim()} />}
+      {phase !== 'formulario' && <LoginCelebration userName={account?.nombre || user.trim()} />}
     </div>
   );
 }
