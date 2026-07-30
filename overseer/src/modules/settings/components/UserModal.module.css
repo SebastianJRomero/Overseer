@@ -109,15 +109,27 @@
   gap: 6px 12px;
 }
 
+/* Cada acceso es un toggle (botón): clic para activar/desactivar. */
 .accessItem {
   display: flex;
   align-items: center;
   gap: 7px;
   font-size: 12px;
   color: var(--text-faint);
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.12s, background 0.12s;
+}
+.accessItem:hover {
+  background: var(--surface-hover);
+  color: var(--text-mid);
 }
 
-/* Función a la que SÍ tiene acceso el rol. */
+/* Función ACTIVADA para esta cuenta. */
 .accessOn {
   color: var(--text-title);
 }
@@ -138,4 +150,49 @@
 .accessOn .check {
   color: #fff;
   background: var(--ok, #25c877);
+}
+
+/* ── Eliminar cuenta (pie del modal, en edición) ── */
+.delBtn {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  background: transparent;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--r-btn);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.delBtn:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+
+.confirmDel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.confirmText {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.yes,
+.no {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--r-btn);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.yes {
+  color: #fff;
+  background: var(--danger);
+}
+.no {
+  color: var(--text-mid);
+  background: transparent;
+  border-color: var(--border-2);
 }

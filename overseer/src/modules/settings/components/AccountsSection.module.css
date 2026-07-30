@@ -6,7 +6,7 @@
   gap: 16px;
 }
 
-/* Avatar de iniciales. */
+/* Avatar de iniciales (con micro-realce al pasar el mouse por la fila). */
 .avatar {
   width: 36px;
   height: 36px;
@@ -19,6 +19,41 @@
   font-weight: 600;
   color: var(--text-mid);
   background: var(--border-1);
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+/* Fila clicable (solo Admin) → abre el modal de edición. Reciclado de la
+   tabla de Miembros: hover tiñe el nombre y realza el avatar. */
+.clickable {
+  cursor: pointer;
+}
+.clickable:hover {
+  background: var(--surface-row-hover);
+}
+.clickable:hover .avatar {
+  transform: scale(1.07);
+  box-shadow: 0 3px 10px rgba(17, 23, 34, 0.14);
+}
+.clickable:hover .userName {
+  color: var(--info);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-title);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.12s;
 }
 
 .email {
@@ -55,54 +90,6 @@
   height: 6px;
   border-radius: 50%;
   flex: none;
-}
-
-/* Eliminar cuenta (solo Admin). */
-.delBtn {
-  flex: none;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--danger);
-  background: transparent;
-  border: 1px solid var(--danger-border);
-  border-radius: var(--r-pill);
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-.delBtn:hover {
-  background: var(--danger-bg);
-  border-color: var(--danger);
-}
-
-/* Confirmación inline (reemplaza al botón). */
-.confirm {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: none;
-}
-.confirmText {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.yes,
-.no {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 5px 11px;
-  border-radius: var(--r-pill);
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-.yes {
-  color: #fff;
-  background: var(--danger);
-}
-.no {
-  color: var(--text-mid);
-  background: transparent;
-  border-color: var(--border-2);
 }
 
 /* Fila de la leyenda de roles. */

@@ -81,7 +81,8 @@ export function migrate() {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY, ord REAL NOT NULL,
       nombre TEXT, email TEXT, rol TEXT, activity TEXT, activo INTEGER DEFAULT 1,
-      cedula TEXT DEFAULT '', telefono TEXT DEFAULT '', foto TEXT DEFAULT ''
+      cedula TEXT DEFAULT '', telefono TEXT DEFAULT '', foto TEXT DEFAULT '',
+      permisos TEXT DEFAULT '[]'
     );
 
     CREATE TABLE IF NOT EXISTS classes (
@@ -108,6 +109,8 @@ export function migrate() {
   ensureColumn('users', 'cedula', "TEXT DEFAULT ''");
   ensureColumn('users', 'telefono', "TEXT DEFAULT ''");
   ensureColumn('users', 'foto', "TEXT DEFAULT ''");
+  // Permisos por cuenta (JSON de funciones accesibles): editable por el Admin.
+  ensureColumn('users', 'permisos', "TEXT DEFAULT '[]'");
 }
 
 /**

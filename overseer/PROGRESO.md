@@ -948,6 +948,23 @@ Dos refinamientos pedidos antes de arrancar el frente 5:
    derecha ocupa menos ancho y el bloque de tabs queda mejor centrado respecto al
    módulo activo (de ~33px a ~13px del centro del viewport). Sin tocar módulos.
 
+3. **Cuentas editables + permisos por usuario (2ª tanda).** La sección de Cuentas
+   pasa a comportarse como la tabla de Miembros:
+   - **Filas clicables** (solo Admin) que abren el modal en modo **editar**
+     (datos precargados); hover recicla el de `MemberTable` (nombre en azul
+     `--info` + micro-realce del avatar).
+   - **Checklist de permisos EDITABLE por usuario:** cada función es un toggle;
+     elegir un rol precarga sus accesos por defecto y luego se afinan a mano.
+     Se guardan por cuenta (`users.permisos`, JSON). *Aún no restringen la
+     navegación (enforcement pendiente, a decidir aparte).*
+   - **Eliminar movido al modal** (pie, con confirmación inline); ya no hay botón
+     por fila. Sigue gated por Admin y nunca sobre la propia cuenta.
+   - Backend: `users.permisos` (migración + seed por rol) y **`PATCH /users/:id`**
+     nuevo; `usersService.updateUser` + `useSettings.updateUser`. `UserModal`
+     reescrito a crear/editar.
+   - Verificado E2E: editar Paula (activar Finanzas → persiste), eliminar Carlos
+     desde el modal (4→3), toggles y precarga de permisos correctos.
+
 `npm run lint` (3 warnings preexistentes) y `npm run build` limpios.
 
 ## Cómo continuar
