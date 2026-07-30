@@ -8,9 +8,10 @@
   Contrato:
     listUsers()        → Promise<User[]>
     createUser(datos)  → Promise<User[]>   (lista actualizada; asigna id)
+    deleteUser(id)     → Promise<User[]>   (lista actualizada; solo Admin en la UI)
 */
 
-import { apiGet, apiPost } from './api';
+import { apiGet, apiPost, apiDelete } from './api';
 import { ROLE_LEGEND } from '../data/seedUsers';
 
 export { ROLE_LEGEND };
@@ -27,4 +28,13 @@ export async function listUsers() {
  */
 export async function createUser({ nombre, email, rol }) {
   return apiPost('/users', { nombre, email, rol });
+}
+
+/**
+ * Elimina una cuenta. El gating (solo Admin) lo aplica la UI.
+ * @param {string} id
+ * @returns {Promise<Array>} lista actualizada
+ */
+export async function deleteUser(id) {
+  return apiDelete(`/users/${id}`);
 }

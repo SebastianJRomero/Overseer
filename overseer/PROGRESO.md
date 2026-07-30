@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1 (libro mayor), 2 (sync Planes) y 3 (auth real con rol)** hechos — **pendientes de revisión** (PR #14). Frentes 4–5 (eliminar cuentas Admin, menú avanzado) pendientes | 2026-07-30 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar cuentas Admin) hechos — **pendientes de revisión** (PR #14). Frente 5 (menú avanzado) pendiente | 2026-07-30 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -892,6 +892,36 @@ vacío→`ok:false`. En navegador: login con `recepcion@overseer.gym` → saluda
 ya no hardcodeado). `npm run lint` (3 warnings preexistentes) y `npm run build`
 limpios; sin errores nuevos de consola.
 
+## Fase 10 — Tramo B · frente 4 (eliminar cuentas · solo Admin) — detalle (2026-07-30, rama `fase-10-tramo-b`)
+
+La gestión de cuentas (crear + eliminar) queda **gated por rol Admin**, usando el
+`role` real que la sesión ya trae (frente 3). Petición del cliente #2.
+
+**Backend (`server/`):**
+- `routes/users.js` — `DELETE /users/:id` borra la cuenta y devuelve la lista
+  actualizada (espejo del de planes).
+
+**Front (`overseer/src/`):**
+- `services/usersService.js` — `deleteUser(id)` (`apiDelete`).
+- `modules/settings/useSettings.js` — acción `deleteUser` que refresca la lista.
+- `modules/settings/components/AccountsSection.jsx` — usa `useSession()`:
+  - `role === 'Admin'` habilita el botón **"＋ Nuevo usuario"** y un botón
+    **"Eliminar"** por fila; para los demás roles la sección es de **solo
+    lectura** (nota "Solo un administrador puede crear o eliminar cuentas").
+  - **Nunca** se puede eliminar la propia cuenta (`u.id !== userId`).
+  - Eliminar pide **confirmación inline** (¿Eliminar? Sí / No) antes de borrar.
+  - Estilos danger (`--danger*`, tokens que voltean en modo claro).
+
+**Decisión:** se gatea crear **y** eliminar (gestión de cuentas = Admin), coherente
+con "cuentas y roles solo Admin"; si se prefiere gatear solo el borrado, es quitar
+la condición del botón de alta.
+
+**Verificado (E2E en navegador):** como **Admin** (`admin@overseer.gym` → Andrés
+Ríos) aparecen "Nuevo usuario" y "Eliminar" en cada fila salvo la propia; eliminar
+a Carlos Vega con confirmación inline lo quita de la lista (persistido). Como
+**Recepción** (`recepcion@overseer.gym`) NO hay botones de crear/eliminar y se ve
+la nota de solo lectura. `DELETE /users/:id` probado por API. Lint y build limpios.
+
 ## Cómo continuar
 
 **Fase 10 — Tramo B (en curso, por checkpoints).** El Tramo A está mergeado
@@ -903,14 +933,16 @@ limpios; sin errores nuevos de consola.
    precargado) en vez de `PLAN_OPTIONS`. Detalle abajo.
 3. ✅ **Auth real con rol (frente 3)** — hecho, **pendiente de revisión**. Login
    contra el backend (`POST /auth/login`); la sesión trae el ROL. Detalle abajo.
-4. ⏳ **Eliminar cuentas (solo Admin)** — ahora viable: `useSession().role` ya da
-   el rol real. Falta `deleteUser` en backend/`usersService` + gating por Admin
-   en `AccountsSection`.
+4. ✅ **Eliminar cuentas (solo Admin) (frente 4)** — hecho, **pendiente de
+   revisión**. `DELETE /users/:id` + gating por Admin en `AccountsSection`.
+   Detalle abajo.
 5. ⏳ **Menú avanzado / secreto:** import de configuración, borrado selectivo y
-   reset total (helpers en el backend).
+   reset total (helpers en el backend). **Debe pedir confirmación fuerte.** Nota
+   técnica: `services/storage.js` usa prefijo `overseer:`; conviene exponer
+   helpers de backend para exportar/importar/resetear por entidad.
 
-**Retomar el frente 4:** en la rama `fase-10-tramo-b`. Correr los 2 procesos
-como abajo. La BD quedó reseteada (semilla limpia) para revisión.
+**Retomar el frente 5 (último):** en la rama `fase-10-tramo-b`. Correr los 2
+procesos como abajo. La BD quedó reseteada (semilla limpia) para revisión.
 
 ### Referencia del Tramo A (contexto original de la fase)
 
