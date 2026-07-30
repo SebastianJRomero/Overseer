@@ -12,7 +12,8 @@
 */
 
 import { db } from './db.js';
-import { todayDMY, addDays, addMonths, formatDMY, todayAtMidnight, dateKey } from './lib/date.js';
+import { todayDMY, addDays, addMonths, formatDMY, todayAtMidnight, dateKey, parseDMY } from './lib/date.js';
+import { createSeededRandom } from './lib/seededRandom.js';
 
 /** ¿La tabla está vacía? (para sembrar solo una vez). */
 function isEmpty(table) {
@@ -194,10 +195,93 @@ function seedTrainers() {
   rows.forEach((r, i) => stmt.run({ ...r, ord: i + 1 }));
 }
 
+/* ══════════════════ MOVIMIENTOS (libro mayor) ══════════════════ */
+/*
+  El libro mayor único (Tramo B) es la tabla `movements`. La sembramos con
+  asientos REALES (no un generador al vuelo) para que Finanzas arranque con
+  datos consistentes:
+    1. El pago de cada miembro semilla (categoría 'membresia', fecha = su inicio).
+    2. Un histórico determinista de ~6 meses (ventas, inscripciones, clases,
+       gastos, mantenimiento) → da curva real al historial y volumen al desglose.
+    3. Gastos fijos recurrentes (nómina, arriendo) → alimentan "Gastos próximos".
+  Todo se ordena por fecha desc (más reciente = `ord` menor) para que la lista
+  del mes muestre lo nuevo arriba.
+*/
+
+// Tipos de ingreso del histórico: categoría del libro + concepto + rango (miles).
+const INCOME_KINDS = [
+  { cat: 'venta', motivo: 'Venta de inventario', min: 15, max: 120 },
+  { cat: 'inscripcion', motivo: 'Inscripción nueva', min: 40, max: 90 },
+  { cat: 'clase', motivo: 'Clase especial', min: 60, max: 160 },
+  { cat: 'otro', motivo: 'Ingreso vario', min: 10, max: 70 },
+];
+// Tipos de egreso del histórico: `tipo` del movimiento + concepto + rango (miles).
+const EXPENSE_KINDS = [
+  { tipo: 'gasto', motivo: 'Servicios públicos', min: 120, max: 600 },
+  { tipo: 'gasto', motivo: 'Publicidad', min: 80, max: 300 },
+  { tipo: 'salida', motivo: 'Pago a proveedor', min: 100, max: 500 },
+  { tipo: 'mantenimiento', motivo: 'Mantenimiento de máquinas', min: 80, max: 350 },
+];
+
+function seedMovements() {
+  if (!isEmpty('movements')) return;
+  const asientos = [];
+  const push = (a) => asientos.push({ recurrent: 0, settled: 1, categoria: 'otro', items: {}, ...a });
+
+  // (1) Pago de cada miembro ya sembrado (si tiene monto).
+  const members = db.prepare('SELECT nombre, tipo, valor, inicio FROM members').all();
+  members.forEach((m) => {
+    if (m.valor > 0) {
+      push({ tipo: 'entrada', categoria: 'membresia', monto: m.valor, fecha: m.inicio, motivo: `Membresía ${m.tipo} · ${m.nombre}` });
+    }
+  });
+
+  // (2) Histórico determinista de los últimos 6 meses (incluye el actual).
+  const now = todayAtMidnight();
+  const amount = (k, rnd) => (k.min + Math.round(rnd() * (k.max - k.min))) * 1000;
+  for (let back = 5; back >= 0; back--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+    const y = d.getFullYear();
+    const mo = d.getMonth();
+    const rnd = createSeededRandom(y * 12 + mo);
+    // En el mes actual no generamos fechas futuras (solo hasta hoy).
+    const maxDay = back === 0 ? now.getDate() : new Date(y, mo + 1, 0).getDate();
+    const dayFecha = () => formatDMY(new Date(y, mo, 1 + Math.floor(rnd() * maxDay)));
+    const nIncome = 3 + Math.floor(rnd() * 3);
+    const nExpense = 2 + Math.floor(rnd() * 3);
+    for (let i = 0; i < nIncome; i++) {
+      const k = INCOME_KINDS[Math.floor(rnd() * INCOME_KINDS.length)];
+      push({ tipo: 'entrada', categoria: k.cat, monto: amount(k, rnd), fecha: dayFecha(), motivo: k.motivo });
+    }
+    for (let i = 0; i < nExpense; i++) {
+      const k = EXPENSE_KINDS[Math.floor(rnd() * EXPENSE_KINDS.length)];
+      push({ tipo: k.tipo, monto: amount(k, rnd), fecha: dayFecha(), motivo: k.motivo });
+    }
+  }
+
+  // (3) Gastos fijos recurrentes (alimentan "Gastos próximos").
+  const y = now.getFullYear();
+  const mo = now.getMonth();
+  const lastDay = new Date(y, mo + 1, 0).getDate();
+  push({ tipo: 'salida', recurrent: 1, monto: 2800000, fecha: formatDMY(new Date(y, mo, Math.min(30, lastDay))), motivo: 'Nómina' });
+  push({ tipo: 'salida', recurrent: 1, monto: 1800000, fecha: formatDMY(new Date(y, mo + 1, 1)), motivo: 'Arriendo del local' });
+
+  // Ordena por fecha desc (más reciente = ord menor) e inserta.
+  asientos.sort((a, b) => (parseDMY(b.fecha) - parseDMY(a.fecha)));
+  const stmt = db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria)
+    VALUES (@id, @ord, @tipo, @monto, @motivo, @fecha, @recurrent, @settled, @items, @categoria)`);
+  asientos.forEach((a, i) => stmt.run({
+    id: `seed-mv-${i + 1}`, ord: i + 1,
+    tipo: a.tipo, monto: a.monto, motivo: a.motivo, fecha: a.fecha,
+    recurrent: a.recurrent, settled: a.settled, items: JSON.stringify(a.items), categoria: a.categoria,
+  }));
+}
+
 /** Siembra todas las tablas vacías (envuelto en una transacción). */
 export function seedAll() {
   const run = db.transaction(() => {
     seedMembers();
+    seedMovements(); // después de miembros: asienta sus pagos en el libro
     seedEvents();
     seedProducts();
     seedEquipment();
