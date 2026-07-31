@@ -23,19 +23,22 @@ export async function listUsers() {
 }
 
 /**
- * Crea una cuenta (la contraseña no se envía). `email` guarda el usuario o
- * correo (el login matchea por ambos). Cédula, teléfono y foto son opcionales.
- * @param {{nombre, email, rol, cedula?, telefono?, foto?, permisos?}} datos
+ * Crea una cuenta. `pass` es la contraseña en claro; el backend la guarda
+ * HASHEADA (nunca en claro ni la devuelve). `email` guarda el usuario o correo
+ * (el login matchea por ambos). Cédula, teléfono y foto son opcionales.
+ * @param {{nombre, email, rol, pass, cedula?, telefono?, foto?, permisos?}} datos
  * @returns {Promise<Array>} lista actualizada
  */
-export async function createUser({ nombre, email, rol, cedula, telefono, foto, permisos }) {
-  return apiPost('/users', { nombre, email, rol, cedula, telefono, foto, permisos });
+export async function createUser({ nombre, email, rol, pass, cedula, telefono, foto, permisos }) {
+  return apiPost('/users', { nombre, email, rol, pass, cedula, telefono, foto, permisos });
 }
 
 /**
  * Edita una cuenta (desde el modal). El gating (solo Admin) lo aplica la UI.
+ * Si el patch trae `pass` no vacía, cambia la contraseña (hasheada); si no, se
+ * conserva la actual.
  * @param {string} id
- * @param {{nombre?, email?, rol?, cedula?, telefono?, foto?, permisos?}} patch
+ * @param {{nombre?, email?, rol?, pass?, cedula?, telefono?, foto?, permisos?}} patch
  * @returns {Promise<Array>} lista actualizada
  */
 export async function updateUser(id, patch) {

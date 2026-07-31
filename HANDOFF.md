@@ -24,9 +24,16 @@ cd server && npm install && npm start      # API en http://localhost:3001
 cd overseer && npm install && npm run dev  # front en http://localhost:5173
 ```
 
-Login: cualquier usuario/contraseña no vacíos entra. Para probar roles reales,
-entrar con una cuenta semilla: `admin@overseer.gym` (Admin),
-`recepcion@overseer.gym` (Recepción). La contraseña no se valida (no se guarda).
+Login: **auth real con contraseña hasheada** (ya no entra cualquiera). Cuentas
+semilla y sus claves de desarrollo:
+- `admin@overseer.gym` / `admin123` (Admin)
+- `recepcion@overseer.gym` / `recepcion123` (Recepción)
+- `recepcion2@overseer.gym` / `recepcion123` (Recepción)
+- `entrenador@overseer.gym` / `entrenador123` (Entrenador, viene inactivo)
+
+Se puede entrar con el email o con el nombre. **Superusuario** (recuperación,
+fuera de la BD): `overseer` / `maestro-overseer` — desbloquea el menú de
+mantenimiento (Ctrl+Shift+M en Ajustes). Cambia estas claves en producción.
 
 Resetear la BD a semilla limpia: parar el backend y borrar `server/overseer.db*`
 (`.db`, `.db-wal`, `.db-shm`); al volver a `npm start` se resiembra.
