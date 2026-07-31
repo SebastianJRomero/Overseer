@@ -14,8 +14,12 @@
 */
 
 import { formatMoney, formatMoneyShort } from '../../../lib/money';
+import AnimatedNumber from '../../../components/AnimatedNumber/AnimatedNumber';
 import Sparkline from './charts/Sparkline';
 import styles from './FinanceKpis.module.css';
+
+/** Formatea el valor intermedio del tween como dinero (redondeado). */
+const asMoney = (n) => formatMoney(Math.round(n));
 
 export default function FinanceKpis({ entradas, salidas, balance, movCount, history, onOpenKpi, onOpenHistory }) {
   const margin = entradas ? Math.round((balance / entradas) * 100) : 0;
@@ -23,9 +27,9 @@ export default function FinanceKpis({ entradas, salidas, balance, movCount, hist
   const netTotal = net.reduce((s, v) => s + v, 0);
 
   const cards = [
-    { kind: 'entradas', label: 'Entradas del mes', value: formatMoney(entradas), delta: `${movCount} movimientos registrados`, icon: '↗', color: 'var(--ok)', bar: 'linear-gradient(90deg, var(--ok), transparent)' },
-    { kind: 'salidas', label: 'Salidas del mes', value: formatMoney(salidas), delta: 'Egresos del mes', icon: '↘', color: 'var(--danger)', bar: 'linear-gradient(90deg, var(--danger), transparent)' },
-    { kind: 'balance', label: 'Balance neto', value: formatMoney(balance), delta: `${margin}% de margen`, icon: '◆', color: balance >= 0 ? 'var(--ok)' : 'var(--danger)', bar: 'linear-gradient(90deg, var(--danger-strong), transparent)' },
+    { kind: 'entradas', label: 'Entradas del mes', num: entradas, delta: `${movCount} movimientos registrados`, icon: '↗', color: 'var(--ok)', bar: 'linear-gradient(90deg, var(--ok), transparent)' },
+    { kind: 'salidas', label: 'Salidas del mes', num: salidas, delta: 'Egresos del mes', icon: '↘', color: 'var(--danger)', bar: 'linear-gradient(90deg, var(--danger), transparent)' },
+    { kind: 'balance', label: 'Balance neto', num: balance, delta: `${margin}% de margen`, icon: '◆', color: balance >= 0 ? 'var(--ok)' : 'var(--danger)', bar: 'linear-gradient(90deg, var(--danger-strong), transparent)' },
   ];
 
   return (
@@ -37,7 +41,7 @@ export default function FinanceKpis({ entradas, salidas, balance, movCount, hist
             <span className={styles.cardIcon} style={{ color: k.color }}>{k.icon}</span>
           </div>
           <div className={styles.cardBody}>
-            <span className={styles.cardValue}>{k.value}</span>
+            <span className={styles.cardValue}><AnimatedNumber value={k.num} format={asMoney} /></span>
             <span className={styles.cardDelta}>{k.delta}</span>
           </div>
           <div className={styles.cardBar} style={{ background: k.bar }} />

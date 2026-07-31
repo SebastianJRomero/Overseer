@@ -16,8 +16,12 @@
 import MonthNav from '../../../components/MonthNav/MonthNav';
 import EmptyState from '../../../components/EmptyState/EmptyState';
 import MovementRow from '../../finance/components/MovementRow';
+import AnimatedNumber from '../../../components/AnimatedNumber/AnimatedNumber';
 import { formatMoney } from '../../../lib/money';
 import styles from './DayMovements.module.css';
+
+/** Formatea el valor intermedio del tween como dinero (redondeado). */
+const asMoney = (n) => formatMoney(Math.round(n));
 
 export default function DayMovements({
   dayLabel, isToday, prevDay, nextDay, goToday,
@@ -31,8 +35,8 @@ export default function DayMovements({
           <span className={styles.title}>Movimientos del día</span>
           <span className={styles.subtitle}>{dayLabel} · {movements.length} movimientos</span>
         </div>
-        <span className={`${styles.pill} ${styles.pillIn}`}>↗ {formatMoney(entradas)}</span>
-        <span className={`${styles.pill} ${styles.pillOut}`}>↘ {formatMoney(salidas)}</span>
+        <span className={`${styles.pill} ${styles.pillIn}`}>↗ <AnimatedNumber value={entradas} format={asMoney} /></span>
+        <span className={`${styles.pill} ${styles.pillOut}`}>↘ <AnimatedNumber value={salidas} format={asMoney} /></span>
       </div>
 
       {/* Toolbar: navegación por día + registrar entrada/salida */}
