@@ -44,8 +44,16 @@ export default function DashboardModule() {
   const { members, counts, createMember, updateMember, renewMember } = useMembers();
   const {
     day, isToday, movements, entradas, salidas, upcoming, summary,
-    prevDay, nextDay, goToday, createMovement, settleMovement,
+    prevDay, nextDay, goToday, createMovement, settleMovement, refresh: refreshFinance,
   } = useDashboard();
+
+  /* Alta y renovación crean un asiento de membresía en el libro (backend). Como
+     eso NO pasa por useDashboard, refrescamos aquí las finanzas del Inicio para
+     que los KPIs y "Movimientos del día" se actualicen al instante (antes solo
+     cambiaban al cambiar de pestaña). */
+  const createMemberAndRefresh = async (datos) => { await createMember(datos); await refreshFinance(); };
+  const renewMemberAndRefresh = async (id, datos) => { await renewMember(id, datos); await refreshFinance(); };
+  const updateMemberAndRefresh = async (id, patch) => { await updateMember(id, patch); await refreshFinance(); };
 
   const movementModal = useModal();
   const summaryModal = useModal();
@@ -146,9 +154,9 @@ export default function DashboardModule() {
         request={memberRequest}
         members={members}
         canEdit={canEditMembers}
-        onCreate={createMember}
-        onUpdate={updateMember}
-        onRenew={renewMember}
+        onCreate={createMemberAndRefresh}
+        onUpdate={updateMemberAndRefresh}
+        onRenew={renewMemberAndRefresh}
       />
     </div>
   );

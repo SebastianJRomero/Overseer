@@ -27,27 +27,35 @@ import { formatMoney } from '../../../lib/money';
 import styles from '../dashboard.module.css';
 
 export default function DashboardKpis({ counts, total, ingresos, session, onFilterMembers, onOpenSummary }) {
+  // Formateadores para la cifra animada (redondea el valor intermedio del tween).
+  const asInt = (n) => String(Math.round(n));
+  const asMoney = (n) => formatMoney(Math.round(n));
+
   const cards = [
     {
-      key: 'activos', need: 'Miembros', label: 'Miembros activos', value: String(counts.activos),
+      key: 'activos', need: 'Miembros', label: 'Miembros activos',
+      numericValue: counts.activos, format: asInt,
       delta: `de ${total} registrados`, icon: 'dot',
       color: 'var(--ok-strong)', glow: 'rgba(62,207,116,.12)',
       onClick: () => onFilterMembers('activos'),
     },
     {
-      key: 'vencidos', need: 'Miembros', label: 'Vencidos', value: String(counts.vencidos),
+      key: 'vencidos', need: 'Miembros', label: 'Vencidos',
+      numericValue: counts.vencidos, format: asInt,
       delta: 'requieren renovación', icon: 'drop',
       color: 'var(--danger-strong)', glow: 'rgba(255,92,56,.13)',
       onClick: () => onFilterMembers('vencidos'),
     },
     {
-      key: 'pronto', need: 'Miembros', label: 'Vencen pronto', value: String(counts.pronto),
+      key: 'pronto', need: 'Miembros', label: 'Vencen pronto',
+      numericValue: counts.pronto, format: asInt,
       delta: 'próximos 7 días', icon: 'gas',
       color: 'var(--warn)', glow: 'rgba(255,179,92,.13)',
       onClick: () => onFilterMembers('pronto'),
     },
     {
-      key: 'ingresos', need: 'Finanzas', label: 'Ingresos del mes', value: formatMoney(ingresos),
+      key: 'ingresos', need: 'Finanzas', label: 'Ingresos del mes',
+      numericValue: ingresos, format: asMoney,
       delta: 'caja recibida', icon: 'wave',
       color: 'var(--info)', glow: 'rgba(127,177,245,.12)',
       onClick: onOpenSummary,
@@ -62,7 +70,8 @@ export default function DashboardKpis({ counts, total, ingresos, session, onFilt
         <KpiCard
           key={c.key}
           label={c.label}
-          value={c.value}
+          numericValue={c.numericValue}
+          format={c.format}
           delta={c.delta}
           icon={c.icon}
           color={c.color}
