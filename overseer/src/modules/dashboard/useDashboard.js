@@ -10,6 +10,9 @@
       totales (los pendientes SÍ suman aquí, igual que el prototipo: son
       dinero del día aunque esté por cobrar).
     - upcoming: próximos eventos del calendario (máx 4).
+    - summary: resumen de caja del MES actual del libro mayor
+      ({ membershipTotal, membershipCount, otherTotal, total }) para el KPI
+      "Ingresos del mes" y su modal — sincronizado con Finanzas.
     - createMovement / settleMovement: mismas acciones que Finanzas, con la
       misma sincronización a calendario (pendientes/recurrentes → evento).
 
@@ -34,14 +37,17 @@ export default function useDashboard() {
   const [day, setDay] = useState(todayParts);
   const [movements, setMovements] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
+  const [summary, setSummary] = useState({ membershipTotal: 0, membershipCount: 0, otherTotal: 0, total: 0 });
 
   const refresh = useCallback(async () => {
-    const [movs, evs] = await Promise.all([
+    const [movs, evs, sum] = await Promise.all([
       movementsService.listDay(day.y, day.m, day.d),
       eventsService.getUpcoming(4),
+      movementsService.getMonthSummary(),
     ]);
     setMovements(movs);
     setUpcoming(evs);
+    setSummary(sum);
   }, [day]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -86,7 +92,7 @@ export default function useDashboard() {
   };
 
   return {
-    day, isToday, movements, entradas, salidas, upcoming,
+    day, isToday, movements, entradas, salidas, upcoming, summary,
     prevDay: () => shift(-1), nextDay: () => shift(1), goToday: () => setDay(todayParts()),
     createMovement, settleMovement,
   };

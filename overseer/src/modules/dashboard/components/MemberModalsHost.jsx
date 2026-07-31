@@ -18,6 +18,8 @@
   Recibe:
     - request: la petición descrita arriba (o null)
     - members: lista con status derivado (useMembers del Inicio)
+    - canEdit: permiso 'Editar miembros'. Si es false, la ficha abre en SOLO
+      LECTURA y no se atienden peticiones de alta ('add').
     - onCreate / onUpdate / onRenew: acciones de useMembers
 */
 
@@ -29,7 +31,7 @@ import MemberFilterModal from '../../members/components/MemberFilterModal';
 import MemberDetailModal from '../../members/components/MemberDetailModal';
 import MemberWizard from '../../members/components/MemberWizard';
 
-export default function MemberModalsHost({ request, members, onCreate, onUpdate, onRenew }) {
+export default function MemberModalsHost({ request, members, canEdit = true, onCreate, onUpdate, onRenew }) {
   const filterModal = useModal();
   const detailModal = useModal();
   const wizModal = useModal();
@@ -43,8 +45,10 @@ export default function MemberModalsHost({ request, members, onCreate, onUpdate,
   // La ficha lee SIEMPRE la versión fresca de la lista (ediciones en vivo).
   const selected = members.find((m) => m.id === selectedId) || null;
 
-  /* key+1 remonta el wizard: estado inicial limpio en cada apertura. */
+  /* key+1 remonta el wizard: estado inicial limpio en cada apertura.
+     Sin permiso de edición no se abre el alta (guarda defensiva). */
   const openAdd = () => {
+    if (!canEdit) return;
     setWizard((w) => ({ mode: 'add', member: null, key: w.key + 1 }));
     wizModal.open();
   };
@@ -65,6 +69,7 @@ export default function MemberModalsHost({ request, members, onCreate, onUpdate,
   }, [request]);
 
   const openRenew = (member) => {
+    if (!canEdit) return;
     detailModal.close();
     setWizard((w) => ({ mode: 'renew', member, key: w.key + 1 }));
     wizModal.open();
@@ -91,6 +96,7 @@ export default function MemberModalsHost({ request, members, onCreate, onUpdate,
         planOptions={planNames}
         onUpdate={onUpdate}
         onRenew={openRenew}
+        canEdit={canEdit}
       />
 
       <MemberWizard

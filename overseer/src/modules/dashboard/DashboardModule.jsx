@@ -23,27 +23,32 @@
 import { useState } from 'react';
 import { useModules } from '../../context/ModulesProvider';
 import { useSession } from '../../context/SessionProvider';
+import { hasPermission } from '../../app/moduleRegistry';
 import useModal from '../../hooks/useModal';
 import useDashboard from './useDashboard';
 import useMembers from '../members/useMembers';
-import { DAY_NAMES, MONTH_ABBR, pad2, todayDMY } from '../../lib/date';
+import { DAY_NAMES, MONTH_ABBR, MONTH_NAMES, pad2, todayDMY } from '../../lib/date';
 import MovementModal from '../finance/components/MovementModal';
 import DashboardHeader from './components/DashboardHeader';
 import DashboardKpis from './components/DashboardKpis';
+import FinanceSummaryModal from './components/FinanceSummaryModal';
 import MemberModalsHost from './components/MemberModalsHost';
 import { widgetsOf } from './widgets';
 import styles from './dashboard.module.css';
 
 export default function DashboardModule() {
   const { setActive } = useModules();
-  const { user } = useSession();
+  const session = useSession();
+  const { user } = session;
+  const canEditMembers = hasPermission(session, 'Editar miembros');
   const { members, counts, createMember, updateMember, renewMember } = useMembers();
   const {
-    day, isToday, movements, entradas, salidas, upcoming,
+    day, isToday, movements, entradas, salidas, upcoming, summary,
     prevDay, nextDay, goToday, createMovement, settleMovement,
   } = useDashboard();
 
   const movementModal = useModal();
+  const summaryModal = useModal();
   const [movement, setMovement] = useState(null); // { kind, fecha, key }
   // Petición de modal de miembros para MemberModalsHost. La `key` sube en
   // cada clic para poder reabrir el MISMO modal dos veces seguidas.
@@ -52,8 +57,12 @@ export default function DashboardModule() {
   // "Lunes 20 jul" — el mismo formato del prototipo para el selector de día.
   const dayLabel = `${DAY_NAMES[new Date(day.y, day.m, day.d).getDay()]} ${pad2(day.d)} ${MONTH_ABBR[day.m]}`;
 
-  // Ingresos del mes = lo pagado por las membresías vigentes registradas.
-  const ingresos = members.reduce((s, m) => s + (Number(m.valor) || 0), 0);
+  // Ingresos del mes = caja recibida este mes según el LIBRO MAYOR (mismo origen
+  // que Finanzas). Antes era Σ members.valor (métrica distinta); ahora el KPI y
+  // su modal-resumen quedan sincronizados con Finanzas.
+  const ingresos = summary.total;
+  const now = new Date();
+  const monthLabel = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
 
   /* key+1 remonta el modal en cada apertura (estado limpio, sin efectos). */
   const openMovement = (kind) => {
@@ -85,21 +94,33 @@ export default function DashboardModule() {
 
   const render = (widget) => <widget.Component key={widget.id} {...ctx} />;
 
+  // Widgets visibles por columna (ya filtrados por permiso). Si la columna
+  // principal queda vacía (p. ej. un rol sin Finanzas no ve "Movimientos del
+  // día"), colapsamos a UNA columna para no dejar un hueco ancho.
+  const mainWidgets = widgetsOf('main', session);
+  const sideWidgets = widgetsOf('side', session);
+  const singleColumn = mainWidgets.length === 0;
+
   return (
     <div className={styles.module}>
-      <DashboardHeader user={user} onAddMember={() => askMemberModal({ kind: 'add' })} />
+      <DashboardHeader
+        user={user}
+        canAddMember={canEditMembers}
+        onAddMember={() => askMemberModal({ kind: 'add' })}
+      />
 
       <DashboardKpis
         counts={counts}
         total={members.length}
         ingresos={ingresos}
+        session={session}
         onFilterMembers={(filter) => askMemberModal({ kind: 'filter', filter })}
-        onOpenFinance={() => setActive('finance')}
+        onOpenSummary={() => summaryModal.open()}
       />
 
-      <div className={styles.columns}>
-        <div className={styles.main}>{widgetsOf('main').map(render)}</div>
-        <div className={styles.side}>{widgetsOf('side').map(render)}</div>
+      <div className={singleColumn ? styles.columnsSingle : styles.columns}>
+        {!singleColumn && <div className={styles.main}>{mainWidgets.map(render)}</div>}
+        <div className={styles.side}>{sideWidgets.map(render)}</div>
       </div>
 
       {movement && (
@@ -111,10 +132,20 @@ export default function DashboardModule() {
         />
       )}
 
+      {/* Resumen de caja del mes (del libro mayor), abierto desde el KPI de
+          ingresos. El botón "Ver Finanzas" navega para quien quiera el detalle. */}
+      <FinanceSummaryModal
+        controller={summaryModal}
+        summary={summary}
+        monthLabel={monthLabel}
+        onOpenFinance={() => { summaryModal.close(); setActive('finance'); }}
+      />
+
       {/* Ficha / filtro / alta de miembros, abiertos SIN salir del Inicio. */}
       <MemberModalsHost
         request={memberRequest}
         members={members}
+        canEdit={canEditMembers}
         onCreate={createMember}
         onUpdate={updateMember}
         onRenew={renewMember}

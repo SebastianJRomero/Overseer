@@ -35,15 +35,66 @@ export const MODULES = [dashboard, members, calendar, finance, inventory, settin
 /** A dónde vuelve la app cuando se oculta el módulo activo (será 'dashboard'). */
 export const DEFAULT_MODULE_ID = MODULES[0].id;
 
+/*
+  Enforcement de permisos (Tramo C). Cada módulo exige una FUNCIÓN de acceso
+  (las de rolePermissions/usersService) para verse en usuarios NO-Admin. Los que
+  no figuran aquí no exigen permiso: 'dashboard' (Inicio) es el hogar y se ve
+  siempre. 'trainers' va con 'Clases' (los entrenadores viven con las clases; el
+  rol Entrenador tiene 'Clases'). El Admin y el superusuario ven TODO.
+*/
+const MODULE_PERM = {
+  members: 'Miembros',
+  calendar: 'Calendario',
+  finance: 'Finanzas',
+  inventory: 'Inventario',
+  classes: 'Clases',
+  trainers: 'Clases',
+  reports: 'Reportes',
+  settings: 'Ajustes',
+};
+
 /**
- * Módulos visibles en la navegación: los core siempre; los opcionales solo
- * si su flag no está apagado. Ordenados por meta.order.
- * @param {Record<string, boolean>} flags  moduleFlags de ModulesProvider
+ * ¿La sesión puede acceder a un módulo? El Admin/superusuario siempre; el resto
+ * solo si sus `permisos` incluyen la función que el módulo exige (o si no exige
+ * ninguna, como Inicio).
+ * @param {string} id                          id del módulo
+ * @param {{isSuper?, role?, permisos?}} sess   datos de sesión (useSession)
+ * @returns {boolean}
+ */
+export function canAccessModule(id, sess = {}) {
+  if (sess.isSuper || sess.role === 'Admin') return true;
+  const need = MODULE_PERM[id];
+  if (!need) return true; // módulo sin permiso requerido (Inicio)
+  return (sess.permisos || []).includes(need);
+}
+
+/**
+ * ¿La sesión tiene una FUNCIÓN de acceso puntual? (permisos de grano fino que no
+ * mapean a un módulo, como 'Editar miembros'). El Admin/superusuario siempre; el
+ * resto solo si sus `permisos` la incluyen. Es el mismo criterio que
+ * canAccessModule pero para una función concreta.
+ * @param {{isSuper?, role?, permisos?}} sess   datos de sesión (useSession)
+ * @param {string} fn                           función (p. ej. 'Editar miembros')
+ * @returns {boolean}
+ */
+export function hasPermission(sess = {}, fn) {
+  if (sess.isSuper || sess.role === 'Admin') return true;
+  return (sess.permisos || []).includes(fn);
+}
+
+/**
+ * Módulos visibles en la navegación: los core siempre (frente a flags); los
+ * opcionales solo si su flag no está apagado; y —si se pasa la sesión— solo los
+ * que el usuario tiene permiso de ver. Ordenados por meta.order.
+ * @param {Record<string, boolean>} flags   moduleFlags de ModulesProvider
+ * @param {{isSuper?, role?, permisos?}|null} sess  sesión para filtrar por
+ *        permisos; null/omitido = sin filtro de permisos (compat)
  * @returns {Array} lista de metas visibles
  */
-export function getVisibleModules(flags = {}) {
+export function getVisibleModules(flags = {}, sess = null) {
   return MODULES
     .filter((m) => m.core || flags[m.id] !== false)
+    .filter((m) => !sess || canAccessModule(m.id, sess))
     .sort((a, b) => a.order - b.order);
 }
 
