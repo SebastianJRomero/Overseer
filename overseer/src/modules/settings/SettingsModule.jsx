@@ -9,21 +9,49 @@
   del contenido; a su izquierda, la sub-nav. Layout de 2 columnas.
 */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useSettings from './useSettings';
 import useSwapAnimation from '../../hooks/useSwapAnimation';
-import { SETTINGS_SECTIONS, DEFAULT_SECTION } from './settingsSections';
+import { SETTINGS_SECTIONS, MAINTENANCE_SECTION, DEFAULT_SECTION } from './settingsSections';
+import { useSession } from '../../context/SessionProvider';
 import SettingsNav from './components/SettingsNav';
 import Icon from '../../components/Icon/Icon';
 import styles from './settings.module.css';
 
 export default function SettingsModule() {
   const settings = useSettings();
+  const { isSuper } = useSession();
   const [section, setSection] = useState(DEFAULT_SECTION);
+  const [unlocked, setUnlocked] = useState(false); // atajo secreto revelado
 
-  const meta = SETTINGS_SECTIONS.find((s) => s.id === section) || SETTINGS_SECTIONS[0];
+  // SOLO el superusuario (credencial maestra) alcanza el menú de mantenimiento.
+  // NO se gatea por rol: el login es permisivo (cualquier usuario entra como
+  // Admin por fallback, ver routes/auth.js), así que gatear por 'Admin' lo
+  // dejaría abierto a CUALQUIER login. El menú es del superusuario y punto.
+  const canMaintain = isSuper;
+
+  // Atajo secreto (Ctrl+Shift+M): revela la sección oculta y salta a ella.
+  // Sin permiso no hace nada (ni siquiera revela que existe).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'M' || e.key === 'm')) {
+        e.preventDefault();
+        if (!canMaintain) return;
+        setUnlocked(true);
+        setSection(MAINTENANCE_SECTION.id);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [canMaintain]);
+
+  // La sección de mantenimiento se anexa a la nav SOLO si está desbloqueada y
+  // el usuario tiene permiso; si no, la lista es la de siempre.
+  const sections = unlocked && canMaintain ? [...SETTINGS_SECTIONS, MAINTENANCE_SECTION] : SETTINGS_SECTIONS;
+
+  const meta = sections.find((s) => s.id === section) || SETTINGS_SECTIONS[0];
   const SectionComponent = meta.Component;
-  const swap = useSwapAnimation(section, ['swapA', 'swapB']);
+  const swap = useSwapAnimation(meta.id, ['swapA', 'swapB']);
 
   return (
     <div className={styles.module}>
@@ -35,7 +63,7 @@ export default function SettingsModule() {
 
       {/* Dos columnas: sub-nav + contenido de la sección */}
       <div className={styles.grid}>
-        <SettingsNav sections={SETTINGS_SECTIONS} active={section} onSelect={setSection} />
+        <SettingsNav sections={sections} active={meta.id} onSelect={setSection} />
 
         <div className={styles.content}>
           {/* Cabecera de la sección activa */}

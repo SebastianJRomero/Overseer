@@ -24,6 +24,7 @@ import usersRouter from './routes/users.js';
 import settingsRouter from './routes/settings.js';
 import classesRouter from './routes/classes.js';
 import trainersRouter from './routes/trainers.js';
+import maintenanceRouter from './routes/maintenance.js';
 
 const PORT = process.env.PORT || 3001;
 
@@ -54,6 +55,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/classes', classesRouter);
 app.use('/api/trainers', trainersRouter);
+app.use('/api/maintenance', maintenanceRouter);
 
 // Manejador de errores: cualquier throw en una ruta responde 500 con el mensaje.
 app.use((err, req, res, _next) => {
