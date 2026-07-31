@@ -40,9 +40,9 @@ Antes de escribir código, la sesión nueva debería:
 | 6 | Módulo `inventory` (productos / equipo / gas) | revisada y mergeada (PR #7) | 2026-07-24 |
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
-| 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (frente 1 mergeado en PR #14; resto en **PR #15** abierto). **Tramo C** (rama `fase-10-tramo-c`): frente 5 (menú avanzado + **superusuario global**) **commiteado** (`4069fa7`); frente 6 (**enforcement de permisos por rol/usuario**) **hecho, en revisión** | 2026-07-30 |
-| 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
+| 9 | Cierre: auditoría de fidelidad vs prototipo | revisada y mergeada (PR #10) | 2026-07-24 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** mergeada (PR #12). **Tramo B** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) mergeada (PR #14 + #15). **Tramo C** (menú avanzado + superusuario, enforcement de permisos por rol/usuario, y ajustes de feedback: permiso "Editar miembros", resumen de finanzas en Inicio, orden de tabla por encabezados, zoom) — **en revisión (PR #16)** | 2026-07-31 |
+| 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | revisada y mergeada (PR #13) | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
 
@@ -1156,10 +1156,12 @@ apilan sobre el frente 6 (enforcement), que también sigue sin commitear.
 
 ## Cómo continuar
 
-**Fase 10 — Tramo C: frente 5 COMMITEADO (`4069fa7`); frente 6 (enforcement)
-HECHO, en revisión (rama `fase-10-tramo-c`, sin commitear).** Con esto el Tramo C
-queda funcionalmente completo, a falta de tu revisión del frente 6 y de decidir el
-follow-up de widgets del dashboard.
+**Fase 10 — Tramo C: COMMITEADO y en PR #16** (rama `fase-10-tramo-c` → `main`).
+Incluye frente 5 (menú avanzado + superusuario, `4069fa7`), frente 6 (enforcement
+de permisos por rol/usuario) y los ajustes de feedback (permiso "Editar miembros",
+resumen de finanzas en Inicio, orden de la tabla por encabezados, zoom, widgets del
+dashboard filtrados por permisos). Con esto el Tramo C queda funcionalmente
+completo, a falta del merge del PR #16.
 
 **Fase 10 — Tramo B: CERRADO, en revisión.** El Tramo A está mergeado (PR #12).
 El Tramo B se hizo **frente por frente** en la rama `fase-10-tramo-b`. ⚠ El
