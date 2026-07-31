@@ -12,6 +12,7 @@
     - minWidth: ancho mínimo de cada tarjeta en px (auto-fit), 150 por defecto
 */
 
+import AnimatedValue from '../AnimatedNumber/AnimatedValue';
 import styles from './StatTiles.module.css';
 
 export default function StatTiles({ items, minWidth = 150 }) {
@@ -24,7 +25,7 @@ export default function StatTiles({ items, minWidth = 150 }) {
         <div key={k.label} className={styles.tile}>
           <span className={styles.label}>{k.label}</span>
           <div className={styles.valueRow}>
-            <span className={styles.value} style={{ color: k.color || 'var(--text-strong)' }}>{k.value}</span>
+            <span className={styles.value} style={{ color: k.color || 'var(--text-strong)' }}><AnimatedValue value={k.value} /></span>
             {k.delta && (
               <span
                 className={styles.delta}
