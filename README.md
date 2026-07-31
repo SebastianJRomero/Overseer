@@ -1,13 +1,12 @@
 # OVERSEER · Sistema de gestión modular
 
-> Todo lo que un negocio pequeño o mediano necesita para llevar su control, en un
-> solo lugar: fácil, intuitivo y agradable a la vista. Sin licencias costosas, sin
-> facturación electrónica y sin sistemas complicados.
+> Todo lo que un negocio pequeño o mediano necesita para llevar su control, en un solo lugar:
+> fácil, intuitivo y agradable a la vista. Sin licencias costosas y sin sistemas complicados.
 
 ## ¿Qué es Overseer?
 
 **Overseer** es un sistema de gestión modular pensado para negocios pequeños y
-medianos —muchos familiares o que dependen de pocas personas— que necesitan
+medianos, muchos familiares o que dependen de pocas personas y que necesitan
 llevar el control de sus finanzas, movimientos, tareas y clientes sin recurrir a
 alternativas caras o con licencias de uso.
 
@@ -34,7 +33,6 @@ capacitación especial.
 - **Permisos por usuario** con *checklist* editable: cada cuenta ve y hace solo lo que se le concede.
 - Distinción **ver vs. editar** (p. ej. un entrenador puede consultar miembros pero no modificarlos, salvo que se le active el permiso).
 - La navegación se **restringe automáticamente**: cada usuario ve únicamente los módulos permitidos.
-- **Superusuario de recuperación** para mantenimiento, independiente de las cuentas de la base de datos.
 
 ### Inicio (panel del día)
 - Indicadores clave (miembros activos, vencidos, por vencer, ingresos del mes) con **cifras animadas**.
@@ -85,19 +83,15 @@ capacitación especial.
 
 ### Ajustes
 - **General**: datos del gimnasio y logo.
-- **Apariencia**: **tema claro/oscuro**, color de acento, densidad, redondez y **zoom** de la interfaz.
+- **Apariencia**: **tema claro/oscuro** y **zoom** de la interfaz.
 - **Módulos**: activar u ocultar los módulos opcionales.
 - **Cuentas y roles**: crear/editar/eliminar usuarios y ajustar sus permisos.
 - **Planes**: administrar el catálogo de membresías.
 - **Notificaciones**: preferencias de avisos.
 - **Datos**: exportación a CSV y copias de seguridad.
 
-### Mantenimiento (menú avanzado)
-- Panel oculto para el superusuario: **exportar/importar** toda la base (JSON), **borrado selectivo** por
-  entidad y **reinicio total**, siempre con confirmación fuerte (escribir la palabra de seguridad).
-
 ### Experiencia de uso
-- **Tema claro y oscuro**, **zoom ajustable** (para pantallas pequeñas o grandes) y acento/densidad configurables.
+- **Tema claro y oscuro**, **zoom ajustable** (para pantallas pequeñas o grandes).
 - **Cifras animadas** en todos los indicadores.
 - Amplia compatibilidad y diseño cuidado ("Overseer Modernist").
 
@@ -108,7 +102,6 @@ capacitación especial.
 | Administrador | `admin@overseer.gym` | `admin123` | Acceso total |
 | Recepción | `recepcion@overseer.gym` | `recepcion123` | Miembros, calendario y finanzas |
 | Entrenador | `entrenador@overseer.gym` | `entrenador123` | Consulta de miembros, calendario y clases |
-| Superusuario | `overseer` | `maestro-overseer` | Recuperación + mantenimiento |
 
 > Son credenciales **de desarrollo**: cámbialas en un uso real.
 
@@ -127,7 +120,6 @@ El proyecto incluye empaquetados listos para el día a día del local:
 - **Servidor + navegador** con un `.bat`: doble clic y la app abre en una ventana dedicada.
 - **Modo segundo plano**: el servidor corre oculto (sin ventanas de consola) y se abre en una
   ventana de app; puede arrancar solo al encender el equipo y elegir el navegador (Edge, Chrome, etc.).
-- **App de escritorio (Electron)**: instalador/`.exe` que corre sin necesidad de tener Node instalado.
 
 La base de datos es un archivo local que **se conserva entre actualizaciones**.
 
