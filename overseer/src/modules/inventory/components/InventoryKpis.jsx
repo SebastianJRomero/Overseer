@@ -9,6 +9,7 @@
     - items: [{ label, value, color }]
 */
 
+import AnimatedValue from '../../../components/AnimatedNumber/AnimatedValue';
 import styles from './InventoryKpis.module.css';
 
 export default function InventoryKpis({ items }) {
@@ -17,7 +18,7 @@ export default function InventoryKpis({ items }) {
       {items.map((k) => (
         <div key={k.label} className={styles.card}>
           <span className={styles.label}>{k.label}</span>
-          <span className={styles.value} style={{ color: k.color }}>{k.value}</span>
+          <span className={styles.value} style={{ color: k.color }}><AnimatedValue value={k.value} /></span>
         </div>
       ))}
     </div>

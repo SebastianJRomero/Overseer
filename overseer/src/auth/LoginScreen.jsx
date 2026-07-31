@@ -10,8 +10,9 @@
     4. Tras la confirmación → fase 'saliendo' (fundido `loginFade`) y se
        avisa a SessionProvider (enter) para montar el shell con `appEnter`.
 
-  La validación real la hace authService (mock: no vacíos). Aquí solo se
-  orquesta la UI; la celebración vive en su propio componente.
+  La validación real la hace el backend (auth con contraseña hasheada) vía
+  authService; si falla devuelve { ok:false } y se muestra el error. Aquí solo
+  se orquesta la UI; la celebración vive en su propio componente.
 */
 
 import { useRef, useState } from 'react';
@@ -115,11 +116,11 @@ export default function LoginScreen() {
           </div>
         </div>
 
-        {/* error */}
+        {/* error: distingue campos vacíos de credenciales incorrectas */}
         {error && (
           <div className={styles.errorBox}>
             <span className={styles.errorIcon}>✕</span>
-            <span>Ingresa tu usuario y contraseña.</span>
+            <span>{user.trim() && pass ? 'Usuario o contraseña incorrectos.' : 'Ingresa tu usuario y contraseña.'}</span>
           </div>
         )}
 

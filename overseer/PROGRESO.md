@@ -40,9 +40,9 @@ Antes de escribir código, la sesión nueva debería:
 | 6 | Módulo `inventory` (productos / equipo / gas) | revisada y mergeada (PR #7) | 2026-07-24 |
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
-| 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (frente 1 mergeado en PR #14; resto en **PR #15** abierto). **Tramo C** (rama `fase-10-tramo-c`): frente 5 (menú avanzado + **superusuario global**) **commiteado** (`4069fa7`); frente 6 (**enforcement de permisos por rol/usuario**) **hecho, en revisión** | 2026-07-30 |
-| 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
+| 9 | Cierre: auditoría de fidelidad vs prototipo | revisada y mergeada (PR #10) | 2026-07-24 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** mergeada (PR #12). **Tramo B** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) mergeada (PR #14 + #15). **Tramo C** (menú avanzado + superusuario, enforcement de permisos por rol/usuario, y ajustes de feedback: permiso "Editar miembros", resumen de finanzas en Inicio, orden de tabla por encabezados, zoom) — **en revisión (PR #16)** | 2026-07-31 |
+| 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | revisada y mergeada (PR #13) | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
 
@@ -72,6 +72,12 @@ Antes de escribir código, la sesión nueva debería:
     comporta igual que hoy). **Tramo B** (pendiente): libro mayor único, sync
     Planes↔alta/renovación, auth real con rol, eliminar cuentas (Admin) y menú
     avanzado import/reset. Checkpoint de revisión entre ambos.
+12. **Auth real con contraseña hasheada** (2026-07-31, Tramo C). **Revierte** la
+    idea previa de "la contraseña nunca se guarda": ahora se guarda su HASH
+    (scrypt, sin dependencias) y se valida en el login. Se quitó el fallback
+    "cualquier usuario entra como Admin". El superusuario maestro (fuera de la
+    BD) se conserva como acceso de recuperación. Claves semilla de desarrollo en
+    `HANDOFF.md` (cambiar en producción).
 
 ## Limitaciones conocidas (se resuelven en la Fase 10, NO son bugs)
 
@@ -1151,15 +1157,44 @@ limpios; verificación E2E en navegador (DOM) como Entrenador y Admin.
    solo-desktop/Chromium). Slider sutil en `UserMenu` (paso 5, con % en vivo).
    Verificado: 85% → `html.style.zoom=0.85`, persiste en `overseer:apariencia`.
 
-**Pendiente de tu revisión + commit** (nada commiteado aún): estos 5 ajustes se
-apilan sobre el frente 6 (enforcement), que también sigue sin commitear.
+Estos 5 ajustes y el frente 6 (enforcement) se commitearon juntos y van en el
+**PR #16**.
+
+## Fase 10 — Tramo C · auth real con contraseña (2026-07-31, rama `fase-10-tramo-c`)
+
+Se reemplaza el login permisivo por **autenticación real con contraseña
+hasheada** (revierte la decisión #"la contraseña nunca se guarda", ver
+decisión #12). Ya NO entra cualquiera inventando datos.
+
+- **Hash sin dependencias:** `server/src/lib/password.js` (nuevo) usa `scrypt` de
+  `crypto` (Node), guarda `salt:hash` por cuenta y verifica en tiempo constante.
+- **Backend:** `users.pass_hash` nueva (CREATE + migración idempotente en
+  `db.js`). `routes/auth.js` valida usuario activo + `verifyPassword`; sin match
+  → `{ ok:false }` (se quitó el fallback "cualquiera es Admin"). El
+  **superusuario maestro** (fuera de la BD) sigue como recuperación.
+  `routes/users.js` hashea `pass` al crear y, al editar, solo cambia la clave si
+  llega `pass` no vacía. `pass_hash` nunca se devuelve al cliente.
+- **Seed:** las 4 cuentas nacen con claves de desarrollo (`admin123`,
+  `recepcion123`, `entrenador123` — ver `HANDOFF.md`).
+- **Frontend:** `UserModal` manda la contraseña (campo también en edición,
+  opcional); `usersService` la reenvía; `LoginScreen` distingue "campos vacíos"
+  de "usuario o contraseña incorrectos". `authService` ya trataba `{ ok:false }`.
+- **Verificado (API + navegador):** clave correcta entra; clave errada, usuario
+  inexistente y cuenta inactiva → error; login por email o por nombre;
+  superusuario OK. Lint y build limpios.
+
+**Nota:** en BDs no reseteadas, las cuentas viejas quedan con `pass_hash` vacío y
+NO podrán entrar hasta fijarles clave (editándolas) o resembrar. El superusuario
+siempre entra (recuperación).
 
 ## Cómo continuar
 
-**Fase 10 — Tramo C: frente 5 COMMITEADO (`4069fa7`); frente 6 (enforcement)
-HECHO, en revisión (rama `fase-10-tramo-c`, sin commitear).** Con esto el Tramo C
-queda funcionalmente completo, a falta de tu revisión del frente 6 y de decidir el
-follow-up de widgets del dashboard.
+**Fase 10 — Tramo C: COMMITEADO y en PR #16** (rama `fase-10-tramo-c` → `main`).
+Incluye frente 5 (menú avanzado + superusuario, `4069fa7`), frente 6 (enforcement
+de permisos por rol/usuario) y los ajustes de feedback (permiso "Editar miembros",
+resumen de finanzas en Inicio, orden de la tabla por encabezados, zoom, widgets del
+dashboard filtrados por permisos). Con esto el Tramo C queda funcionalmente
+completo, a falta del merge del PR #16.
 
 **Fase 10 — Tramo B: CERRADO, en revisión.** El Tramo A está mergeado (PR #12).
 El Tramo B se hizo **frente por frente** en la rama `fase-10-tramo-b`. ⚠ El

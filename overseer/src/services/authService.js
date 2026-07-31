@@ -1,10 +1,10 @@
 /*
   services/authService.js — Autenticación (API real: Node + Express + SQLite).
 
-  login() valida contra el backend (POST /auth/login), que devuelve la cuenta
-  con su ROL. Las cuentas NO guardan contraseña (decisión del proyecto), así que
-  la clave solo se exige no vacía; lo importante es que la sesión traiga el rol
-  (habilita el gating de Admin). Ver server/src/routes/auth.js.
+  login() valida contra el backend (POST /auth/login) con AUTH REAL: la cuenta
+  debe existir, estar activa y la contraseña debe verificar contra su hash
+  (scrypt). El backend devuelve la cuenta con su ROL y permisos, o { ok:false }
+  si las credenciales son incorrectas. Ver server/src/routes/auth.js.
 
   "Recordarme" decide si la sesión sobrevive recargas: con remember se guarda la
   cuenta en storage; sin remember, vive solo en memoria (React) y se pierde al

@@ -19,6 +19,7 @@
 import { Router } from 'express';
 import { db, nextOrd } from '../db.js';
 import { newId } from '../lib/id.js';
+import { todayDMY } from '../lib/date.js';
 
 const router = Router();
 
@@ -32,15 +33,21 @@ function listAll() {
 /**
  * Registra el pago de una membresía como asiento del libro mayor.
  * Se omite si no hay monto (plan "Especial" o valor 0): no hubo cobro.
- * @param {{nombre, tipo, valor, inicio}} m  datos del miembro (alta o renovación)
+ *
+ * La `fecha` del asiento es la del PAGO (hoy), NO el inicio de la cobertura: es
+ * caja recibida hoy. Antes usaba `inicio`, y en una renovación anticipada ese
+ * inicio cae en un mes futuro → el ingreso no aparecía en "hoy" ni en el mes
+ * actual de Finanzas. Con la fecha de hoy, alta y renovación entran al libro y
+ * se ven en los movimientos del día y del mes.
+ * @param {{nombre, tipo, valor}} m  datos del miembro (alta o renovación)
  */
-function addMembershipEntry({ nombre, tipo, valor, inicio }) {
+function addMembershipEntry({ nombre, tipo, valor }) {
   if (!valor || valor <= 0) return;
   db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria)
     VALUES (@id, @ord, 'entrada', @monto, @motivo, @fecha, 0, 1, '{}', 'membresia')`)
     .run({
       id: newId('mv'), ord: nextOrd('movements', 'top'),
-      monto: valor, motivo: `Membresía ${tipo || ''} · ${nombre || ''}`.trim(), fecha: inicio || '',
+      monto: valor, motivo: `Membresía ${tipo || ''} · ${nombre || ''}`.trim(), fecha: todayDMY(),
     });
 }
 

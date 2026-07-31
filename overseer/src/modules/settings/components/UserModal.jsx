@@ -1,8 +1,9 @@
 /*
   UserModal — Crear / editar una cuenta (modal 560px), al estilo de la ficha de
   miembro: columna de FOTO subible + badge de rol, y a la derecha una grilla de
-  campos (nombre, usuario o correo, cédula, teléfono, [contraseña solo al crear])
-  y una CHECKLIST de accesos EDITABLE (activar/desactivar por función).
+  campos (nombre, usuario o correo, cédula, teléfono, contraseña) y una CHECKLIST
+  de accesos EDITABLE (activar/desactivar por función). La contraseña se manda al
+  backend y se guarda HASHEADA (auth real); al editar, en blanco = no cambiarla.
 
   Elegir un rol precarga sus accesos por defecto (rolePermissions); luego el
   Admin puede afinar función por función para dar más o menos permisos a esa
@@ -74,6 +75,9 @@ export default function UserModal({ controller, mode = 'add', user, canDelete, o
   const save = () => {
     if (!canSave) return;
     const datos = { nombre: nombre.trim(), email: email.trim(), rol, cedula, telefono, foto, permisos };
+    // La contraseña se envía al crear siempre; al editar, solo si se escribió
+    // una nueva (en blanco = conservar la actual).
+    if (pass) datos.pass = pass;
     if (isEdit) onUpdate(user.id, datos);
     else onSave(datos);
   };
@@ -125,13 +129,17 @@ export default function UserModal({ controller, mode = 'add', user, canDelete, o
             <Field label="Teléfono">
               <input value={telefono} onChange={(e) => setTelefono(onlyDigits(e.target.value))} placeholder="Solo números" style={mono} inputMode="numeric" />
             </Field>
-            {!isEdit && (
-              <div className={styles.full}>
-                <Field label="Contraseña">
-                  <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="••••••••" style={mono} />
-                </Field>
-              </div>
-            )}
+            <div className={styles.full}>
+              <Field label={isEdit ? 'Contraseña (en blanco = no cambiar)' : 'Contraseña'}>
+                <input
+                  type="password"
+                  value={pass}
+                  onChange={(e) => setPass(e.target.value)}
+                  placeholder={isEdit ? 'Dejar en blanco para conservarla' : '••••••••'}
+                  style={mono}
+                />
+              </Field>
+            </div>
           </div>
 
           <Field label="Rol">

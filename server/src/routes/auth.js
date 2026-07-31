@@ -3,15 +3,15 @@
 
     POST /auth/login   { user, pass } → { ok, user }
 
-  Auth de demo con ROL real (Tramo B · frente 3). Las cuentas NO guardan
-  contraseña (decisión del proyecto: la clave nunca se persiste), así que la
-  contraseña solo se exige NO vacía. La gracia es que la sesión traiga el ROL:
+  Auth REAL con contraseña hasheada. La clave se guarda como hash scrypt en
+  users.pass_hash (ver lib/password.js) y se valida en cada login:
 
-    - Si `user` (email o nombre) coincide con una cuenta ACTIVA → se devuelve esa
-      cuenta con su rol real → habilita el gating de Admin (frente 4).
-    - Si no coincide → sesión de demo con rol 'Admin', para no bloquear el
-      acceso rápido de siempre (escribir cualquier usuario entra). Cambiar a
-      rechazo estricto es trivial: devolver { ok: false } en ese caso.
+    - `user` (email o nombre) debe coincidir con una cuenta ACTIVA y la
+      contraseña debe verificar contra su hash → se devuelve la cuenta con su
+      rol y permisos reales.
+    - Cualquier otro caso (usuario inexistente, cuenta inactiva, clave errada,
+      o cuenta sin hash) → { ok: false }. Ya NO existe el fallback "cualquiera
+      entra como Admin"; el único acceso sin cuenta es el superusuario maestro.
 
   Superusuario global (Tramo C · frente 5): una credencial MAESTRA que NO vive
   en la BD. Sobrevive a "eliminar cuentas" y al reset total → es el acceso de
@@ -23,6 +23,7 @@
 
 import { Router } from 'express';
 import { db } from '../db.js';
+import { verifyPassword } from '../lib/password.js';
 
 const router = Router();
 
@@ -52,15 +53,15 @@ router.post('/login', (req, res) => {
   }
 
   const row = db.prepare(
-    `SELECT id, nombre, email, rol, permisos FROM users
+    `SELECT id, nombre, email, rol, permisos, pass_hash FROM users
      WHERE activo = 1 AND (LOWER(email) = LOWER(@ident) OR LOWER(nombre) = LOWER(@ident))
      LIMIT 1`,
   ).get({ ident });
 
-  if (row) return res.json({ ok: true, user: toAccount(row) });
-  // Fallback de demo: usuario no registrado → sesión Admin (acceso total) con el
-  // nombre escrito. Mantiene el acceso rápido de siempre.
-  return res.json({ ok: true, user: { id: null, nombre: ident, email: '', rol: 'Admin', permisos: ALL_ACCESS } });
+  // Cuenta válida SOLO si existe, está activa y la contraseña verifica.
+  if (row && verifyPassword(pass, row.pass_hash)) return res.json({ ok: true, user: toAccount(row) });
+  // Sin fallback: usuario/clave incorrectos → acceso denegado.
+  return res.json({ ok: false });
 });
 
 export default router;
