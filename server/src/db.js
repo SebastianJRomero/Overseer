@@ -82,7 +82,8 @@ export function migrate() {
       id TEXT PRIMARY KEY, ord REAL NOT NULL,
       nombre TEXT, email TEXT, rol TEXT, activity TEXT, activo INTEGER DEFAULT 1,
       cedula TEXT DEFAULT '', telefono TEXT DEFAULT '', foto TEXT DEFAULT '',
-      permisos TEXT DEFAULT '[]'
+      permisos TEXT DEFAULT '[]',
+      pass_hash TEXT DEFAULT ''   -- auth real: "salt:hash" (scrypt); vacío = no puede entrar
     );
 
     CREATE TABLE IF NOT EXISTS classes (
@@ -111,6 +112,9 @@ export function migrate() {
   ensureColumn('users', 'foto', "TEXT DEFAULT ''");
   // Permisos por cuenta (JSON de funciones accesibles): editable por el Admin.
   ensureColumn('users', 'permisos', "TEXT DEFAULT '[]'");
+  // Auth real: hash de la contraseña ("salt:hash", scrypt). BDs viejas quedan
+  // con '' → esas cuentas no entran hasta fijarles clave (o resembrar).
+  ensureColumn('users', 'pass_hash', "TEXT DEFAULT ''");
 }
 
 /**
