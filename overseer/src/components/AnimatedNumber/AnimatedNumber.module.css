@@ -1,0 +1,20 @@
+/* AnimatedNumber.module.css — cifra que cuenta + pulso al cambiar.
+   Keyframe local (CSS Modules hashea los nombres): debe vivir aquí. */
+
+.num {
+  display: inline-block;
+  /* No hereda color especial: usa el del contenedor (el KPI le da su color). */
+}
+
+/* Pulso breve al actualizar: leve escala + realce de brillo, sin mover el layout
+   (transform-origin a la izquierda para que la cifra no "salte"). */
+.pulse {
+  animation: numPulse 0.55s ease;
+  transform-origin: left center;
+}
+
+@keyframes numPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  35% { transform: scale(1.11); filter: brightness(1.35); }
+  100% { transform: scale(1); filter: brightness(1); }
+}

@@ -94,6 +94,6 @@ export default function useDashboard() {
   return {
     day, isToday, movements, entradas, salidas, upcoming, summary,
     prevDay: () => shift(-1), nextDay: () => shift(1), goToday: () => setDay(todayParts()),
-    createMovement, settleMovement,
+    createMovement, settleMovement, refresh,
   };
 }
