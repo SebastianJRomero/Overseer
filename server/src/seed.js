@@ -14,6 +14,7 @@
 import { db } from './db.js';
 import { todayDMY, addDays, addMonths, formatDMY, todayAtMidnight, dateKey, parseDMY } from './lib/date.js';
 import { createSeededRandom } from './lib/seededRandom.js';
+import { hashPassword } from './lib/password.js';
 
 /** ¿La tabla está vacía? (para sembrar solo una vez). */
 function isEmpty(table) {
@@ -161,15 +162,22 @@ const ROLE_ACCESS = {
 
 function seedUsers() {
   if (!isEmpty('users')) return;
+  // Contraseñas por defecto (auth real). SOLO para desarrollo/demo — cámbialas
+  // en producción. El superusuario (overseer/maestro-overseer) es aparte y no
+  // vive en la BD (recuperación). Ver routes/auth.js y HANDOFF.md.
   const rows = [
-    { id: 'u-andres', nombre: 'Andrés Ríos', email: 'admin@overseer.gym', rol: 'Admin', activity: 'Hace 5 min', activo: 1, cedula: '1017234880', telefono: '3105567712' },
-    { id: 'u-paula', nombre: 'Paula Méndez', email: 'recepcion@overseer.gym', rol: 'Recepción', activity: 'Hace 2 h', activo: 1, cedula: '1039922145', telefono: '3128840091' },
-    { id: 'u-carlos', nombre: 'Carlos Vega', email: 'recepcion2@overseer.gym', rol: 'Recepción', activity: 'Ayer', activo: 1, cedula: '71998233', telefono: '3004471180' },
-    { id: 'u-diana', nombre: 'Diana López', email: 'entrenador@overseer.gym', rol: 'Entrenador', activity: 'Hace 3 días', activo: 0, cedula: '1152009943', telefono: '3159087744' },
+    { id: 'u-andres', nombre: 'Andrés Ríos', email: 'admin@overseer.gym', rol: 'Admin', activity: 'Hace 5 min', activo: 1, cedula: '1017234880', telefono: '3105567712', pass: 'admin123' },
+    { id: 'u-paula', nombre: 'Paula Méndez', email: 'recepcion@overseer.gym', rol: 'Recepción', activity: 'Hace 2 h', activo: 1, cedula: '1039922145', telefono: '3128840091', pass: 'recepcion123' },
+    { id: 'u-carlos', nombre: 'Carlos Vega', email: 'recepcion2@overseer.gym', rol: 'Recepción', activity: 'Ayer', activo: 1, cedula: '71998233', telefono: '3004471180', pass: 'recepcion123' },
+    { id: 'u-diana', nombre: 'Diana López', email: 'entrenador@overseer.gym', rol: 'Entrenador', activity: 'Hace 3 días', activo: 0, cedula: '1152009943', telefono: '3159087744', pass: 'entrenador123' },
   ];
-  const stmt = db.prepare(`INSERT INTO users (id, ord, nombre, email, rol, activity, activo, cedula, telefono, foto, permisos)
-    VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo, @cedula, @telefono, '', @permisos)`);
-  rows.forEach((r, i) => stmt.run({ ...r, ord: i + 1, permisos: JSON.stringify(ROLE_ACCESS[r.rol] || []) }));
+  const stmt = db.prepare(`INSERT INTO users (id, ord, nombre, email, rol, activity, activo, cedula, telefono, foto, permisos, pass_hash)
+    VALUES (@id, @ord, @nombre, @email, @rol, @activity, @activo, @cedula, @telefono, '', @permisos, @pass_hash)`);
+  rows.forEach(({ pass, ...r }, i) => stmt.run({
+    ...r, ord: i + 1,
+    permisos: JSON.stringify(ROLE_ACCESS[r.rol] || []),
+    pass_hash: hashPassword(pass),
+  }));
 }
 
 /* ══════════════════ CLASES ══════════════════ */

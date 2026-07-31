@@ -72,6 +72,12 @@ Antes de escribir código, la sesión nueva debería:
     comporta igual que hoy). **Tramo B** (pendiente): libro mayor único, sync
     Planes↔alta/renovación, auth real con rol, eliminar cuentas (Admin) y menú
     avanzado import/reset. Checkpoint de revisión entre ambos.
+12. **Auth real con contraseña hasheada** (2026-07-31, Tramo C). **Revierte** la
+    idea previa de "la contraseña nunca se guarda": ahora se guarda su HASH
+    (scrypt, sin dependencias) y se valida en el login. Se quitó el fallback
+    "cualquier usuario entra como Admin". El superusuario maestro (fuera de la
+    BD) se conserva como acceso de recuperación. Claves semilla de desarrollo en
+    `HANDOFF.md` (cambiar en producción).
 
 ## Limitaciones conocidas (se resuelven en la Fase 10, NO son bugs)
 
@@ -1151,8 +1157,35 @@ limpios; verificación E2E en navegador (DOM) como Entrenador y Admin.
    solo-desktop/Chromium). Slider sutil en `UserMenu` (paso 5, con % en vivo).
    Verificado: 85% → `html.style.zoom=0.85`, persiste en `overseer:apariencia`.
 
-**Pendiente de tu revisión + commit** (nada commiteado aún): estos 5 ajustes se
-apilan sobre el frente 6 (enforcement), que también sigue sin commitear.
+Estos 5 ajustes y el frente 6 (enforcement) se commitearon juntos y van en el
+**PR #16**.
+
+## Fase 10 — Tramo C · auth real con contraseña (2026-07-31, rama `fase-10-tramo-c`)
+
+Se reemplaza el login permisivo por **autenticación real con contraseña
+hasheada** (revierte la decisión #"la contraseña nunca se guarda", ver
+decisión #12). Ya NO entra cualquiera inventando datos.
+
+- **Hash sin dependencias:** `server/src/lib/password.js` (nuevo) usa `scrypt` de
+  `crypto` (Node), guarda `salt:hash` por cuenta y verifica en tiempo constante.
+- **Backend:** `users.pass_hash` nueva (CREATE + migración idempotente en
+  `db.js`). `routes/auth.js` valida usuario activo + `verifyPassword`; sin match
+  → `{ ok:false }` (se quitó el fallback "cualquiera es Admin"). El
+  **superusuario maestro** (fuera de la BD) sigue como recuperación.
+  `routes/users.js` hashea `pass` al crear y, al editar, solo cambia la clave si
+  llega `pass` no vacía. `pass_hash` nunca se devuelve al cliente.
+- **Seed:** las 4 cuentas nacen con claves de desarrollo (`admin123`,
+  `recepcion123`, `entrenador123` — ver `HANDOFF.md`).
+- **Frontend:** `UserModal` manda la contraseña (campo también en edición,
+  opcional); `usersService` la reenvía; `LoginScreen` distingue "campos vacíos"
+  de "usuario o contraseña incorrectos". `authService` ya trataba `{ ok:false }`.
+- **Verificado (API + navegador):** clave correcta entra; clave errada, usuario
+  inexistente y cuenta inactiva → error; login por email o por nombre;
+  superusuario OK. Lint y build limpios.
+
+**Nota:** en BDs no reseteadas, las cuentas viejas quedan con `pass_hash` vacío y
+NO podrán entrar hasta fijarles clave (editándolas) o resembrar. El superusuario
+siempre entra (recuperación).
 
 ## Cómo continuar
 
