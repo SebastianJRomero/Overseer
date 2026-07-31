@@ -22,6 +22,9 @@
     - planOptions: nombres de plan que ofrece el gimnasio
     - onUpdate: (id, patch) => void
     - onRenew: (member) => void — abre el wizard de renovación
+    - canEdit: con permiso 'Editar miembros'. Si es false, la ficha es de SOLO
+      LECTURA: los controles editables se muestran como texto y se ocultan
+      "Renovar", el editor de nombre y el selector de foto.
 */
 
 import { useEffect, useRef, useState } from 'react';
@@ -38,7 +41,7 @@ import { computeFin, STATUS } from '../../../lib/memberStatus';
 import { ESTADO_STYLES, getPlanStyle } from '../memberStyles';
 import styles from './MemberDetailModal.module.css';
 
-export default function MemberDetailModal({ controller, member, planOptions, onUpdate, onRenew }) {
+export default function MemberDetailModal({ controller, member, planOptions, onUpdate, onRenew, canEdit = true }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const fileInputRef = useRef(null);
@@ -86,17 +89,23 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
       <div className={styles.header}>
         {/* Columna izquierda: foto (adjuntable) + identidad fija */}
         <div className={styles.photoCol}>
-          <button type="button" className={styles.photo} title="Subir foto" onClick={() => fileInputRef.current?.click()}>
+          <button
+            type="button"
+            className={styles.photo}
+            title={canEdit ? 'Subir foto' : undefined}
+            onClick={canEdit ? () => fileInputRef.current?.click() : undefined}
+            disabled={!canEdit}
+          >
             {member.foto ? (
               <img className={styles.photoImg} src={member.foto} alt={member.nombre} />
             ) : (
               <>
                 <span className={styles.photoInitials}>{getInitials(member.nombre)}</span>
-                <span className={styles.photoLabel}>SUBIR FOTO</span>
+                {canEdit && <span className={styles.photoLabel}>SUBIR FOTO</span>}
               </>
             )}
           </button>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={onPhotoPick} hidden />
+          {canEdit && <input ref={fileInputRef} type="file" accept="image/*" onChange={onPhotoPick} hidden />}
 
           <div className={styles.idField}>
             <span className={styles.idLabel}>Cédula</span>
@@ -116,7 +125,9 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
               {!editingName && (
                 <div className={styles.nameView}>
                   <span className={styles.name}>{member.nombre}</span>
-                  <button type="button" className={styles.editBtn} title="Editar nombre" onClick={startEditName}>✎</button>
+                  {canEdit && (
+                    <button type="button" className={styles.editBtn} title="Editar nombre" onClick={startEditName}>✎</button>
+                  )}
                 </div>
               )}
               <div className={styles.badges}>
@@ -151,35 +162,51 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
 
           <div className={styles.grid}>
             <Field label="Fecha inicio">
-              <DatePicker value={member.inicio} onChange={changeInicio} />
+              {canEdit
+                ? <DatePicker value={member.inicio} onChange={changeInicio} />
+                : <span className={styles.roValue}>{member.inicio}</span>}
             </Field>
             <Field label="Fecha fin">
-              <DatePicker value={member.fin} onChange={(fin) => onUpdate(member.id, { fin })} align="right" />
+              {canEdit
+                ? <DatePicker value={member.fin} onChange={(fin) => onUpdate(member.id, { fin })} align="right" />
+                : <span className={styles.roValue}>{member.fin}</span>}
             </Field>
             <Field label="Membresía">
-              <PlanDropdown
-                value={member.tipo}
-                options={planOptions}
-                onChange={(tipo) => onUpdate(member.id, { tipo })}
-              />
+              {canEdit
+                ? (
+                  <PlanDropdown
+                    value={member.tipo}
+                    options={planOptions}
+                    onChange={(tipo) => onUpdate(member.id, { tipo })}
+                  />
+                )
+                : <span className={styles.roValue}>{member.tipo}</span>}
             </Field>
             <Field label="N° Recibo">
-              <input
-                className={`${styles.editInput} ${styles.mono}`}
-                value={member.recibo}
-                onChange={(e) => onUpdate(member.id, { recibo: e.target.value })}
-                placeholder="RC-0000"
-              />
+              {canEdit
+                ? (
+                  <input
+                    className={`${styles.editInput} ${styles.mono}`}
+                    value={member.recibo}
+                    onChange={(e) => onUpdate(member.id, { recibo: e.target.value })}
+                    placeholder="RC-0000"
+                  />
+                )
+                : <span className={`${styles.roValue} ${styles.mono}`}>{member.recibo || '—'}</span>}
             </Field>
             <div className={styles.obsField}>
               <Field label="Observaciones">
-                <textarea
-                  className={styles.editTextarea}
-                  value={member.obs}
-                  onChange={(e) => onUpdate(member.id, { obs: e.target.value })}
-                  placeholder="Sin observaciones"
-                  rows={2}
-                />
+                {canEdit
+                  ? (
+                    <textarea
+                      className={styles.editTextarea}
+                      value={member.obs}
+                      onChange={(e) => onUpdate(member.id, { obs: e.target.value })}
+                      placeholder="Sin observaciones"
+                      rows={2}
+                    />
+                  )
+                  : <span className={styles.roValue}>{member.obs || 'Sin observaciones'}</span>}
               </Field>
             </div>
           </div>
@@ -190,7 +217,7 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
         <span className={styles.lastRenewal}>Última renovación: {member.inicio}</span>
         <div className={styles.actions}>
           <Button variant="outline" onClick={() => controller.close()}>Cerrar</Button>
-          <Button onClick={() => onRenew(member)}>↻ Renovar membresía</Button>
+          {canEdit && <Button onClick={() => onRenew(member)}>↻ Renovar membresía</Button>}
         </div>
       </div>
     </Modal>

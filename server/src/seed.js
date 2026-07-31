@@ -154,8 +154,8 @@ function seedPlans() {
 // Accesos por defecto de cada rol (espeja rolePermissions.js del front). Se
 // usa para sembrar el `permisos` inicial de cada cuenta; el Admin lo ajusta.
 const ROLE_ACCESS = {
-  Admin: ['Miembros', 'Calendario', 'Finanzas', 'Inventario', 'Clases', 'Reportes', 'Ajustes', 'Cuentas'],
-  Recepción: ['Miembros', 'Calendario', 'Finanzas'],
+  Admin: ['Miembros', 'Editar miembros', 'Calendario', 'Finanzas', 'Inventario', 'Clases', 'Reportes', 'Ajustes', 'Cuentas'],
+  Recepción: ['Miembros', 'Editar miembros', 'Calendario', 'Finanzas'],
   Entrenador: ['Miembros', 'Calendario', 'Clases'],
 };
 

@@ -10,6 +10,8 @@
 
   Recibe:
     - user: nombre del usuario logueado (string o null)
+    - canAddMember: si es false se oculta "＋ Agregar miembro" (sin permiso
+      'Editar miembros', p. ej. rol Entrenador).
     - onAddMember: () => void
 */
 
@@ -23,7 +25,7 @@ function greetingFor(hour) {
   return 'Buenas noches';
 }
 
-export default function DashboardHeader({ user, onAddMember }) {
+export default function DashboardHeader({ user, canAddMember = true, onAddMember }) {
   const saludo = `${greetingFor(new Date().getHours())}, ${user || 'Admin'}`;
 
   return (
@@ -32,9 +34,11 @@ export default function DashboardHeader({ user, onAddMember }) {
         <span className={styles.title}>Inicio</span>
         <span className={styles.subtitle}>Resumen general — {saludo}</span>
       </div>
-      <button type="button" className={styles.addBtn} onClick={onAddMember}>
-        <Icon name="add" /> Agregar miembro
-      </button>
+      {canAddMember && (
+        <button type="button" className={styles.addBtn} onClick={onAddMember}>
+          <Icon name="add" /> Agregar miembro
+        </button>
+      )}
     </div>
   );
 }

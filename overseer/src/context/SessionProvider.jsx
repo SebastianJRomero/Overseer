@@ -7,6 +7,10 @@
         App muestra un frame vacío en vez de parpadear el login.
     - user: nombre del usuario logueado (o null) — compat con toda la UI.
     - role: rol del usuario ('Admin' | 'Recepción' | ...) — para el gating.
+    - isSuper: true si entró con la credencial maestra (superusuario global) —
+      desbloquea el menú de mantenimiento aunque no exista ningún Admin.
+    - permisos: funciones accesibles de la cuenta (['Miembros', ...]) — con esto
+      la navegación filtra qué módulos ve cada usuario (enforcement, Tramo C).
     - userId: id de la cuenta (o null si es una sesión de demo sin cuenta).
     - account: la cuenta completa { id, nombre, email, rol } (o null).
     - justIn: true durante ~600 ms tras el login — AppShell lo usa para
@@ -63,6 +67,8 @@ export default function SessionProvider({ children }) {
       status,
       user: account?.nombre ?? null, // compat: la UI usa `user` como el nombre
       role: account?.rol ?? null,
+      isSuper: account?.super ?? false,
+      permisos: account?.permisos ?? [],
       userId: account?.id ?? null,
       account,
       justIn, enter, logout,

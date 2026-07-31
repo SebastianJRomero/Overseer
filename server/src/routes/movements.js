@@ -15,6 +15,7 @@
     GET   /movements/history?y=&m=    → [[mes, ingresos, egresos], …]  (getHistory · 6 meses)
     GET   /movements/income-breakdown → [{ label, value, color, pct }] (getIncomeBreakdown)
     GET   /movements/upcoming-expenses→ [{ label, due, value, urgent }](getUpcomingExpenses)
+    GET   /movements/summary          → { membershipTotal, membershipCount, otherTotal, total } (getMonthSummary)
 */
 
 import { Router } from 'express';
@@ -141,6 +142,30 @@ router.get('/income-breakdown', (req, res) => {
     .map((cat) => ({ label: CATEGORY_META[cat].label, value: totals[cat], color: CATEGORY_META[cat].color }));
   const total = rows.reduce((s, r) => s + r.value, 0) || 1;
   res.json(rows.map((r) => ({ ...r, pct: Math.round((r.value / total) * 100) })));
+});
+
+/**
+ * getMonthSummary: resumen de caja del MES CALENDARIO actual para el Inicio
+ * (el KPI "Ingresos del mes" y su modal-resumen). Separa lo cobrado por
+ * MEMBRESÍAS (categoria 'membresia', con su conteo) del resto de ingresos, y
+ * da el total. Solo cuenta entradas CONFIRMADAS (los pendientes no suman),
+ * igual criterio que el desglose de Finanzas → todo sale del libro mayor.
+ */
+router.get('/summary', (req, res) => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  let membershipTotal = 0;
+  let membershipCount = 0;
+  let otherTotal = 0;
+  for (const r of readAll()) {
+    if (!inMonth(r, y, m) || sign(r.tipo) < 0) continue;
+    const pending = r.tipo === 'entrada_pend' && !r.settled;
+    if (pending) continue;
+    if (r.categoria === 'membresia') { membershipTotal += r.monto; membershipCount += 1; }
+    else otherTotal += r.monto;
+  }
+  res.json({ membershipTotal, membershipCount, otherTotal, total: membershipTotal + otherTotal });
 });
 
 /**

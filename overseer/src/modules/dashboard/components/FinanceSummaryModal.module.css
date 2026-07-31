@@ -1,0 +1,136 @@
+/* FinanceSummaryModal.module.css — resumen de caja del mes (Inicio). */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: var(--info-bg, rgba(127, 177, 245, 0.12));
+  color: var(--info);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.month {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 15px;
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--border-1);
+  color: var(--text-title);
+}
+
+/* ── Total destacado ── */
+.totalRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 18px 20px 14px;
+}
+
+.total {
+  font-size: 30px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+  color: var(--info);
+}
+
+.totalSub {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Desglose ── */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 20px 18px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-1);
+}
+
+.rowInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowLabel {
+  font-size: var(--fs-body, 13px);
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.rowSub {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.rowValue {
+  flex: none;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text-title);
+}
+
+/* ── Pie ── */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 20px 18px;
+}

@@ -140,3 +140,68 @@ export function nextOrd(table, where) {
   const row = db.prepare(`SELECT MAX(ord) AS m FROM ${table}`).get();
   return (row.m ?? 0) + 1;
 }
+
+/* ══════════════════ Mantenimiento (Tramo C · frente 5) ══════════════════
+   Helpers de export/import/borrado que usa el menú avanzado (/api/maintenance).
+   El orden importa para las FK: `gas_cylinders` va ANTES que `gas_usos` al
+   insertar (padre primero); al borrar da igual porque gas_usos cae por CASCADE.
+*/
+
+/** Todas las tablas del volcado, en orden apto para insertar (padres primero). */
+export const ALL_TABLES = [
+  'members', 'movements', 'events', 'products', 'equipment',
+  'gas_cylinders', 'gas_usos', 'plans', 'users', 'classes', 'trainers', 'settings',
+];
+
+/**
+ * Vuelca la BD completa a un objeto { tabla: filas[] } (para exportar/respaldar).
+ * @returns {Record<string, object[]>}
+ */
+export function exportAll() {
+  const out = {};
+  for (const t of ALL_TABLES) out[t] = db.prepare(`SELECT * FROM ${t}`).all();
+  return out;
+}
+
+/** Inserta una fila genérica: arma columnas y placeholders desde sus claves. */
+function insertRow(table, row) {
+  const cols = Object.keys(row);
+  if (!cols.length) return;
+  const names = cols.join(', ');
+  const holders = cols.map((c) => `@${c}`).join(', ');
+  db.prepare(`INSERT INTO ${table} (${names}) VALUES (${holders})`).run(row);
+}
+
+/**
+ * Restaura desde un volcado { tabla: filas[] }. Reemplaza SOLO las tablas
+ * presentes en el bundle (borra y reinserta), dentro de una transacción.
+ * @param {Record<string, object[]>} bundle
+ */
+export function importAll(bundle) {
+  const present = ALL_TABLES.filter((t) => Array.isArray(bundle?.[t]));
+  const run = db.transaction(() => {
+    for (const t of present) db.prepare(`DELETE FROM ${t}`).run();
+    for (const t of present) for (const row of bundle[t]) insertRow(t, row);
+  });
+  run();
+}
+
+/** Borra TODAS las filas de TODAS las tablas (empezar de cero). */
+export function clearAll() {
+  const run = db.transaction(() => {
+    for (const t of ALL_TABLES) db.prepare(`DELETE FROM ${t}`).run();
+  });
+  run();
+}
+
+/**
+ * Borra las filas de una lista de tablas (borrado selectivo por entidad).
+ * @param {string[]} tables  subconjunto de ALL_TABLES
+ */
+export function clearTables(tables) {
+  const valid = tables.filter((t) => ALL_TABLES.includes(t));
+  const run = db.transaction(() => {
+    for (const t of valid) db.prepare(`DELETE FROM ${t}`).run();
+  });
+  run();
+}

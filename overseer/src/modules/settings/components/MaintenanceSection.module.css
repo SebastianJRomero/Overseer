@@ -1,0 +1,129 @@
+/* MaintenanceSection.module.css — menú avanzado (Tramo C · frente 5).
+   Reutiliza las filas de SettingsShared; aquí van solo el banner, los mensajes
+   de resultado, los botones (neutro / peligro) y los controles del modal de
+   confirmación fuerte. Todo por tokens (voltea bien en claro/oscuro). */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Aviso de sección restringida. */
+.banner {
+  padding: 12px 15px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--warn-border, var(--border-2));
+  background: var(--warn-bg);
+  color: var(--text-mid);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.banner b { color: var(--text-title); }
+
+/* Mensajes de resultado. */
+.okMsg,
+.errMsg {
+  padding: 10px 14px;
+  border-radius: var(--r-btn);
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid;
+}
+.okMsg {
+  color: var(--ok-strong);
+  background: var(--ok-bg);
+  border-color: var(--ok-border);
+}
+.errMsg {
+  color: var(--danger-strong);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+
+/* Botón neutro (exportar/importar): outline sobrio. */
+.neutralBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-4);
+  background: var(--surface-hover);
+  color: var(--text-mid);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+  transition: border-color 0.13s;
+}
+.neutralBtn:hover { border-color: var(--border-hover); }
+
+/* Botón de peligro "fantasma" (una entidad): texto/borde rojos. */
+.dangerGhost {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--danger-border);
+  background: transparent;
+  color: var(--danger);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+  transition: background 0.13s;
+}
+.dangerGhost:hover { background: var(--danger-bg); }
+
+/* Botón de peligro sólido (reset + confirmar en el modal). */
+.dangerBtn {
+  height: 36px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--danger-strong);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+.dangerBtn:hover { filter: brightness(1.08); }
+.dangerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* ── Controles del ConfirmDangerModal ── */
+.warnText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-mid);
+}
+.typeHint {
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.typeHint b {
+  color: var(--danger-strong);
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+}
+.keyInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 13px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-4);
+  background: var(--surface-2);
+  color: var(--text-title);
+  font-size: var(--fs-body);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+.keyInput:focus {
+  outline: none;
+  border-color: var(--danger);
+}

@@ -53,3 +53,49 @@ export function remove(key) {
     /* ignorar: si no se pudo borrar es que tampoco se pudo guardar */
   }
 }
+
+/* ── Helpers de mantenimiento (Tramo C · frente 5) ──────────────────────────
+   Operan sobre TODO lo que vive bajo el prefijo `overseer:` (apariencia, tema,
+   flags de módulos, sesión…). Los usa el menú avanzado para exportar/importar
+   la config local y para el reset total. */
+
+/** Lista las claves cortas (sin prefijo) guardadas por la app. */
+function prefixedKeys() {
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const full = localStorage.key(i);
+      if (full && full.startsWith(PREFIX)) out.push(full.slice(PREFIX.length));
+    }
+  } catch { /* sin acceso a localStorage: devolvemos lo que haya */ }
+  return out;
+}
+
+/**
+ * Vuelca toda la config local a un objeto { claveCorta: valor }.
+ * @returns {Record<string, *>}
+ */
+export function exportAll() {
+  const out = {};
+  for (const k of prefixedKeys()) out[k] = load(k, null);
+  return out;
+}
+
+/**
+ * Escribe varias claves de una (restaurar config local desde un respaldo).
+ * @param {Record<string, *>} obj
+ */
+export function importAll(obj) {
+  if (!obj || typeof obj !== 'object') return;
+  for (const [k, v] of Object.entries(obj)) save(k, v);
+}
+
+/**
+ * Borra toda la config local del prefijo, salvo las claves excluidas.
+ * @param {string[]} [except]  claves cortas a conservar (p. ej. ['auth'])
+ */
+export function clearAll(except = []) {
+  for (const k of prefixedKeys()) {
+    if (!except.includes(k)) remove(k);
+  }
+}

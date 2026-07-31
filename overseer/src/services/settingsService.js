@@ -26,16 +26,17 @@ const DEFAULT_APPEARANCE = {
   accent: 'coral',        // coral | electrico | oceano | purpura
   density: 'comodo',      // compacto | comodo | espacioso
   roundness: 'redondeado', // nitido | redondeado | suave
+  zoom: 100,              // % de zoom de la interfaz (85–115) — control del menú de usuario
 };
 
-/** @returns {Promise<{accent, density, roundness}>} */
+/** @returns {Promise<{tema, accent, density, roundness, zoom}>} */
 export async function getAppearance() {
   return { ...DEFAULT_APPEARANCE, ...load('apariencia', {}) };
 }
 
 /**
  * Guarda uno o varios ejes de apariencia.
- * @param {Partial<{accent, density, roundness}>} patch
+ * @param {Partial<{tema, accent, density, roundness, zoom}>} patch
  * @returns {Promise<object>} la apariencia resultante
  */
 export async function setAppearance(patch) {
