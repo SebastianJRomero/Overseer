@@ -3,6 +3,8 @@
 > Todo lo que un negocio pequeño o mediano necesita para llevar su control, en un solo lugar:
 > fácil, intuitivo y agradable a la vista. Sin licencias costosas y sin sistemas complicados.
 
+<img width="1818" height="859" alt="Overseer Modular System" src="https://github.com/user-attachments/assets/0bd1aa1c-a345-451f-8187-7cfd2a232d3f" />
+
 ## ¿Qué es Overseer?
 
 **Overseer** es un sistema de gestión modular pensado para negocios pequeños y
