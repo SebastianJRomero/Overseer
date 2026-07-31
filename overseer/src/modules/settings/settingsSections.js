@@ -20,6 +20,7 @@ import AccountsSection from './components/AccountsSection';
 import PlansSection from './components/PlansSection';
 import NotificationsSection from './components/NotificationsSection';
 import DataSection from './components/DataSection';
+import MaintenanceSection from './components/MaintenanceSection';
 
 export const SETTINGS_SECTIONS = [
   { id: 'general', icon: 'brand', label: 'Datos del gimnasio', desc: 'Nombre, contacto y horarios', Component: GeneralSection },
@@ -29,6 +30,17 @@ export const SETTINGS_SECTIONS = [
   { id: 'notificaciones', icon: 'notification', label: 'Notificaciones', desc: 'Recordatorios y avisos', Component: NotificationsSection },
   { id: 'datos', icon: 'reports', label: 'Respaldos y datos', desc: 'Exportar y copias de seguridad', Component: DataSection },
 ];
+
+/*
+  Sección OCULTA de mantenimiento (Tramo C · frente 5). No va en el array de
+  arriba a propósito: no aparece en la sub-nav. SettingsModule la añade a la
+  navegación SOLO cuando el atajo Ctrl+Shift+M la desbloquea y el usuario es
+  SUPERUSUARIO (no basta el rol Admin: el login es permisivo). Se mantiene
+  aparte para no exponerla por accidente.
+*/
+export const MAINTENANCE_SECTION = {
+  id: 'mantenimiento', icon: 'key', label: 'Mantenimiento', desc: 'Zona avanzada · acceso restringido', Component: MaintenanceSection,
+};
 
 /** Sección por defecto (la primera del registro). */
 export const DEFAULT_SECTION = SETTINGS_SECTIONS[0].id;

@@ -16,13 +16,16 @@
   reciben todo por props, sin leer estado del módulo.
 */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import useMembers from './useMembers';
 import useActivePlans from '../../hooks/useActivePlans';
 import useModal from '../../hooks/useModal';
+import { useSession } from '../../context/SessionProvider';
+import { hasPermission } from '../../app/moduleRegistry';
 import { SPECIAL_PLAN } from '../../lib/memberStatus';
 import { onlyDigits } from '../../lib/format';
 import MembersToolbar from './components/MembersToolbar';
+import { DEFAULT_SORT, DEFAULT_DIR, sortMembers } from './memberSort';
 import MemberTable from './components/MemberTable';
 import MemberDetailModal from './components/MemberDetailModal';
 import MemberWizard from './components/MemberWizard';
@@ -35,7 +38,13 @@ export default function MembersModule() {
   // Para la ficha (PlanDropdown): nombres de planes activos + "Especial".
   const planNames = [...plans.map((p) => p.nombre), SPECIAL_PLAN];
 
+  // 'Editar miembros' habilita alta/renovación y la ficha editable. Sin él la
+  // tabla y la ficha son de SOLO LECTURA (p. ej. el rol Entrenador consulta).
+  const session = useSession();
+  const canEdit = hasPermission(session, 'Editar miembros');
+
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState(DEFAULT_SORT);
   const [selectedId, setSelectedId] = useState(null);
   const [wizard, setWizard] = useState({ mode: 'add', member: null, key: 0 });
   const [filter, setFilter] = useState(null);
@@ -59,6 +68,14 @@ export default function MembersModule() {
       })
     : members;
 
+  /* Orden de la tabla (búsqueda ya aplicada). Se controla clicando los
+     encabezados; A-Z es el defecto. Clic en la columna activa invierte; clic en
+     otra la activa con su dirección natural. */
+  const sorted = useMemo(() => sortMembers(visible, sort), [visible, sort]);
+  const onSort = (field) => setSort((s) => (s.field === field
+    ? { field, dir: s.dir === 'asc' ? 'desc' : 'asc' }
+    : { field, dir: DEFAULT_DIR[field] }));
+
   // La ficha lee SIEMPRE la versión fresca de la lista (ediciones en vivo).
   const selected = members.find((m) => m.id === selectedId) || null;
 
@@ -67,13 +84,16 @@ export default function MembersModule() {
     detailModal.open();
   };
 
-  /* key+1 remonta el wizard: estado inicial limpio en cada apertura. */
+  /* key+1 remonta el wizard: estado inicial limpio en cada apertura.
+     Guardas defensivas: sin permiso de edición, alta y renovación no abren. */
   const openAdd = () => {
+    if (!canEdit) return;
     setWizard((w) => ({ mode: 'add', member: null, key: w.key + 1 }));
     wizModal.open();
   };
 
   const openRenew = (member) => {
+    if (!canEdit) return;
     detailModal.close();
     setWizard((w) => ({ mode: 'renew', member, key: w.key + 1 }));
     wizModal.open();
@@ -99,9 +119,10 @@ export default function MembersModule() {
         onQuery={setQuery}
         onFilter={openFilter}
         onAdd={openAdd}
+        canEdit={canEdit}
       />
 
-      <MemberTable members={visible} onOpen={openDetail} />
+      <MemberTable members={sorted} onOpen={openDetail} sort={sort} onSort={onSort} />
 
       <MemberDetailModal
         controller={detailModal}
@@ -109,6 +130,7 @@ export default function MembersModule() {
         planOptions={planNames}
         onUpdate={updateMember}
         onRenew={openRenew}
+        canEdit={canEdit}
       />
 
       <MemberWizard

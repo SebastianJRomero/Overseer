@@ -16,6 +16,7 @@
     getHistory(y, m)     → Promise<[mes, ingresos, egresos][]>  (6 meses)
     getIncomeBreakdown() → Promise<[{ label, value, color, pct }]>
     getUpcomingExpenses()→ Promise<[{ label, due, value, urgent }]>
+    getMonthSummary()    → Promise<{ membershipTotal, membershipCount, otherTotal, total }>
 */
 
 import { apiGet, apiPost } from './api';
@@ -74,4 +75,13 @@ export async function getIncomeBreakdown() {
  */
 export async function getUpcomingExpenses() {
   return apiGet('/movements/upcoming-expenses');
+}
+
+/**
+ * Resumen de caja del mes actual para el Inicio: membresías (con conteo), otros
+ * ingresos y total. Sincronizado con el libro mayor (solo entradas confirmadas).
+ * @returns {Promise<{membershipTotal, membershipCount, otherTotal, total}>}
+ */
+export async function getMonthSummary() {
+  return apiGet('/movements/summary');
 }

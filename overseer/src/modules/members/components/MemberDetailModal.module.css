@@ -35,6 +35,13 @@
 .photo:hover {
   border-color: var(--acc-1);
 }
+/* En solo lectura la foto no es interactiva: sin cursor ni realce al pasar. */
+.photo:disabled {
+  cursor: default;
+}
+.photo:disabled:hover {
+  border-color: var(--border-4);
+}
 
 /* Imagen adjunta: ocupa el marco completo. */
 .photoImg {
@@ -249,6 +256,21 @@
 
 .mono {
   font-family: var(--font-mono);
+}
+
+/* Valor de campo en SOLO LECTURA: mismo alto/tipografía que un input pero sin
+   caja editable (sin fondo ni borde), para que la ficha de consulta se lea como
+   una ficha y no como un formulario deshabilitado. */
+.roValue {
+  display: block;
+  width: 100%;
+  padding: 9px 2px;
+  font-size: var(--fs-small);
+  color: var(--text-soft);
+  min-height: 38px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .editTextarea {

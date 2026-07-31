@@ -17,13 +17,13 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from '../../context/SessionProvider';
-import { useTheme } from '../../theme/ThemeProvider';
+import { useTheme, ZOOM_MIN, ZOOM_MAX } from '../../theme/ThemeProvider';
 import { getInitials } from '../../lib/initials';
 import styles from './UserMenu.module.css';
 
 export default function UserMenu() {
   const { user, role, logout } = useSession();
-  const { tema, setAppearance } = useTheme();
+  const { tema, zoom, setAppearance } = useTheme();
   const [open, setOpen] = useState(false);
   const name = user || 'Admin';
   const roleLabel = role || 'Administrador';
@@ -54,6 +54,25 @@ export default function UserMenu() {
                 <span className={styles.headerName}>{name}</span>
                 <span className={styles.headerRole}>{roleLabel}</span>
               </div>
+            </div>
+
+            {/* Zoom de la interfaz — deslizante sutil (85–115%). Reduce para que
+                los modales quepan sin scroll; aumenta para más detalle. */}
+            <div className={styles.zoomBlock}>
+              <div className={styles.zoomTop}>
+                <span className={styles.zoomLabel}>Zoom</span>
+                <span className={styles.zoomValue}>{zoom}%</span>
+              </div>
+              <input
+                type="range"
+                className={styles.zoomSlider}
+                min={ZOOM_MIN}
+                max={ZOOM_MAX}
+                step={5}
+                value={zoom}
+                onChange={(e) => setAppearance({ zoom: Number(e.target.value) })}
+                aria-label="Zoom de la interfaz"
+              />
             </div>
 
             <div className={styles.actions}>

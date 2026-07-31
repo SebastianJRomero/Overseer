@@ -15,18 +15,29 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as settingsService from '../services/settingsService';
-import { DEFAULT_MODULE_ID } from '../app/moduleRegistry';
+import { DEFAULT_MODULE_ID, canAccessModule } from '../app/moduleRegistry';
+import { useSession } from './SessionProvider';
 
 const ModulesContext = createContext(null);
 
 export default function ModulesProvider({ children }) {
   const [active, setActive] = useState(DEFAULT_MODULE_ID);
   const [flags, setFlags] = useState({});
+  const { isSuper, role, permisos } = useSession();
 
   // Cargar los flags guardados al arrancar.
   useEffect(() => {
     settingsService.getModuleFlags().then(setFlags);
   }, []);
+
+  // Enforcement (Tramo C): si el módulo activo deja de ser accesible para la
+  // sesión (p. ej. al iniciar sesión con un rol sin permiso, o si cambian los
+  // permisos), volver a Inicio — nunca dejar a la vista un módulo prohibido.
+  useEffect(() => {
+    if (!canAccessModule(active, { isSuper, role, permisos })) {
+      setActive(DEFAULT_MODULE_ID);
+    }
+  }, [active, isSuper, role, permisos]);
 
   /** Enciende/apaga un módulo opcional (y aplica la regla de "volver a Inicio"). */
   const toggleModule = async (id) => {
