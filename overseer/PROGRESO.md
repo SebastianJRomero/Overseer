@@ -41,7 +41,7 @@ Antes de escribir código, la sesión nueva debería:
 | 7 | Módulo `settings` (7 secciones, incl. Apariencia) | revisada y mergeada (PR #8) | 2026-07-24 |
 | 8 | Módulos opcionales `classes` / `trainers` / `reports` | revisada y mergeada (PR #9) | 2026-07-24 |
 | 9 | Cierre: auditoría de fidelidad vs prototipo | hecha — **pendiente de revisión** | 2026-07-24 |
-| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (frente 1 mergeado en PR #14; resto en **PR #15** abierto). **Tramo C**: frente 5 (menú avanzado import/reset + **superusuario global**) **hecho, en revisión** (rama `fase-10-tramo-c`); falta enforcement de permisos por rol | 2026-07-30 |
+| 10 | Backend + BD — **Node + Express + SQLite** (reescribe `services/` mock→API; **libro mayor único** + peticiones del cliente: sync planes↔miembros, eliminar cuentas (Admin), menú avanzado import/reset — ver "Limitaciones conocidas") | **Tramo A** revisada y mergeada (PR #12). **Tramo B · frentes 1–4** (libro mayor, sync Planes, auth real, eliminar/editar cuentas Admin + permisos por usuario) + refinamientos de UI — **hecho, en revisión** (frente 1 mergeado en PR #14; resto en **PR #15** abierto). **Tramo C** (rama `fase-10-tramo-c`): frente 5 (menú avanzado + **superusuario global**) **commiteado** (`4069fa7`); frente 6 (**enforcement de permisos por rol/usuario**) **hecho, en revisión** | 2026-07-30 |
 | 11 | Reskin **"Overseer Modernist"** — fuente Archivo + **modo claro/oscuro** (nuevo eje `tema`) + refinamientos de UI. Rama independiente desde `main`, en paralelo a la Fase 10 | hecha — **pendiente de revisión** | 2026-07-29 |
 
 ## Decisiones aprobadas por el usuario
@@ -1040,11 +1040,126 @@ correr se instaló `better-sqlite3@12` **solo en node_modules** (`--no-save`, si
 tocar `package.json`). Conviene evaluar subir el pin a `^12` (sirve para Node 22 y
 24) — pendiente de tu OK (cambio de dependencia, regla #7).
 
+## Fase 10 — Tramo C · frente 6 (enforcement de permisos) — detalle (2026-07-30, rama `fase-10-tramo-c`)
+
+Los `permisos` que se guardaban/editaban por cuenta (frente 4) ahora **restringen
+la navegación**: cada usuario ve solo los módulos que su cuenta permite. Antes se
+guardaban pero no hacían nada. No se tocó ningún módulo de negocio; el cambio es
+la sesión + el registro + los dos consumidores de la navegación.
+
+**Modelo:** el Admin y el superusuario ven **todo**. El resto ve un módulo solo si
+sus `permisos` incluyen la **función** que ese módulo exige. `Inicio` (dashboard)
+no exige permiso: es el hogar y se ve siempre. Mapa función→módulo en
+`moduleRegistry` (`MODULE_PERM`): Miembros→members, Calendario→calendar,
+Finanzas→finance, Inventario→inventory, Clases→classes, **Clases→trainers**
+(los entrenadores viven con las clases), Reportes→reports, Ajustes→settings.
+
+**Backend (`server/`):**
+- `routes/auth.js` — el login ahora devuelve `permisos` en la sesión: de la cuenta
+  real (columna `users.permisos`), y **acceso total** (`ALL_ACCESS`) para el
+  superusuario y para el Admin de fallback (así "cualquier usuario entra con acceso
+  completo" sigue vigente).
+
+**Front (`overseer/src/`):**
+- `context/SessionProvider.jsx` — expone `permisos` (array).
+- `app/moduleRegistry.js` — `MODULE_PERM` + `canAccessModule(id, sesión)`;
+  `getVisibleModules(flags, sesión)` gana el 2º parámetro y filtra también por
+  permiso (Admin/super pasan todo; `dashboard` sin permiso requerido).
+- `app/TopBar/TopBarTabs.jsx` — pasa `{ isSuper, role, permisos }` de `useSession`
+  a `getVisibleModules`: las pestañas se derivan de flags **y** permisos.
+- `context/ModulesProvider.jsx` — **guarda el módulo activo**: si deja de ser
+  accesible (login con rol sin permiso, o navegación interna a un módulo prohibido)
+  vuelve a `Inicio`. Nunca se queda a la vista un módulo prohibido.
+
+**Verificado (E2E API + navegador por DOM):** el login trae `permisos` por cuenta
+(Admin 8 · Recepción Miembros/Calendario/Finanzas · Entrenador Miembros/Calendario/
+Clases · superusuario y fallback → acceso total). En navegador: **Recepción
+(Paula)** ve solo Inicio·Miembros·Calendario·Finanzas; **Entrenador (Elena, activa
+de prueba)** ve Inicio·Miembros·Calendario·Clases·Entrenadores (mapeo trainers←
+Clases); **Admin (juan por fallback)** ve los 9. **Guard:** como Entrenador, clicar
+el KPI "Ingresos del mes" (que navega a Finanzas, que NO tiene) **rebota a Inicio**.
+`npm run lint` (3 warnings preexistentes) y `npm run build` limpios; consola sin
+errores. BD dejada en semilla limpia.
+
+**Limitación conocida (a decidir aparte):** el enforcement es a nivel de MÓDULO.
+El dashboard (`Inicio`) sigue componiendo widgets de Finanzas/Miembros/Eventos, así
+que un rol sin Finanzas todavía **ve el KPI "Ingresos del mes"** en Inicio (aunque
+no puede entrar a Finanzas). Afinarlo sería filtrar el registro de widgets
+(`dashboard/widgets.js`) por `permisos` — pequeño follow-up si lo quieres.
+
+## Fase 10 — Tramo C · ajustes por feedback (2026-07-30, rama `fase-10-tramo-c`)
+
+Cinco peticiones del cliente tras probar el Tramo C, hechas frente por frente.
+`npm run lint` (3 warnings de fast-refresh preexistentes) y `npm run build`
+limpios; verificación E2E en navegador (DOM) como Entrenador y Admin.
+
+1. **Dependencia `better-sqlite3` → `^12`** (aprobado; regla #7). El pin `^11`
+   no tenía binario para Node 24; `^12.2.0` sirve para Node 20/22/24. `npm install`
+   dejó `better-sqlite3@12.11.1`; el backend arranca y abre la BD (probado en Node
+   22 de este PC). `package.json` + `package-lock.json` actualizados.
+
+2. **Permiso `Editar miembros` (ver ≠ editar).** Antes cualquier rol con
+   `Miembros` podía editar/renovar/agregar; el Entrenador tenía más poder del
+   necesario. Ahora `Miembros` = VER (módulo + ficha en **solo lectura**) y un
+   permiso NUEVO `Editar miembros` habilita editar campos, renovar, agregar y la
+   foto. Es aparte y editable por cuenta desde Cuentas.
+   - **Gating** central: `hasPermission(sesión, fn)` en `app/moduleRegistry.js`
+     (Admin/super pasan todo). Lo usan `MembersModule` y (Inicio) `DashboardModule`.
+   - **Ficha solo-lectura** (`MemberDetailModal` con prop `canEdit`): fechas/plan/
+     recibo/observaciones se muestran como texto (clase `.roValue`), sin ✎, sin
+     "Subir foto", sin "↻ Renovar". `MembersToolbar`/`DashboardHeader` ocultan
+     "＋ Agregar". Guardas defensivas en alta/renovación.
+   - **Tres listas de permisos en sync:** `rolePermissions.js` (front),
+     `server/routes/auth.js` (`ALL_ACCESS`) y `server/seed.js` (`ROLE_ACCESS`).
+     Recepción conserva edición; Entrenador solo VE. La checklist del modal de
+     usuario mapea `ACCESS_FUNCTIONS` → el nuevo toggle aparece solo.
+   - **Cuentas ya estaba a salvo:** la sección Cuentas exige rol Admin además del
+     permiso, así que el Entrenador nunca pudo tocar usuarios (se confirmó).
+
+3. **Inicio: widgets por permiso + KPI de finanzas → modal-resumen del libro
+   mayor.**
+   - `widgets.js` y `DashboardKpis` filtran por `permisos` (`need` por widget/
+     tarjeta): un rol sin Finanzas ya no ve "Movimientos del día" ni el KPI
+     "Ingresos del mes"; sin Miembros no ve sus KPIs/vencimientos. Si la columna
+     principal queda vacía, el Inicio colapsa a UNA columna (`.columnsSingle`) sin
+     hueco. (Resuelve la "limitación conocida" del frente 6.)
+   - El KPI "Ingresos del mes" **ya no redirige** a Finanzas: abre
+     `FinanceSummaryModal` con **membresías (y cuántas van), otros ingresos y
+     total del mes**, todo del **libro mayor** (nuevo `GET /movements/summary` →
+     `getMonthSummary()`; solo entradas confirmadas del mes calendario). El valor
+     del KPI pasó de `Σ members.valor` a `summary.total` → **sincronizado con
+     Finanzas**. Un botón "Ver Finanzas →" navega para el detalle.
+   - Verificado: KPI = $872.000 = entradas del mes = suma del modal (membresías
+     $402.000/5 + otros $470.000). Como Entrenador el KPI y el widget de finanzas
+     desaparecen y el Inicio queda en una columna.
+
+4. **Orden de la tabla de miembros por ENCABEZADOS clicables.** Sin barra aparte
+   (se descartó `MemberSort` por romper un poco la estética): se ordena clicando
+   el encabezado de la columna y se invierte con otro clic. La **flecha (↑/↓)
+   aparece solo en la columna activa**. Columnas ordenables: **Nombre** (A–Z),
+   **Fin** (arranca en recientes), **Estado** (vencido→pronto→vigente),
+   **Membresía** y **N° Recibo**. **A–Z es el defecto** (Nombre activo). Lógica
+   pura en `modules/members/memberSort.js` (archivo aparte para no romper
+   fast-refresh); el estado `{ field, dir }` vive en `MembersModule` y la tabla lo
+   recibe con `onSort`. El encabezado ordenable es un `<button>` que hereda el
+   aspecto del `th` (no cambia la estética).
+
+5. **Zoom de la interfaz (deslizante 85–115%) en el menú de usuario.** Eje nuevo
+   `zoom` en `settingsService`/`ThemeProvider` (persistido local como el tema); se
+   aplica con la propiedad CSS `zoom` en `<html>` (re-renderiza el texto sin
+   desenfoque y refluye el layout, así los modales caben sin scroll al reducir; app
+   solo-desktop/Chromium). Slider sutil en `UserMenu` (paso 5, con % en vivo).
+   Verificado: 85% → `html.style.zoom=0.85`, persiste en `overseer:apariencia`.
+
+**Pendiente de tu revisión + commit** (nada commiteado aún): estos 5 ajustes se
+apilan sobre el frente 6 (enforcement), que también sigue sin commitear.
+
 ## Cómo continuar
 
-**Fase 10 — Tramo C · frente 5: HECHO, en revisión (rama `fase-10-tramo-c`).**
-Falta el segundo frente del Tramo C (enforcement de permisos, abajo) y tu
-revisión + commit del frente 5.
+**Fase 10 — Tramo C: frente 5 COMMITEADO (`4069fa7`); frente 6 (enforcement)
+HECHO, en revisión (rama `fase-10-tramo-c`, sin commitear).** Con esto el Tramo C
+queda funcionalmente completo, a falta de tu revisión del frente 6 y de decidir el
+follow-up de widgets del dashboard.
 
 **Fase 10 — Tramo B: CERRADO, en revisión.** El Tramo A está mergeado (PR #12).
 El Tramo B se hizo **frente por frente** en la rama `fase-10-tramo-b`. ⚠ El
@@ -1070,11 +1185,11 @@ Entregado:
    recuperación). Sección oculta + atajo Ctrl+Shift+M, gated **solo al
    superusuario** (corregido tras revisión: el rol Admin no basta porque el login
    es permisivo). Detalle arriba.
-2. ⏳ **Enforcement de permisos por rol/usuario:** hoy `users.permisos` se guarda
-   y edita, pero la app **no restringe** la navegación. Falta que la sesión traiga
-   los `permisos` del usuario logueado y que `moduleRegistry`/la TopBar/ModuleHost
-   filtren los módulos visibles según ellos (respetando `core`), más el gating de
-   acciones sensibles. Ver la nota de alcance del frente 4.
+2. ✅ **Enforcement de permisos por rol/usuario (frente 6) — hecho, en revisión.**
+   La sesión trae los `permisos`; `moduleRegistry`/TopBar filtran los módulos
+   visibles según ellos y `ModulesProvider` guarda el módulo activo. Admin/super
+   ven todo. Queda como follow-up opcional filtrar los widgets del dashboard por
+   permisos (ver limitación conocida en el detalle del frente 6). Detalle abajo.
 
 **Cómo retomar el Tramo C en una sesión nueva:** ver `HANDOFF.md` (raíz del repo)
 y la sección **"▶ Retomar en una sesión nueva"** al inicio de este archivo. En

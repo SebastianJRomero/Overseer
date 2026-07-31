@@ -12,6 +12,7 @@
     - query / onQuery: texto del buscador (estado vive en el módulo)
     - onFilter: (clave) => void  — 'activos' | 'pronto' | 'vencidos'
     - onAdd: abrir el wizard de alta
+    - canEdit: si es false, se oculta "＋ Agregar" (usuario de solo lectura)
 */
 
 import Button from '../../../components/Button/Button';
@@ -24,7 +25,7 @@ const CHIPS = [
   { key: 'vencidos', label: 'vencidos', color: 'var(--danger)', bg: 'var(--danger-bg)', border: 'var(--danger-border)' },
 ];
 
-export default function MembersToolbar({ total, counts, query, onQuery, onFilter, onAdd }) {
+export default function MembersToolbar({ total, counts, query, onQuery, onFilter, onAdd, canEdit = true }) {
   return (
     <div className={styles.toolbar}>
       <div className={styles.heading}>
@@ -58,7 +59,7 @@ export default function MembersToolbar({ total, counts, query, onQuery, onFilter
         />
       </div>
 
-      <Button onClick={onAdd}>＋ Agregar</Button>
+      {canEdit && <Button onClick={onAdd}>＋ Agregar</Button>}
     </div>
   );
 }
