@@ -13,6 +13,14 @@
     (el input solo admite dígitos). El botón "Continuar/Guardar" se ve
     deshabilitado y Enter no avanza mientras el paso no sea válido.
 
+  Cédula sin duplicados: en el alta, si la cédula ya pertenece a otro miembro
+  registrado, el paso queda inválido con un aviso y no se puede continuar
+  (se compara solo por dígitos, sin puntos ni espacios).
+
+  El nombre se normaliza a Título (primera letra de cada palabra en
+  mayúscula) mientras se escribe, así queda consistente sin importar cómo lo
+  haya tecleado quien da de alta al miembro.
+
   Enter siempre avanza: los inputs lo manejan ellos mismos y un listener
   global cubre los pasos sin input (plan y resumen), igual que el prototipo.
 
@@ -24,10 +32,11 @@
     - mode: 'add' | 'renew'
     - member: miembro a renovar (solo renew)
     - plans: planes activos del catálogo (Ajustes → Planes) [{ nombre, duracionDias, precio }]
+    - members: lista completa de miembros (para detectar cédulas duplicadas en el alta)
     - onSave: (datos) => void — el módulo decide si es create o renew
 */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Modal from '../../../components/Modal/Modal';
 import WizardStepText from './WizardStepText';
 import WizardStepPlanDates from './WizardStepPlanDates';
@@ -36,7 +45,7 @@ import WizardSummary from './WizardSummary';
 import { todayDMY, isValidDMY } from '../../../lib/date';
 import { computeFin, SPECIAL_PLAN } from '../../../lib/memberStatus';
 import { parseMoney } from '../../../lib/money';
-import { onlyDigits } from '../../../lib/format';
+import { onlyDigits, toTitleCase } from '../../../lib/format';
 import styles from './MemberWizard.module.css';
 
 /* Pasos de texto del alta (el 4º es el combinado de plan, ver render).
@@ -44,8 +53,8 @@ import styles from './MemberWizard.module.css';
    al hacer spread de estas props. `format` marca los campos numéricos. */
 const ADD_STEPS = [
   { field: 'nombre', label: '¿Cómo se llama el miembro?', hint: 'Nombre y apellido', placeholder: 'Ej: Valeria Gómez' },
-  { field: 'cedula', label: 'Número de cédula', hint: 'Solo números', placeholder: '1.085.333.621', format: 'cedula' },
-  { field: 'telefono', label: 'Teléfono de contacto', hint: 'Solo números', placeholder: '315 665 79 32', format: 'phone' },
+  { field: 'cedula', label: 'Número de cédula', hint: 'Solo números', placeholder: '1.085......', format: 'cedula' },
+  { field: 'telefono', label: 'Teléfono de contacto', hint: 'Solo números', placeholder: '317 555 ....', format: 'phone' },
   { field: 'plan' }, // paso combinado plan + fechas
   { field: 'recibo', label: 'Número de recibo', hint: 'Comprobante de pago', placeholder: 'RC-0000', mono: true },
   { field: 'valor', label: 'Valor pagado', hint: 'Monto del pago', placeholder: '$ 0', format: 'money' },
@@ -99,7 +108,7 @@ function initialData(mode, member, plans) {
   };
 }
 
-export default function MemberWizard({ controller, mode, member, plans, onSave }) {
+export default function MemberWizard({ controller, mode, member, plans, members, onSave }) {
   const isRenew = mode === 'renew';
   const totalSteps = isRenew ? 2 : ADD_STEPS.length;
   const [step, setStep] = useState(0);
@@ -110,6 +119,16 @@ export default function MemberWizard({ controller, mode, member, plans, onSave }
   const isLast = isRenew ? step === 1 : isSummary;
   const currentField = !isRenew && !isSummary ? ADD_STEPS[step].field : null;
 
+  /* Cédula ya registrada (solo aplica al alta: la renovación no toca la cédula
+     del miembro existente). Se compara solo por dígitos, sin importar puntos
+     o espacios con los que se haya guardado. */
+  const cedulaTaken = useMemo(() => {
+    if (isRenew) return false;
+    const digits = onlyDigits(data.cedula);
+    if (!digits) return false;
+    return (members || []).some((m) => onlyDigits(m.cedula) === digits);
+  }, [isRenew, data.cedula, members]);
+
   /* ¿Se puede salir del paso actual? (bloquea Continuar/Enter si no). */
   const stepValid = (() => {
     if (isRenew) {
@@ -117,7 +136,8 @@ export default function MemberWizard({ controller, mode, member, plans, onSave }
         ? fieldValid('plan', data)
         : fieldValid('recibo', data) && fieldValid('valor', data);
     }
-    if (isSummary) return REQUIRED.every((f) => fieldValid(f, data));
+    if (currentField === 'cedula') return fieldValid('cedula', data) && !cedulaTaken;
+    if (isSummary) return REQUIRED.every((f) => fieldValid(f, data)) && !cedulaTaken;
     return fieldValid(currentField, data);
   })();
 
@@ -126,7 +146,7 @@ export default function MemberWizard({ controller, mode, member, plans, onSave }
     const valor = parseMoney(data.valor); // texto/número → número limpio
     onSave(isRenew
       ? { tipo: data.tipo, inicio: data.inicio, fin: data.fin, valor, recibo: data.recibo, obs: data.obs }
-      : { ...data, valor });
+      : { ...data, nombre: toTitleCase(data.nombre), valor });
   };
 
   const next = () => {
@@ -195,9 +215,10 @@ export default function MemberWizard({ controller, mode, member, plans, onSave }
         <WizardStepText
           {...current}
           value={data[current.field]}
-          onChange={(v) => patch({ [current.field]: v })}
+          onChange={(v) => patch({ [current.field]: current.field === 'nombre' ? toTitleCase(v) : v })}
           onNext={next}
-          invalid={!stepValid && REQUIRED.includes(current.field)}
+          invalid={(!stepValid && REQUIRED.includes(current.field)) || (current.field === 'cedula' && cedulaTaken)}
+          errorText={current.field === 'cedula' && cedulaTaken ? 'Ya existe un miembro registrado con esta cédula.' : undefined}
         />
       ))}
       {isSummary && <WizardSummary data={data} onEditField={jumpToField} />}

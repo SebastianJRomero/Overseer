@@ -82,6 +82,13 @@
   color: var(--text-dim);
 }
 
+/* Aviso en vez del hint (p. ej. cédula duplicada): mismo lugar, tono de alerta. */
+.stepError {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--danger-strong);
+}
+
 /* Input protagonista de los pasos de texto: grande y subrayado. */
 .bigInput {
   padding: 12px 2px;

@@ -268,8 +268,8 @@ resueltos y verificados por DOM + screenshots en esta sesión:
 7. **Búsqueda por teléfono** → la toolbar busca nombre + cédula + teléfono,
    normalizando a solo dígitos (encuentra con o sin espacios/puntos).
 8. **Cédula/teléfono con separadores al mostrar, crudos al guardar** →
-   nuevo `lib/format.js` (`formatCedula` 1.085.333.621 · `formatPhone`
-   315 665 79 32 · `onlyDigits`). Seed migrada a dígitos crudos; las
+   nuevo `lib/format.js` (`formatCedula` 1.234.567.890 · `formatPhone`
+   317 555 12 34 · `onlyDigits`). Seed migrada a dígitos crudos; las
    funciones normalizan primero (idempotentes con datos viejos).
 9. **Foto adjuntable** → clic en la foto abre selector de imagen; se lee
    como data URL, se muestra al instante y persiste (campo `foto`).
@@ -1331,3 +1331,33 @@ originales). Consola sin errores.
 **Nota:** los colores de Clases se guardan en `localStorage`, así que el cambio
 de paleta aplica al resembrar (borrar `overseer:classes`) o en instalación
 fresca. `server/` NO forma parte de esta rama (es de la Fase 10 / PR #12).
+
+## Miembros — validación de cédula duplicada y normalización de nombre (2026-08-01, rama `fix-members-form-validation`)
+
+Dos ajustes al formulario de alta de miembros:
+
+1. **Cédula sin duplicados.** El paso de cédula del wizard de alta ahora
+   compara contra la lista de miembros ya registrados (solo dígitos, sin
+   puntos ni espacios); si coincide con una cédula existente, muestra un
+   aviso ("Ya existe un miembro registrado con esta cédula") en el mismo
+   lugar del hint, marca el campo como inválido y bloquea "Continuar"/Enter
+   hasta que se corrija. `MemberWizard` recibe la prop `members` (ya la
+   tenían disponible `MembersModule` y `MemberModalsHost`, solo faltaba
+   pasarla). La renovación no se ve afectada (no toca la cédula del miembro).
+2. **Nombre normalizado a Título.** El nombre se capitaliza palabra por
+   palabra mientras se escribe (`toTitleCase` en `lib/format.js`), tanto en
+   el alta como al editar el nombre desde la ficha. Se refuerza también en
+   el backend (`server/src/lib/text.js`, aplicado en `POST /members` y
+   `PATCH /members/:id`), para que quede garantizado en la BD sin depender
+   de qué cliente haga la petición.
+
+De paso se ajustaron los placeholders de ejemplo del formulario de alta (antes
+mostraban un número de cédula y de teléfono completos y reales; ahora son
+parciales/no identificables) y las mismas cifras de ejemplo en comentarios de
+`lib/format.js` y en esta bitácora.
+
+**Verificado (navegador + API):** crear con nombre en minúsculas → se guarda
+capitalizado (API: `"david martinez"` → `"David Martinez"`); escribir una
+cédula ya registrada en el wizard → aviso + botón deshabilitado; cambiar a una
+cédula distinta → el aviso desaparece y el botón se habilita. Lint y build
+limpios (los 3 warnings de fast-refresh preexistentes).

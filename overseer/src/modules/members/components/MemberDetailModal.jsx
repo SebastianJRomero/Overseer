@@ -36,7 +36,7 @@ import DatePicker from '../../../components/DatePicker/DatePicker';
 import PlanDropdown from './PlanDropdown';
 import { getInitials } from '../../../lib/initials';
 import { formatMoney } from '../../../lib/money';
-import { formatCedula, formatPhone } from '../../../lib/format';
+import { formatCedula, formatPhone, toTitleCase } from '../../../lib/format';
 import { computeFin, STATUS } from '../../../lib/memberStatus';
 import { ESTADO_STYLES, getPlanStyle } from '../memberStyles';
 import styles from './MemberDetailModal.module.css';
@@ -70,7 +70,7 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
   };
   const saveName = () => {
     const clean = nameDraft.trim();
-    if (clean) onUpdate(member.id, { nombre: clean });
+    if (clean) onUpdate(member.id, { nombre: toTitleCase(clean) });
     setEditingName(false);
   };
 
@@ -148,7 +148,7 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
               <input
                 className={styles.nameInput}
                 value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
+                onChange={(e) => setNameDraft(toTitleCase(e.target.value))}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') saveName();
                   else if (e.key === 'Escape') setEditingName(false);
