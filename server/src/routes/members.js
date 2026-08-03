@@ -20,6 +20,7 @@ import { Router } from 'express';
 import { db, nextOrd } from '../db.js';
 import { newId } from '../lib/id.js';
 import { todayDMY } from '../lib/date.js';
+import { toTitleCase } from '../lib/text.js';
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.post('/', (req, res) => {
   const d = req.body || {};
   const member = {
     id: newId('m'),
-    nombre: d.nombre ?? '', cedula: d.cedula ?? '', telefono: d.telefono ?? '',
+    nombre: toTitleCase(d.nombre ?? ''), cedula: d.cedula ?? '', telefono: d.telefono ?? '',
     inicio: d.inicio ?? '', fin: d.fin ?? '', tipo: d.tipo ?? '',
     recibo: d.recibo ?? '', valor: d.valor ?? 0, obs: d.obs ?? '',
   };
@@ -75,8 +76,10 @@ function applyPatch(id, patch) {
   const allowed = ['nombre', 'cedula', 'telefono', 'inicio', 'fin', 'tipo', 'recibo', 'valor', 'obs'];
   const keys = Object.keys(patch || {}).filter((k) => allowed.includes(k));
   if (keys.length) {
+    const values = { ...patch, id };
+    if (values.nombre != null) values.nombre = toTitleCase(values.nombre);
     const setSql = keys.map((k) => `${k} = @${k}`).join(', ');
-    db.prepare(`UPDATE members SET ${setSql} WHERE id = @id`).run({ ...patch, id });
+    db.prepare(`UPDATE members SET ${setSql} WHERE id = @id`).run(values);
   }
   return listAll();
 }

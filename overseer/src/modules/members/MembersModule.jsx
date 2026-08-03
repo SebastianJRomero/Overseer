@@ -139,6 +139,7 @@ export default function MembersModule() {
         mode={wizard.mode}
         member={wizard.member}
         plans={plans}
+        members={members}
         onSave={saveWizard}
       />
 
