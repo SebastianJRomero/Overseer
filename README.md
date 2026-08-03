@@ -105,8 +105,6 @@ capacitación especial.
 | Recepción | `recepcion@overseer.gym` | `recepcion123` | Miembros, calendario y finanzas |
 | Entrenador | `entrenador@overseer.gym` | `entrenador123` | Consulta de miembros, calendario y clases |
 
-> Son credenciales **de desarrollo**: cámbialas en un uso real.
-
 ## Cómo ejecutarlo
 
 ### Modo desarrollo (dos procesos)
@@ -118,7 +116,7 @@ cd overseer && npm install && npm run dev  # interfaz en http://localhost:5173
 ```
 
 ### Como aplicación (2 clics)
-El proyecto incluye empaquetados listos para el día a día del local:
+El proyecto incluye empaquetado listos para el día a día del local:
 - **Servidor + navegador** con un `.bat`: doble clic y la app abre en una ventana dedicada.
 - **Modo segundo plano**: el servidor corre oculto (sin ventanas de consola) y se abre en una
   ventana de app; puede arrancar solo al encender el equipo y elegir el navegador (Edge, Chrome, etc.).
