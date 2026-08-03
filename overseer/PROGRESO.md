@@ -1,10 +1,10 @@
 # PROGRESO — OVERSEER · Gym Manager
 
 > Bitácora de avance por fases. Pensada para que **cualquier persona o
-> sesión nueva pueda retomar el trabajo sin el chat original**.
+> sesión nueva pueda retomar el trabajo**.
 > Se actualiza al cerrar cada fase (y si algo queda a medias).
 
-## ▶ Cómo retomar en una sesión nueva
+## Cómo retomar en una sesión nueva
 
 Empezar una sesión limpia después de cada PR mergeado mantiene el contexto
 ligero y el trabajo igual de continuo. Para retomar basta con pedir:
