@@ -6,7 +6,7 @@
 
   Formato en vivo (prop `format`): cédula, teléfono y valor son campos
   NUMÉRICOS. Se guarda siempre el valor crudo (solo dígitos) pero se MUESTRA
-  formateado mientras se escribe (1.085.333.621 · 315 665 79 32 · $ 70.000).
+  formateado mientras se escribe (1.234.567.890 · 317 555 12 34 · $ 70.000).
 
   Recibe:
     - label / hint / placeholder: textos del paso
@@ -15,6 +15,8 @@
     - value / onChange: valor CRUDO del campo (string de dígitos si es numérico)
     - onNext: avanzar de paso (Enter)
     - invalid: marca el subrayado en rojo si el paso no es válido aún
+    - errorText: si viene, reemplaza el hint por un aviso en rojo (p. ej.
+      "Ya existe un miembro con esta cédula") — el hint normal se oculta.
 */
 
 import { formatCedula, formatPhone, onlyDigits } from '../../../lib/format';
@@ -28,7 +30,7 @@ const DISPLAY = {
   money: (v) => (v ? '$ ' + formatThousands(Number(onlyDigits(v))) : ''),
 };
 
-export default function WizardStepText({ label, hint, placeholder, mono, format, value, onChange, onNext, invalid }) {
+export default function WizardStepText({ label, hint, placeholder, mono, format, value, onChange, onNext, invalid, errorText }) {
   // Numéricos: se muestran formateados; texto libre: tal cual.
   const display = format ? DISPLAY[format](value) : value;
 
@@ -47,7 +49,9 @@ export default function WizardStepText({ label, hint, placeholder, mono, format,
     <div className={styles.stepBody}>
       <div className={styles.stepHeading}>
         <span className={styles.stepTitle}>{label}</span>
-        <span className={styles.stepHint}>{hint}</span>
+        {errorText
+          ? <span className={styles.stepError}>{errorText}</span>
+          : <span className={styles.stepHint}>{hint}</span>}
       </div>
       <input
         /* key por label: al cambiar de paso se remonta y re-enfoca solo */

@@ -105,6 +105,7 @@ export default function MemberModalsHost({ request, members, canEdit = true, onC
         mode={wizard.mode}
         member={wizard.member}
         plans={plans}
+        members={members}
         onSave={saveWizard}
       />
     </>

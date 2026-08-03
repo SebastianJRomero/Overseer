@@ -6,11 +6,11 @@
   búsqueda puede comparar sin espacios ni puntos y el dato viaja limpio al
   backend el día de mañana.
 
-    cédula   1085333621 → "1.085.333.621"  (miles con punto)
-    teléfono 3156657932 → "315 665 79 32"   (grupos 3-3-2-2)
+    cédula   1234567890 → "1.234.567.890"  (miles con punto)
+    teléfono 3175551234 → "317 555 12 34"   (grupos 3-3-2-2)
 
   Las funciones normalizan primero (onlyDigits), así que son idempotentes:
-  da igual que reciban "1.085.333.621" o "1085333621".
+  da igual que reciban "1.234.567.890" o "1234567890".
 */
 
 /** Deja solo los dígitos de un texto (para guardar y para buscar). */
@@ -19,7 +19,7 @@ export function onlyDigits(value) {
 }
 
 /**
- * Cédula con separador de miles: 1085333621 → "1.085.333.621".
+ * Cédula con separador de miles: 1234567890 → "1.234.567.890".
  * Agrupa de a 3 desde la derecha con puntos (sin usar Number, que podría
  * perder precisión en documentos muy largos).
  * @param {string|number} value
@@ -31,7 +31,7 @@ export function formatCedula(value) {
 }
 
 /**
- * Teléfono en grupos 3-3-2-2: 3156657932 → "315 665 79 32".
+ * Teléfono en grupos 3-3-2-2: 3175551234 → "317 555 12 34".
  * Tolera longitudes distintas para no romper con fijos o números cortos.
  * @param {string|number} value
  * @returns {string}
@@ -44,4 +44,17 @@ export function formatPhone(value) {
   // 9+ dígitos: 3-3-2-2 y lo que sobre se anexa al final.
   const base = `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 8)} ${d.slice(8, 10)}`;
   return d.length > 10 ? `${base} ${d.slice(10)}` : base;
+}
+
+/**
+ * Pone en mayúscula la primera letra de cada palabra: "david martinez" →
+ * "David Martinez". El resto de cada palabra queda en minúscula (soporta
+ * acentos y ñ), así da igual cómo lo haya escrito quien lo tecleó.
+ * @param {string} value
+ * @returns {string}
+ */
+export function toTitleCase(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/(^|\s)([a-záéíóúñü])/g, (_, sep, ch) => sep + ch.toUpperCase());
 }
