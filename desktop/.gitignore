@@ -1,0 +1,8 @@
+# Generados en build/empaquetado (no se versionan)
+node_modules
+dist
+web
+release
+*.db
+*.db-wal
+*.db-shm

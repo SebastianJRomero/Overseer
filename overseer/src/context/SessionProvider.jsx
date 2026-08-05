@@ -46,6 +46,17 @@ export default function SessionProvider({ children }) {
     return () => clearTimeout(justInTimer.current);
   }, []);
 
+  // Si la API responde 401 (token inválido/expirado/revocado), api.js emite
+  // 'overseer:unauthorized' → volvemos al login aunque haya sesión recordada.
+  useEffect(() => {
+    const onUnauthorized = () => {
+      setAccount(null);
+      setStatus('anonimo');
+    };
+    window.addEventListener('overseer:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('overseer:unauthorized', onUnauthorized);
+  }, []);
+
   /** Marca la sesión como iniciada (LoginScreen ya validó con authService). */
   const enter = (cuenta) => {
     setAccount(cuenta);
