@@ -7,7 +7,7 @@
   confirmación FUERTE (ConfirmDangerModal):
     1. Respaldo completo: EXPORTAR (BD + config local a un JSON) e IMPORTAR.
     2. Borrado selectivo por entidad (miembros, movimientos, inventario…).
-    3. Reset total (borrar todo y volver a la semilla inicial).
+    3. Reset total (borrar todo y dejar el sistema limpio, sin sembrar la demo).
 
   Tras importar/borrar/resetear se recarga la página para que todos los módulos
   relean datos frescos (no hay router; es la vía simple y segura).
@@ -92,8 +92,8 @@ export default function MaintenanceSection() {
 
   const askReset = () => ask({
     title: 'Resetear todo', keyword: 'RESETEAR', confirmLabel: 'Resetear todo',
-    message: 'Se borrará TODA la base de datos y se volverá a la semilla inicial (empezar de cero). También se restablece el tema y los módulos. No cierra tu sesión.',
-    okMsg: 'Sistema reseteado a la semilla inicial.', run: () => maintenance.resetAll(),
+    message: 'Se borrará TODA la base de datos y quedará limpia (sin datos ni usuarios de demo). También se restablecen el tema y los módulos, y se cierra tu sesión: deberás volver a entrar (con el superusuario o una cuenta nueva).',
+    okMsg: 'Sistema reseteado: quedó limpio y la sesión se cerró.', run: () => maintenance.resetAll(),
   });
 
   return (
@@ -136,11 +136,11 @@ export default function MaintenanceSection() {
         ))}
       </SettingsCard>
 
-      <SettingsCard title="Zona de peligro" subtitle="Borra todo y vuelve a la semilla inicial.">
+      <SettingsCard title="Zona de peligro" subtitle="Borra todo y deja el sistema limpio, listo para usar desde cero.">
         <div className={shared.row}>
           <div className={shared.rowInfo}>
             <span className={shared.rowLabel}>Resetear todo el sistema</span>
-            <span className={shared.rowDesc}>Deja la base de datos como en una instalación nueva.</span>
+            <span className={shared.rowDesc}>Borra la base de datos completa, cierra la sesión y deja la instalación como nueva (sin datos de demo).</span>
           </div>
           <button type="button" className={styles.dangerBtn} onClick={askReset}>Resetear todo</button>
         </div>

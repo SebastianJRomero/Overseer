@@ -38,6 +38,7 @@ import { getInitials } from '../../../lib/initials';
 import { formatMoney } from '../../../lib/money';
 import { formatCedula, formatPhone, toTitleCase } from '../../../lib/format';
 import { computeFin, STATUS } from '../../../lib/memberStatus';
+import { resizeImage } from '../../../lib/image';
 import { ESTADO_STYLES, getPlanStyle } from '../memberStyles';
 import styles from './MemberDetailModal.module.css';
 
@@ -74,14 +75,20 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
     setEditingName(false);
   };
 
-  // Adjuntar foto: leemos el archivo como data URL y lo guardamos en el
-  // miembro; se ve al instante (y persiste como cualquier otro campo).
-  const onPhotoPick = (e) => {
+  // Adjuntar foto: la redimensionamos en el cliente (512px máx.) y la
+  // guardamos en el miembro; se ve al instante y persiste como cualquier
+  // otro campo. Si algo falla (no es imagen, muy grande), dejamos la foto
+  // anterior y mostramos el error en consola.
+  const onPhotoPick = async (e) => {
     const file = e.target.files && e.target.files[0];
+    e.target.value = ''; // permite volver a elegir el mismo archivo
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => onUpdate(member.id, { foto: ev.target.result });
-    reader.readAsDataURL(file);
+    try {
+      const foto = await resizeImage(file);
+      onUpdate(member.id, { foto });
+    } catch (err) {
+      console.error('[OVERSEER] no se pudo adjuntar la foto:', err.message || err);
+    }
   };
 
   return (
@@ -105,7 +112,16 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
               </>
             )}
           </button>
-          {canEdit && <input ref={fileInputRef} type="file" accept="image/*" onChange={onPhotoPick} hidden />}
+          {canEdit && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={onPhotoPick}
+              hidden
+            />
+          )}
 
           <div className={styles.idField}>
             <span className={styles.idLabel}>Cédula</span>

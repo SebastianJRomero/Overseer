@@ -5,11 +5,16 @@
   (ARQUITECTURA §9). Antes ese punto era storage.js (localStorage); ahora es la
   API real (Node + Express + SQLite). La UI y los hooks no cambian.
 
-  La URL base sale de VITE_API_URL si se define (p. ej. en producción); en
-  desarrollo apunta al backend local en el puerto 3001.
+  La URL base sale de VITE_API_URL si se define (p. ej. en producción). En
+  desarrollo apunta al backend del MISMO host que sirve la página en el puerto
+  3001: "localhost" en el PC y la IP de la red en el móvil. Usar el mismo host
+  evita dos problemas: el bloqueo de Private Network Access (localhost → IP
+  privada) y tener que apuntar el teléfono a la IP a mano.
 */
 
-const BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api`;
+// En producción (Electron) la API se sirve junto al front → ruta relativa /api.
+const DEV_BASE = import.meta.env.DEV ? `http://${window.location.hostname}:3001` : '';
+const BASE = `${import.meta.env.VITE_API_URL || DEV_BASE}/api`;
 
 /**
  * Hace una petición JSON y devuelve el cuerpo parseado.

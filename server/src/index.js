@@ -12,7 +12,7 @@
 
 import express from 'express';
 import { migrate } from './db.js';
-import { seedAll } from './seed.js';
+import { seedAll, isSeeded } from './seed.js';
 
 import authRouter from './routes/auth.js';
 import membersRouter from './routes/members.js';
@@ -29,16 +29,21 @@ import maintenanceRouter from './routes/maintenance.js';
 const PORT = process.env.PORT || 3001;
 
 migrate();
-seedAll();
+// La semilla corre solo la primera vez: si el usuario vacía/resetea datos
+// (menú de mantenimiento), el arranque no debe volver a sembrar la demo.
+if (!isSeeded()) seedAll();
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 
 // CORS mínimo a mano (dev: el front vive en otro puerto).
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
+  // Permite preflight de "Private Network Access" (localhost → IP privada) si
+  // algún día el front y la API viven en hosts distintos.
+  res.header('Access-Control-Allow-Private-Network', 'true');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   return next();
 });
