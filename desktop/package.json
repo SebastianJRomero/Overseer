@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "OVERSEER — App de escritorio (Electron): front compilado + server embebido + auto-updater.",
   "main": "main.cjs",
+  "author": "SebastianJRomero",
   "private": true,
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -53,7 +54,7 @@
       "provider": "github",
       "owner": "SebastianJRomero",
       "repo": "Overseer",
-      "draft": false
+      "releaseType": "release"
     }
   }
 }
