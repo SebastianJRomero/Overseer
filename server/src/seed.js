@@ -306,6 +306,29 @@ export function seedAll() {
     seedUsers();
     seedClasses();
     seedTrainers();
+    markSeeded();
   });
   run();
+}
+
+/* ══════════════════ MARCA DE "YA SEMBRADO" ══════════════════
+
+   La siembra corre UNA sola vez por instalación (la primera vez que la BD
+   arranca). Guardamos una marca en settings: si el usuario vacía tablas desde
+   el menú de mantenimiento o resetea todo el sistema, el siguiente arranque NO
+   debe repoblar los datos de demo. Sin esta marca, al cerrar la app de
+   escritorio y volver a abrirla, los datos borrados se sembraban otra vez. */
+
+const SEED_MARKER = 'seeded';
+
+/** ¿Esta instalación ya pasó por la siembra inicial? */
+export function isSeeded() {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(SEED_MARKER);
+  return row !== undefined;
+}
+
+/** Registra la siembra inicial (idempotente). */
+export function markSeeded() {
+  db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
+    .run(SEED_MARKER, new Date().toISOString());
 }

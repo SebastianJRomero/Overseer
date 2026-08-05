@@ -8,14 +8,18 @@
     GET    /maintenance/export        → volcado completo de la BD { tabla: filas[] }
     POST   /maintenance/import        → restaura desde un volcado (body = el volcado)
     DELETE /maintenance/entity/:name  → borra los registros de una entidad
-    POST   /maintenance/reset         → borra TODO y resiembra (empezar de cero)
+    POST   /maintenance/reset         → borra TODO y deja el sistema limpio (sin sembrar)
+
+  Nota: importar o resetear marca la instalación como "ya sembrada" para que el
+  siguiente arranque NO repueble los datos de demo (la semilla corre solo en la
+  primera inicialización; ver seed.js).
 
   Espeja services/maintenanceService.js del front.
 */
 
 import { Router } from 'express';
 import { exportAll, importAll, clearAll, clearTables } from '../db.js';
-import { seedAll } from '../seed.js';
+import { markSeeded } from '../seed.js';
 
 const router = Router();
 
@@ -42,6 +46,7 @@ router.post('/import', (req, res) => {
     return res.status(400).json({ ok: false, error: 'Volcado inválido' });
   }
   importAll(bundle);
+  markSeeded(); // un sistema restaurado no debe resembrarse en el arranque
   return res.json({ ok: true });
 });
 
@@ -53,10 +58,13 @@ router.delete('/entity/:name', (req, res) => {
   return res.json({ ok: true });
 });
 
-/** Reset total: borra todo y resiembra (las tablas quedan vacías → se repueblan). */
+/** Reset total: borra todo y deja el sistema limpio (sin demo ni usuarios de
+    prueba). El acceso queda para el superusuario (vive fuera de la BD); las
+    cuentas se crean desde Ajustes → Cuentas. La marca "seeded" se conserva para
+    que el arranque no resembre. */
 router.post('/reset', (req, res) => {
   clearAll();
-  seedAll();
+  markSeeded();
   return res.json({ ok: true });
 });
 

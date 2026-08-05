@@ -34,7 +34,7 @@ export function migrate() {
       id TEXT PRIMARY KEY, ord REAL NOT NULL,
       nombre TEXT, cedula TEXT, telefono TEXT,
       inicio TEXT, fin TEXT, tipo TEXT, recibo TEXT,
-      valor INTEGER, obs TEXT
+      valor INTEGER, obs TEXT, foto TEXT DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS movements (
@@ -106,6 +106,8 @@ export function migrate() {
   // CREATE TABLE IF NOT EXISTS no añade columnas a una tabla ya existente, así
   // que las agregamos a mano solo si faltan (idempotente).
   ensureColumn('movements', 'categoria', "TEXT DEFAULT 'otro'");
+  // Foto de miembro (data URL): no estaba en BDs creadas antes del frente 4.1.
+  ensureColumn('members', 'foto', "TEXT DEFAULT ''");
   // Datos extra de las cuentas (frente 4.1): cédula, teléfono y foto (data URL).
   ensureColumn('users', 'cedula', "TEXT DEFAULT ''");
   ensureColumn('users', 'telefono', "TEXT DEFAULT ''");
