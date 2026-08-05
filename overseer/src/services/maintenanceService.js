@@ -51,13 +51,14 @@ export async function clearEntity(name) {
 }
 
 /**
- * Reset total: borra y resiembra la BD, y resetea la config local (tema/flags)
- * SIN cerrar la sesión (se conserva 'auth').
+ * Reset total: borra la BD y la deja limpia (sin demo), resetea la config local
+ * (tema/flags) y CIERRA la sesión: 'auth' se borra para que nadie siga entrado
+ * con datos que ya no existen.
  * @returns {Promise<void>}
  */
 export async function resetAll() {
   await apiPost('/maintenance/reset');
-  storage.clearAll(['auth']);
+  storage.clearAll();
 }
 
 /* Entidades que ofrece el borrado selectivo (etiqueta para la UI). El `name`
