@@ -24,7 +24,7 @@ import { toTitleCase } from '../lib/text.js';
 
 const router = Router();
 
-const COLS = 'id, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, obs';
+const COLS = 'id, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, obs, foto';
 
 /** Lee la lista completa en el orden de la UI (más nuevos arriba). */
 function listAll() {
@@ -73,7 +73,7 @@ router.post('/', (req, res) => {
 
 /** Aplica un patch parcial y devuelve la lista actualizada (update y renew). */
 function applyPatch(id, patch) {
-  const allowed = ['nombre', 'cedula', 'telefono', 'inicio', 'fin', 'tipo', 'recibo', 'valor', 'obs'];
+  const allowed = ['nombre', 'cedula', 'telefono', 'inicio', 'fin', 'tipo', 'recibo', 'valor', 'obs', 'foto'];
   const keys = Object.keys(patch || {}).filter((k) => allowed.includes(k));
   if (keys.length) {
     const values = { ...patch, id };
