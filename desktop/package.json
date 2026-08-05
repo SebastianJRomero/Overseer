@@ -1,0 +1,58 @@
+{
+  "name": "overseer-desktop",
+  "version": "1.0.0",
+  "description": "OVERSEER — App de escritorio (Electron): front compilado + server embebido + auto-updater.",
+  "main": "main.cjs",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dist": "node scripts/build.mjs && electron-builder --win --publish never",
+    "dist:publish": "node scripts/build.mjs && electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.24.2"
+  },
+  "build": {
+    "appId": "com.overseer.gym",
+    "productName": "OVERSEER",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**"
+    ],
+    "files": [
+      "main.cjs",
+      "assets/**",
+      "web/**",
+      "dist/**"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "OVERSEER-Setup-${version}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "SebastianJRomero",
+      "repo": "Overseer"
+    }
+  }
+}

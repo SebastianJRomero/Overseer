@@ -20,8 +20,16 @@ import Database from 'better-sqlite3';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, '..', 'overseer.db');
+// En la app de escritorio (Electron) la BD vive en %APPDATA%\OVERSEER: el main
+// deja OVERSEER_DB_PATH seteado antes de cargar el bundle. En dev queda al lado
+// del server (server/overseer.db) como siempre.
+//
+// Con OVERSEER_DB_PATH seteado NO se evalúa `import.meta.url` (queda como
+// undefined): eso permite embeber este archivo con esbuild en formato CJS.
+const __dirname = process.env.OVERSEER_DB_PATH
+  ? undefined
+  : dirname(fileURLToPath(import.meta.url));
+const DB_PATH = process.env.OVERSEER_DB_PATH || join(__dirname, '..', 'overseer.db');
 
 export const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');   // mejor concurrencia lectura/escritura
@@ -99,6 +107,13 @@ export function migrate() {
 
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY, value TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      creada TEXT NOT NULL,
+      expira TEXT NOT NULL
     );
   `);
 
@@ -192,10 +207,13 @@ export function importAll(bundle) {
   run();
 }
 
-/** Borra TODAS las filas de TODAS las tablas (empezar de cero). */
+/** Borra TODAS las filas de TODAS las tablas (empezar de cero).
+    Las sesiones NO se exportan (los tokens son secretos); el reset las borra
+    igual: todos los clientes quedan fuera (deben volver a loguearse). */
 export function clearAll() {
   const run = db.transaction(() => {
     for (const t of ALL_TABLES) db.prepare(`DELETE FROM ${t}`).run();
+    db.prepare('DELETE FROM sessions').run();
   });
   run();
 }
