@@ -3,15 +3,18 @@
 
   login() valida contra el backend (POST /auth/login) con AUTH REAL: la cuenta
   debe existir, estar activa y la contraseña debe verificar contra su hash
-  (scrypt). El backend devuelve la cuenta con su ROL y permisos, o { ok:false }
-  si las credenciales son incorrectas. Ver server/src/routes/auth.js.
+  (scrypt). El backend devuelve la cuenta con su ROL, permisos y un TOKEN de
+  sesión, o { ok:false } si las credenciales son incorrectas. El token lo usa
+  api.js en cada petición (Authorization: Bearer). Ver server/src/routes/auth.js.
 
   "Recordarme" decide si la sesión sobrevive recargas: con remember se guarda la
-  cuenta en storage; sin remember, vive solo en memoria (React) y se pierde al
-  recargar. Mismo comportamiento que el prototipo.
+  cuenta+token en storage; sin remember, el token vive solo en memoria (api.js)
+  y la sesión se pierde al recargar. Cerrar sesión revoca el token en el server
+  (POST /auth/logout) y borra lo guardado.
 */
 
 import { apiPost } from './api';
+import { setAuthToken } from './api';
 import { load, save, remove } from './storage';
 
 const SESSION_KEY = 'auth';
@@ -25,8 +28,9 @@ const SESSION_KEY = 'auth';
 export async function login({ user, pass, remember }) {
   const res = await apiPost('/auth/login', { user, pass });
   if (!res || !res.ok) return { ok: false };
+  setAuthToken(res.token);
   if (remember) {
-    save(SESSION_KEY, res.user);
+    save(SESSION_KEY, { ...res.user, token: res.token });
   } else {
     // Sin "recordarme" no debe quedar rastro de sesiones anteriores.
     remove(SESSION_KEY);
@@ -40,13 +44,18 @@ export async function login({ user, pass, remember }) {
  */
 export async function getSession() {
   const session = load(SESSION_KEY, null);
-  return session && session.nombre ? session : null;
+  // Sin token la sesión no puede autenticar la API: se descarta (obliga a
+  // volver al login). Pasa con sesiones guardadas por versiones viejas.
+  return session && session.nombre && session.token ? session : null;
 }
 
 /**
- * Cierra la sesión y olvida a la cuenta recordada.
+ * Cierra la sesión: revoca el token en el server (si responde) y olvida la
+ * cuenta recordada.
  * @returns {Promise<void>}
  */
 export async function logout() {
+  try { await apiPost('/auth/logout'); } catch { /* sin red: se cierra igual */ }
+  setAuthToken(null);
   remove(SESSION_KEY);
 }

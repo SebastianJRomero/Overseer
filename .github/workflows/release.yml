@@ -1,0 +1,40 @@
+name: Build & Release OVERSEER
+
+# Se dispara al empujar una etiqueta v* (ej. v1.0.0). Electron-builder
+# publica el instalador NSIS + latest.yml en un Release de GitHub, que es lo
+# que electron-updater consulta para actualizar la app instalada.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar deps (frontend)
+        working-directory: overseer
+        run: npm ci
+
+      - name: Instalar deps (server)
+        working-directory: server
+        run: npm ci
+
+      - name: Instalar deps (desktop)
+        working-directory: desktop
+        run: npm ci
+
+      - name: Compilar y publicar release
+        working-directory: desktop
+        run: npm run dist:publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
