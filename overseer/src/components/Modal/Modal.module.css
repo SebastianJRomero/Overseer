@@ -37,3 +37,18 @@
   overflow: visible;
   max-height: none;
 }
+
+/* Pantallas BAJAS (p. ej. 1366×768): el offset fijo de 118px empuja los
+   modales muy abajo y obliga a hacer scroll. En esos altos, centramos el modal
+   verticalmente y le damos casi toda la altura útil. No afecta a la variante
+   con popovers (.cardVisible), que sigue sin recortar. */
+@media (max-height: 860px) {
+  .overlay {
+    align-items: center;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+  .card:not(.cardVisible) {
+    max-height: calc(100vh - 48px);
+  }
+}

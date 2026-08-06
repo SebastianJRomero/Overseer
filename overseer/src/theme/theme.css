@@ -81,8 +81,13 @@
   --r-pill: 999px;
 
   /* ── Tipografía ─────────────────────────────────────────────────────── */
-  --font-sans: 'Archivo', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', monospace;
+  /* 'Segoe UI Symbol' va en el stack a propósito: los iconos de la UI son
+     glifos Unicode (↗ ↘ ◆ ◔ …) que 'Archivo' no incluye. Sin una fuente de
+     TEXTO que los tenga, el runtime de Electron (offline) cae a la fuente de
+     emoji y los pinta a color/tamaño distinto — descuadrando la fila de KPIs.
+     Segoe UI Symbol (Windows) los resuelve como texto monocromo. Ver AGENTS.md. */
+  --font-sans: 'Archivo', system-ui, 'Segoe UI Symbol', sans-serif;
+  --font-mono: 'Geist Mono', 'Segoe UI Symbol', monospace;
   /* escala extraída del prototipo */
   --fs-kpi: 28px;         /* cifra grande de KPI */
   --fs-title: 20px;       /* título de módulo */

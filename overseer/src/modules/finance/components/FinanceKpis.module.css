@@ -38,6 +38,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* width:100% explícito: la tarjeta es un <button> flex-column y el Chromium
+     de Electron NO estira sus hijos al ancho completo (sí lo hace el navegador).
+     Sin esto, la fila se encoge al contenido y el icono queda pegado al texto
+     en vez de en la esquina derecha. */
+  width: 100%;
 }
 
 .cardLabel {
@@ -57,6 +62,10 @@
   font-size: 12px;
   background: var(--surface-2);
   border: 1px solid var(--border-2);
+  /* refuerzo: aunque space-between fallara, el margen automático empuja el
+     icono a la derecha; flex-shrink:0 evita que se aplaste. */
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .cardBody {
@@ -112,6 +121,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%; /* mismo motivo que .cardTop: <button> flex en Electron */
 }
 
 .histLabel {
@@ -132,6 +142,8 @@
   color: var(--hist-info);
   background: var(--hist-icon-bg);
   border: 1px solid var(--hist-border);
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .histValue {
