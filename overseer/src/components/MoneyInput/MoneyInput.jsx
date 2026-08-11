@@ -16,12 +16,13 @@
     - value: number | null  (null = campo vacío)
     - onChange: (number|null) => void
     - placeholder: texto cuando está vacío (por defecto "0")
+    - onEnter: opcional — callback al pulsar Enter (p. ej. avanzar en un wizard)
 */
 
 import { formatThousands, parseMoney } from '../../lib/money';
 import styles from './MoneyInput.module.css';
 
-export default function MoneyInput({ value, onChange, placeholder = '0' }) {
+export default function MoneyInput({ value, onChange, placeholder = '0', onEnter }) {
   // Valor visible: número → "12.000"; vacío → '' (para que se vea el placeholder).
   const display = value === null || value === undefined || value === '' ? '' : formatThousands(value);
 
@@ -38,6 +39,7 @@ export default function MoneyInput({ value, onChange, placeholder = '0' }) {
         className={styles.input}
         value={display}
         onChange={handleInput}
+        onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) onEnter(); }}
         placeholder={placeholder}
         inputMode="numeric"
       />
