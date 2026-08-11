@@ -44,7 +44,7 @@ import WizardStepPago from './WizardStepPago';
 import WizardSummary from './WizardSummary';
 import { todayDMY, isValidDMY } from '../../../lib/date';
 import { computeFin, SPECIAL_PLAN } from '../../../lib/memberStatus';
-import { parseMoney } from '../../../lib/money';
+import { parseMoney, quickThousands } from '../../../lib/money';
 import { onlyDigits, toTitleCase } from '../../../lib/format';
 import styles from './MemberWizard.module.css';
 
@@ -143,7 +143,8 @@ export default function MemberWizard({ controller, mode, member, plans, members,
 
   const save = () => {
     if (!stepValid) return;
-    const valor = parseMoney(data.valor); // texto/número → número limpio
+    // El valor pasa por el atajo de miles: "55" tecleado → 55.000.
+    const valor = parseMoney(quickThousands(data.valor)); // texto/número → número limpio
     onSave(isRenew
       ? { tipo: data.tipo, inicio: data.inicio, fin: data.fin, valor, recibo: data.recibo, obs: data.obs }
       : { ...data, nombre: toTitleCase(data.nombre), valor });
@@ -151,6 +152,12 @@ export default function MemberWizard({ controller, mode, member, plans, members,
 
   const next = () => {
     if (!stepValid) return;         // no avanza si el paso es inválido
+    // Atajo de miles al salir del paso "valor" (alta y renovación): se guarda
+    // AQUÍ para que el resumen muestre el valor completo; save() lo vuelve a
+    // normalizar (quickThousands es inofensivo si ya viene completo).
+    if (currentField === 'valor' || (isRenew && step === 1)) {
+      patch({ valor: quickThousands(data.valor) });
+    }
     if (isLast) save();
     else setStep(step + 1);
   };

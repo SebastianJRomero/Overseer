@@ -25,7 +25,7 @@ export default function WizardStepPago({ data, onPatch, onNext }) {
 
       <div className={styles.dateGrid}>
         <Field label="Valor pagado">
-          <MoneyInput value={data.valor} onChange={(valor) => onPatch({ valor })} />
+          <MoneyInput value={data.valor} onChange={(valor) => onPatch({ valor })} onEnter={onNext} />
         </Field>
         <Field label="N° Recibo nuevo">
           <input

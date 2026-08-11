@@ -48,3 +48,22 @@ export function parseMoney(str) {
 export function formatMoneyShort(n) {
   return '$' + (n / 1e6).toFixed(1) + 'M';
 }
+
+/**
+ * Atajo de digitación rápida para el alta/renovación de miembros: el
+ * operador escribe el precio "en miles" (55 = $55.000) y al confirmar se
+ * completa. SOLO los números de 2-3 cifras se multiplican por 1000; con 4+
+ * se asume que ya es el valor completo (p. ej. el precio precargado del
+ * plan, que viene con 5+ cifras) y no se toca, para no duplicar ceros.
+ * Devuelve el MISMO tipo de entrada (string de dígitos o número/null).
+ * @param {string|number|null} valor
+ * @returns {string|number|null}
+ */
+export function quickThousands(valor) {
+  const digits = String(valor ?? '').replace(/[^0-9]/g, '');
+  const out = digits.length === 2 || digits.length === 3 ? digits + '000' : digits;
+  if (valor === null || valor === undefined || typeof valor === 'number') {
+    return out === '' ? null : Number(out);
+  }
+  return out;
+}
