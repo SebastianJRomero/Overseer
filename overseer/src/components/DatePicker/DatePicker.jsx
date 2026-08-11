@@ -17,6 +17,9 @@
     - onChange: (dmy) => void
     - align: 'left' | 'right' — a qué borde del campo se pega el popover
     - placeholder: texto cuando no hay fecha
+    - display: (dmy) => string — formatea el valor que SE MUESTRA en el campo
+      (p. ej. formatShortDate → "8 Ago 2026"). Si no se pasa, se muestra el
+      valor tal cual. El popover y onChange siguen trabajando con "dd/mm/aaaa".
 */
 
 import { useState } from 'react';
@@ -33,9 +36,11 @@ function initialCursor(value) {
   return { y: d.getFullYear(), m: d.getMonth() };
 }
 
-export default function DatePicker({ value, onChange, align = 'left', placeholder = 'Seleccionar fecha' }) {
+export default function DatePicker({ value, onChange, align = 'left', placeholder = 'Seleccionar fecha', display }) {
   const popover = usePopover();
   const [cursor, setCursor] = useState(() => initialCursor(value));
+  // El texto que se ve en el campo: formateado si hay formateador, si no tal cual.
+  const shown = value ? (display ? display(value) : value) : placeholder;
 
   const openCalendar = () => {
     // Reposicionar el cursor cada vez que se abre (la fecha pudo cambiar).
@@ -67,7 +72,7 @@ export default function DatePicker({ value, onChange, align = 'left', placeholde
         className={popover.isActive ? `${styles.trigger} ${styles.triggerOpen}` : styles.trigger}
         onClick={openCalendar}
       >
-        <span className={value ? styles.value : styles.placeholder}>{value || placeholder}</span>
+        <span className={value ? styles.value : styles.placeholder}>{shown}</span>
         <span className={styles.icon}>▤</span>
       </button>
 

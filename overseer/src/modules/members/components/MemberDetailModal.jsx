@@ -11,6 +11,8 @@
     - Editar el nombre despliega una barra a lo ANCHO por debajo del valor
       pagado, para no encimarse con el valor ni con la ✕.
     - Recibo y observaciones son editables (se guardan al escribir).
+    - Cédula y teléfono son editables (se guardan al salir del campo o con
+      Enter) SOLO si el usuario es Admin o tiene 'Editar miembros' (canEdit).
     - La foto se adjunta desde un selector de archivo (se muestra al instante).
 
   Reglas de negocio: cambiar la fecha de INICIO recalcula el fin según el
@@ -36,7 +38,8 @@ import DatePicker from '../../../components/DatePicker/DatePicker';
 import PlanDropdown from './PlanDropdown';
 import { getInitials } from '../../../lib/initials';
 import { formatMoney } from '../../../lib/money';
-import { formatCedula, formatPhone, toTitleCase } from '../../../lib/format';
+import { formatCedula, formatPhone, onlyDigits, toTitleCase } from '../../../lib/format';
+import { formatShortDate } from '../../../lib/date';
 import { computeFin, STATUS } from '../../../lib/memberStatus';
 import { resizeImage } from '../../../lib/image';
 import { ESTADO_STYLES, getPlanStyle } from '../memberStyles';
@@ -45,12 +48,22 @@ import styles from './MemberDetailModal.module.css';
 export default function MemberDetailModal({ controller, member, planOptions, onUpdate, onRenew, canEdit = true }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  // Cédula y teléfono se editan en la columna izquierda: borrador local que se
+  // confirma al salir del campo (Enter/blur) para no llamar a la API por tecla.
+  const [editingCedula, setEditingCedula] = useState(false);
+  const [cedulaDraft, setCedulaDraft] = useState('');
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneDraft, setPhoneDraft] = useState('');
   const fileInputRef = useRef(null);
 
-  // Al cerrar el modal, salir del modo edición para que la próxima apertura
+  // Al cerrar el modal, salir de los modos edición para que la próxima apertura
   // empiece en modo vista.
   useEffect(() => {
-    if (!controller.isOpen) setEditingName(false);
+    if (!controller.isOpen) {
+      setEditingName(false);
+      setEditingCedula(false);
+      setEditingPhone(false);
+    }
   }, [controller.isOpen]);
 
   if (!member) return null;
@@ -73,6 +86,28 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
     const clean = nameDraft.trim();
     if (clean) onUpdate(member.id, { nombre: toTitleCase(clean) });
     setEditingName(false);
+  };
+
+  // Edición de cédula/teléfono: se guarda solo si cambió el valor; la cédula
+  // no puede quedar vacía (es el documento de identidad). Se guarda "cruda"
+  // (solo dígitos); la UI la formatea al mostrar (lib/format.js).
+  const startEditCedula = () => {
+    setCedulaDraft(member.cedula);
+    setEditingCedula(true);
+  };
+  const commitCedula = () => {
+    const clean = onlyDigits(cedulaDraft);
+    if (clean && clean !== onlyDigits(member.cedula)) onUpdate(member.id, { cedula: clean });
+    setEditingCedula(false);
+  };
+  const startEditPhone = () => {
+    setPhoneDraft(member.telefono);
+    setEditingPhone(true);
+  };
+  const commitPhone = () => {
+    const clean = onlyDigits(phoneDraft);
+    if (clean !== onlyDigits(member.telefono)) onUpdate(member.id, { telefono: clean });
+    setEditingPhone(false);
   };
 
   // Adjuntar foto: la redimensionamos en el cliente (512px máx.) y la
@@ -124,12 +159,50 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
           )}
 
           <div className={styles.idField}>
-            <span className={styles.idLabel}>Cédula</span>
-            <span className={styles.idValue}>{formatCedula(member.cedula)}</span>
+            <div className={styles.idHead}>
+              <span className={styles.idLabel}>Cédula</span>
+              {canEdit && !editingCedula && (
+                <button type="button" className={styles.idEdit} title="Editar cédula" onClick={startEditCedula}>✎</button>
+              )}
+            </div>
+            {canEdit && editingCedula ? (
+              <input
+                className={`${styles.idInput} ${styles.mono}`}
+                value={cedulaDraft}
+                onChange={(e) => setCedulaDraft(onlyDigits(e.target.value))}
+                onBlur={commitCedula}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                  else if (e.key === 'Escape') setEditingCedula(false);
+                }}
+                autoFocus
+              />
+            ) : (
+              <span className={styles.idValue}>{formatCedula(member.cedula)}</span>
+            )}
           </div>
           <div className={styles.idField}>
-            <span className={styles.idLabel}>Teléfono</span>
-            <span className={styles.idValue}>{formatPhone(member.telefono)}</span>
+            <div className={styles.idHead}>
+              <span className={styles.idLabel}>Teléfono</span>
+              {canEdit && !editingPhone && (
+                <button type="button" className={styles.idEdit} title="Editar teléfono" onClick={startEditPhone}>✎</button>
+              )}
+            </div>
+            {canEdit && editingPhone ? (
+              <input
+                className={`${styles.idInput} ${styles.mono}`}
+                value={phoneDraft}
+                onChange={(e) => setPhoneDraft(onlyDigits(e.target.value))}
+                onBlur={commitPhone}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                  else if (e.key === 'Escape') setEditingPhone(false);
+                }}
+                autoFocus
+              />
+            ) : (
+              <span className={styles.idValue}>{formatPhone(member.telefono)}</span>
+            )}
           </div>
         </div>
 
@@ -179,13 +252,13 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
           <div className={styles.grid}>
             <Field label="Fecha inicio">
               {canEdit
-                ? <DatePicker value={member.inicio} onChange={changeInicio} />
-                : <span className={styles.roValue}>{member.inicio}</span>}
+                ? <DatePicker value={member.inicio} onChange={changeInicio} display={formatShortDate} />
+                : <span className={styles.roValue}>{formatShortDate(member.inicio)}</span>}
             </Field>
             <Field label="Fecha fin">
               {canEdit
-                ? <DatePicker value={member.fin} onChange={(fin) => onUpdate(member.id, { fin })} align="right" />
-                : <span className={styles.roValue}>{member.fin}</span>}
+                ? <DatePicker value={member.fin} onChange={(fin) => onUpdate(member.id, { fin })} align="right" display={formatShortDate} />
+                : <span className={styles.roValue}>{formatShortDate(member.fin) || '—'}</span>}
             </Field>
             <Field label="Membresía">
               {canEdit
@@ -230,7 +303,7 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
       </div>
 
       <div className={styles.footer}>
-        <span className={styles.lastRenewal}>Última renovación: {member.inicio}</span>
+        <span className={styles.lastRenewal}>Última renovación: {formatShortDate(member.inicio)}</span>
         <div className={styles.actions}>
           <Button variant="outline" onClick={() => controller.close()}>Cerrar</Button>
           {canEdit && <Button onClick={() => onRenew(member)}>↻ Renovar membresía</Button>}
