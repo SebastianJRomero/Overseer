@@ -21,6 +21,7 @@
 import Field from '../../../components/Field/Field';
 import DatePicker from '../../../components/DatePicker/DatePicker';
 import SegmentedOptions from '../../../components/SegmentedOptions/SegmentedOptions';
+import { formatShortDate } from '../../../lib/date';
 import { computeFin, SPECIAL_PLAN, PLAN_OPTIONS } from '../../../lib/memberStatus';
 import styles from './MemberWizard.module.css';
 
@@ -61,10 +62,10 @@ export default function WizardStepPlanDates({ data, onPatch, plans }) {
 
       <div className={styles.dateGrid}>
         <Field label="Fecha inicio">
-          <DatePicker value={data.inicio} onChange={pickInicio} />
+          <DatePicker value={data.inicio} onChange={pickInicio} display={formatShortDate} />
         </Field>
         <Field label="Fecha fin" hint="(auto)">
-          <DatePicker value={data.fin} onChange={(fin) => onPatch({ fin })} align="right" />
+          <DatePicker value={data.fin} onChange={(fin) => onPatch({ fin })} align="right" display={formatShortDate} />
         </Field>
       </div>
     </div>
