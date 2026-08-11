@@ -15,6 +15,7 @@
 import Modal from '../../../components/Modal/Modal';
 import Badge from '../../../components/Badge/Badge';
 import { getInitials } from '../../../lib/initials';
+import { formatShortDate } from '../../../lib/date';
 import { STATUS } from '../../../lib/memberStatus';
 import { ESTADO_STYLES } from '../memberStyles';
 import styles from './MemberFilterModal.module.css';
@@ -50,7 +51,7 @@ export default function MemberFilterModal({ controller, filter, members, onOpenM
               <span className={styles.avatar}>{getInitials(m.nombre)}</span>
               <span className={styles.info}>
                 <span className={styles.name}>{m.nombre}</span>
-                <span className={styles.meta}>Vence {m.fin || '—'} · {m.tipo}</span>
+                <span className={styles.meta}>Vence {formatShortDate(m.fin) || '—'} · {m.tipo}</span>
               </span>
               <Badge color={estado.color} bg={estado.bg}>{estado.label}</Badge>
             </button>

@@ -13,6 +13,8 @@ export const MONTH_NAMES = [
 ];
 export const MONTH_ABBR = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 export const MONTH_ABBR_UP = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+/** Abreviaturas con mayúscula inicial ("Ago") — para fechas legibles como "8 Ago 2026". */
+export const MONTH_ABBR_CAP = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 export const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 export const DAY_ABBR_UP = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 /** Cabecera de calendarios lunes-first (así se leen los calendarios en Colombia). */
@@ -44,6 +46,19 @@ export function formatDMY(date) {
 /** ¿El string tiene forma de fecha dd/mm/aaaa? (para validar inputs) */
 export function isValidDMY(str) {
   return parseDMY(str) !== null;
+}
+
+/**
+ * Fecha corta legible para MOSTRAR: "08/08/2026" → "8 Ago 2026".
+ * Deja el string tal cual si no es una fecha válida (p. ej. '' o '—'),
+ * para que quien llama mantenga sus propios fallbacks.
+ * @param {string} dmy  fecha en formato "dd/mm/aaaa"
+ * @returns {string}
+ */
+export function formatShortDate(dmy) {
+  const d = parseDMY(dmy);
+  if (!d) return dmy;
+  return `${d.getDate()} ${MONTH_ABBR_CAP[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 /** Fecha de hoy como "dd/mm/aaaa". */

@@ -69,6 +69,13 @@
   gap: 3px;
 }
 
+.idHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
 .idLabel {
   font-size: var(--fs-micro);
   font-weight: 600;
@@ -81,6 +88,40 @@
   font-size: var(--fs-small);
   font-family: var(--font-mono);
   color: var(--text-mid);
+}
+
+/* Lápiz para editar cédula/teléfono (solo visible con permiso de edición). */
+.idEdit {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.13s;
+}
+.idEdit:hover {
+  background: var(--border-1);
+  color: var(--acc-1);
+}
+
+/* Input de cédula/teléfono en edición: mismo estilo compacto que el resto. */
+.idInput {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--acc-1);
+  font-size: var(--fs-small);
+  color: var(--text-title);
+  outline: none;
+  transition: border-color 0.13s;
 }
 
 /* ── Columna derecha ── */

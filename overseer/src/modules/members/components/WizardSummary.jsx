@@ -11,6 +11,7 @@
 */
 
 import { formatMoney, parseMoney } from '../../../lib/money';
+import { formatShortDate } from '../../../lib/date';
 import styles from './MemberWizard.module.css';
 
 /* Orden y etiquetas del resumen (mismo orden del prototipo). */
@@ -30,6 +31,8 @@ export default function WizardSummary({ data, onEditField }) {
   const display = (key) => {
     const val = data[key];
     if (key === 'valor' && val) return formatMoney(parseMoney(val));
+    // Fechas del resumen en formato legible ("8 Ago 2026").
+    if ((key === 'inicio' || key === 'fin') && val) return formatShortDate(val);
     if (val) return val;
     return key === 'obs' ? 'Sin observaciones' : '—';
   };

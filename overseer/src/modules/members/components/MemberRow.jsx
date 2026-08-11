@@ -14,6 +14,7 @@
 import Badge from '../../../components/Badge/Badge';
 import { getInitials } from '../../../lib/initials';
 import { formatCedula, formatPhone } from '../../../lib/format';
+import { formatShortDate } from '../../../lib/date';
 import { STATUS } from '../../../lib/memberStatus';
 import { ESTADO_STYLES, getPlanStyle } from '../memberStyles';
 import styles from './MemberTable.module.css';
@@ -35,13 +36,13 @@ export default function MemberRow({ member, onOpen }) {
       </td>
       <td className={`${styles.cell} ${styles.mono}`}>{formatCedula(member.cedula)}</td>
       <td className={`${styles.cell} ${styles.mono}`}>{formatPhone(member.telefono)}</td>
-      <td className={`${styles.cell} ${styles.soft}`}>{member.inicio}</td>
+      <td className={`${styles.cell} ${styles.soft}`}>{formatShortDate(member.inicio)}</td>
       <td
         className={styles.cell}
         // La fecha avisa: ámbar si vence pronto, gris normal si no.
         style={{ color: member.status === STATUS.PRONTO ? 'var(--warn)' : 'var(--text-soft)' }}
       >
-        {member.fin || '—'}
+        {formatShortDate(member.fin) || '—'}
       </td>
       <td className={styles.cell}>
         <Badge color={estado.color} bg={estado.bg} dot={estado.dot}>{estadoLabel}</Badge>

@@ -16,6 +16,7 @@
 import Badge from '../../../components/Badge/Badge';
 import EmptyState from '../../../components/EmptyState/EmptyState';
 import { getInitials } from '../../../lib/initials';
+import { formatShortDate } from '../../../lib/date';
 import { STATUS } from '../../../lib/memberStatus';
 import { ESTADO_STYLES } from '../../members/memberStyles';
 import styles from './SideWidget.module.css';
@@ -42,7 +43,7 @@ export default function ExpiringMembers({ members, onOpenMember }) {
                 <span className={styles.avatar}>{getInitials(m.nombre)}</span>
                 <span className={styles.info}>
                   <span className={styles.name}>{m.nombre}</span>
-                  <span className={styles.meta}>Vence {m.fin} · {m.tipo}</span>
+                  <span className={styles.meta}>Vence {formatShortDate(m.fin)} · {m.tipo}</span>
                 </span>
                 <Badge color={estado.color} bg={estado.bg}>{estado.label}</Badge>
               </button>
