@@ -30,12 +30,14 @@
 */
 
 import { useEffect, useRef, useState } from 'react';
+import useModal from '../../../hooks/useModal';
 import Modal from '../../../components/Modal/Modal';
 import Badge from '../../../components/Badge/Badge';
 import Button from '../../../components/Button/Button';
 import Field from '../../../components/Field/Field';
 import DatePicker from '../../../components/DatePicker/DatePicker';
 import PlanDropdown from './PlanDropdown';
+import MemberPhotoPreview from './MemberPhotoPreview';
 import { getInitials } from '../../../lib/initials';
 import { formatMoney } from '../../../lib/money';
 import { formatCedula, formatPhone, onlyDigits, toTitleCase } from '../../../lib/format';
@@ -55,6 +57,9 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
   const [editingPhone, setEditingPhone] = useState(false);
   const [phoneDraft, setPhoneDraft] = useState('');
   const fileInputRef = useRef(null);
+  // Vista ampliada de la foto: se abre al tocar la foto cuando ya hay una
+  // adjunta; desde ahí se puede cambiar la foto (canEdit) o cerrar.
+  const previewCtrl = useModal();
 
   // Al cerrar el modal, salir de los modos edición para que la próxima apertura
   // empiece en modo vista.
@@ -126,17 +131,35 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
     }
   };
 
+  // Tocar la foto: si ya hay una foto adjunta se AMPLÍA (vista previa); si no,
+  // se abre directo el selector de archivos/cámara para subir la primera foto.
+  const onPhotoClick = () => {
+    if (member.foto) {
+      previewCtrl.open();
+    } else if (canEdit) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  // "Cambiar foto" desde la vista ampliada: cerrar la vista previa y abrir el
+  // selector. El input file lo maneja onPhotoPick, que persiste el nuevo valor.
+  const changePhotoFromPreview = () => {
+    previewCtrl.close();
+    fileInputRef.current?.click();
+  };
+
   return (
-    <Modal controller={controller} width={560} overflowVisible>
+    <>
+      <Modal controller={controller} width={560} overflowVisible>
       <div className={styles.header}>
         {/* Columna izquierda: foto (adjuntable) + identidad fija */}
         <div className={styles.photoCol}>
           <button
             type="button"
             className={styles.photo}
-            title={canEdit ? 'Subir foto' : undefined}
-            onClick={canEdit ? () => fileInputRef.current?.click() : undefined}
-            disabled={!canEdit}
+            title={member.foto ? 'Ver foto ampliada' : canEdit ? 'Subir foto' : undefined}
+            onClick={onPhotoClick}
+            disabled={!member.foto && !canEdit}
           >
             {member.foto ? (
               <img className={styles.photoImg} src={member.foto} alt={member.nombre} />
@@ -310,5 +333,15 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
         </div>
       </div>
     </Modal>
+
+      {/* Vista ampliada de la foto (solo si hay foto adjunta). */}
+      <MemberPhotoPreview
+        controller={previewCtrl}
+        foto={member.foto}
+        nombre={member.nombre}
+        canEdit={canEdit}
+        onChangePhoto={changePhotoFromPreview}
+      />
+    </>
   );
 }
