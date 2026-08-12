@@ -4,6 +4,8 @@
   Espejan la PARTE de services/settingsService.js que es dato del negocio:
     GET   /settings/gym            → gymInfo                (getGymInfo)
     PATCH /settings/gym            → gymInfo (body {key,value})   (setGymField)
+    GET   /settings/network        → { port, host, primary, ips }  (para conectarse
+                                                                    desde otro equipo)
     GET   /settings/notifications  → notifications          (getNotifications)
     PATCH /settings/notifications  → notifications (body {key,on}) (setNotification)
     GET   /settings/backup         → backup                 (getBackup)
@@ -21,6 +23,7 @@
 
 import { Router } from 'express';
 import { db } from '../db.js';
+import { lanIps, primaryIp } from '../lib/network.js';
 
 const router = Router();
 
@@ -58,6 +61,13 @@ router.patch('/gym', (req, res) => {
   const { key, value } = req.body || {};
   const next = { ...readSetting('gymInfo', DEFAULT_GYM), [key]: value };
   res.json(writeSetting('gymInfo', next));
+});
+
+/* ── Conexión de red (desde otro dispositivo) ───────────────────────────── */
+router.get('/network', async (req, res) => {
+  const port = Number(process.env.PORT || 3001);
+  const host = process.env.HOST || '127.0.0.1';
+  res.json({ port, host, primary: await primaryIp(), ips: lanIps() });
 });
 
 /* ── Notificaciones ─────────────────────────────────────────────────────── */
