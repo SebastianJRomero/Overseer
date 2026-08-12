@@ -18,6 +18,8 @@
 
 const { app, BrowserWindow, Tray, Menu, nativeImage, dialog } = require('electron');
 const net = require('node:net');
+const os = require('node:os');
+const dgram = require('node:dgram');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -157,12 +159,52 @@ function createWindow() {
   });
 }
 
-function createTray(port, ephemeral) {
+// ── IPs LAN para mostrar la URL de conexión en la bandeja ──────────────────
+// Misma lógica que server/src/lib/network.js, duplicada aquí porque main.cjs
+// es CommonJS y no puede require() un módulo ESM del server. El truco del
+// socket UDP a 8.8.8.8:80 deja que el S.O. elija la IP de la ruta por defecto
+// (no se envía ningún paquete: basta conectar y leer el origen local).
+const VIRTUAL_RE = /virtualbox|vmware|vethernet|wsl|docker|hyper-v|npcap|loopback/i;
+
+function lanIps() {
+  const found = [];
+  const ifaces = os.networkInterfaces();
+  for (const [name, addrs] of Object.entries(ifaces || {})) {
+    if (VIRTUAL_RE.test(name)) continue;
+    for (const a of addrs || []) {
+      const isV4 = a.family === 'IPv4' || a.family === 4;
+      if (isV4 && !a.internal) found.push({ name, address: a.address });
+    }
+  }
+  return found;
+}
+
+function primaryIp() {
+  const all = lanIps();
+  if (all.length === 0) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const sock = dgram.createSocket('udp4');
+    let settled = false;
+    const settle = (v) => { if (settled) return; settled = true; try { sock.close(); } catch {} resolve(v); };
+    sock.on('error', () => settle(null));
+    sock.once('connect', () => {
+      const a = sock.address().address;
+      settle(a && a !== '0.0.0.0' ? a : null);
+    });
+    sock.connect(80, '8.8.8.8');
+    setTimeout(() => settle(null), 500); // nunca colgar el arranque
+  }).then((addr) => addr || (all[0] ? all[0].address : null));
+}
+
+async function createTray(port, ephemeral) {
   tray = new Tray(nativeImage.createFromPath(iconPath()));
-  const tip = ephemeral
-    ? `OVERSEER · puerto ${port} (temporal: el fijo estaba ocupado)`
-    : `OVERSEER · puerto ${port}`;
-  tray.setToolTip(tip);
+  // Tooltip con la URL para conectarse desde el celular/otro PC (IP de la
+  // ruta por defecto). Sin IP LAN cae a 127.0.0.1 (solo funciona local).
+  const ip = await primaryIp();
+  const base = `http://${ip || '127.0.0.1'}:${port}`;
+  tray.setToolTip(ephemeral
+    ? `OVERSEER · ${base} (temporal: el fijo estaba ocupado)`
+    : `OVERSEER · ${base}`);
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Abrir OVERSEER', click: showWindow },
     { type: 'separator' },
@@ -227,7 +269,7 @@ app.whenReady().then(async () => {
   });
 
   createWindow();
-  createTray(port, ephemeral);
+  await createTray(port, ephemeral);
   setupAutoUpdater();
 
   const base = `http://127.0.0.1:${port}/`;

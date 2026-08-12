@@ -26,6 +26,7 @@ import settingsRouter from './routes/settings.js';
 import classesRouter from './routes/classes.js';
 import trainersRouter from './routes/trainers.js';
 import maintenanceRouter from './routes/maintenance.js';
+import { lanIps } from './lib/network.js';
 
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = process.env.PORT || 3001;
@@ -89,4 +90,14 @@ app.use((err, req, res, _next) => {
 // el export no estorba.
 export const server = app.listen(PORT, HOST, () => {
   console.log(`OVERSEER API escuchando en http://${HOST}:${PORT}`);
+  // En dev: deja a la vista la(s) URL(s) para conectarse desde el celular/otro
+  // PC en la misma red. En Electron el log no se ve, ahí la URL va al tooltip
+  // de la bandeja (desktop/main.cjs).
+  const ips = lanIps();
+  if (ips.length > 0) {
+    console.log('Conectarse desde otro dispositivo:');
+    for (const ip of ips) console.log(`  http://${ip.address}:${PORT}/   (${ip.name})`);
+  } else {
+    console.log('Sin interfaces de red LAN accesibles (solo local).');
+  }
 });
