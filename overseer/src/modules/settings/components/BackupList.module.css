@@ -1,0 +1,111 @@
+/* BackupList.module.css — lista de copias de seguridad (.db) dentro de Ajustes. */
+
+.wrap {
+  border-top: 1px solid var(--surface-2);
+  padding: 6px 0;
+}
+
+.head {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  padding: 10px 18px 6px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px;
+  transition: background 0.13s;
+}
+.row:hover {
+  background: var(--surface-row-hover);
+}
+
+.icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--info);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-title);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Botones de acción (outline chico): descargar, restaurar y borrar. */
+.dl,
+.res,
+.del {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.13s, color 0.13s, filter 0.13s;
+}
+.dl {
+  border: 1px solid var(--border-4);
+  background: var(--surface-hover);
+  color: var(--text-mid);
+}
+.dl:hover {
+  border-color: var(--border-hover);
+  color: var(--text-title);
+}
+.res {
+  border: 1px solid var(--ok-border);
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.res:hover {
+  filter: brightness(1.12);
+}
+.del {
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.del:hover {
+  filter: brightness(1.12);
+}
+.dl:disabled,
+.res:disabled,
+.del:disabled {
+  opacity: 0.5;
+  cursor: default;
+  filter: none;
+}

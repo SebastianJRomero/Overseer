@@ -10,7 +10,10 @@
     PATCH /settings/notifications  → notifications (body {key,on}) (setNotification)
     GET   /settings/backup         → backup                 (getBackup)
     PATCH /settings/backup         → backup (body {auto})    (setAutoBackup)
-    POST  /settings/backup/run     → backup (sella la fecha) (runBackup)
+    POST  /settings/backup/run     → backup (crea copia real) (runBackup)
+    GET   /settings/backup/files   → { files }               (listBackups)
+    GET   /settings/backup/files/:name → descarga la copia
+    DELETE /settings/backup/files/:name → borra la copia
 
   La APARIENCIA (accent/density/roundness) y los FLAGS de módulos NO están aquí:
   siguen en localStorage del front (decisión #2: el tema se persiste local; y
@@ -24,6 +27,8 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { lanIps, primaryIp } from '../lib/network.js';
+import { createBackup, listBackups, deleteBackup, backupPath, restoreBackup } from '../lib/backup.js';
+import { markSeeded } from '../seed.js';
 
 const router = Router();
 
@@ -38,7 +43,7 @@ const DEFAULT_NOTIFICATIONS = {
   rem3: true, remDay: true, stockLow: true, dailySummary: false,
   chWhats: true, chMail: true, chSms: false,
 };
-const DEFAULT_BACKUP = { auto: true, last: '12/07/2026 · 03:00' };
+const DEFAULT_BACKUP = { auto: true, last: '', lastFile: '' };
 
 /** Lee una clave de settings mezclada con sus defaults. */
 function readSetting(key, defaults) {
@@ -79,7 +84,20 @@ router.patch('/notifications', (req, res) => {
   res.json(writeSetting('notifications', next));
 });
 
-/* ── Respaldos ──────────────────────────────────────────────────────────── */
+/* ── Respaldos ────────────────────────────────────────────────────────────
+   A diferencia de antes (que solo sellaba la fecha), ahora "run" crea un
+   respaldo REAL: snapshot consistente del SQLite a un archivo .db en la
+   carpeta `backups/` junto a la BD (lib/backup.js). Se puede listar, descargar
+   y borrar. La copia automática de las 03:00 la dispara el scheduler de
+   index.js (mismo createBackup), no este router. */
+
+/** Etiqueta humana de una fecha ISO: "12/08/2026 · 22:31". */
+function labelFromIso(iso) {
+  const d = new Date(iso);
+  const p2 = (n) => String(n).padStart(2, '0');
+  return `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} · ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+
 router.get('/backup', (req, res) => res.json(readSetting('backup', DEFAULT_BACKUP)));
 
 router.patch('/backup', (req, res) => {
@@ -88,12 +106,43 @@ router.patch('/backup', (req, res) => {
   res.json(writeSetting('backup', next));
 });
 
-router.post('/backup/run', (req, res) => {
-  const d = new Date();
-  const p2 = (n) => String(n).padStart(2, '0');
-  const stamp = `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} · ${p2(d.getHours())}:${p2(d.getMinutes())}`;
-  const next = { ...readSetting('backup', DEFAULT_BACKUP), last: stamp };
+/* Crea una copia real de la BD y la registra como la última. */
+router.post('/backup/run', async (req, res) => {
+  const snap = await createBackup();
+  const next = {
+    ...readSetting('backup', DEFAULT_BACKUP),
+    last: labelFromIso(snap.date),
+    lastFile: snap.name,
+  };
   res.json(writeSetting('backup', next));
+});
+
+/* Lista los respaldos guardados (más reciente primero). */
+router.get('/backup/files', (req, res) => res.json({ files: listBackups() }));
+
+/* Descarga un respaldo concreto (nombre validado contra path traversal). */
+router.get('/backup/files/:name', (req, res) => {
+  const path = backupPath(req.params.name);
+  if (!path) return res.status(400).json({ error: 'Nombre de respaldo inválido' });
+  res.download(path, req.params.name);
+});
+
+/* Restaura la BD actual desde un respaldo (reemplaza TODO el contenido). */
+router.post('/backup/files/:name/restore', (req, res) => {
+  if (!restoreBackup(req.params.name)) {
+    return res.status(404).json({ error: 'Respaldo no encontrado' });
+  }
+  // Un sistema restaurado no debe resembrarse en el arranque (igual que import).
+  markSeeded();
+  res.json({ ok: true });
+});
+
+/* Borra un respaldo concreto. */
+router.delete('/backup/files/:name', (req, res) => {
+  if (!deleteBackup(req.params.name)) {
+    return res.status(404).json({ error: 'Respaldo no encontrado' });
+  }
+  res.json({ ok: true });
 });
 
 export default router;

@@ -1,21 +1,30 @@
 /*
   DataSection — Ajustes → Respaldos y datos.
 
-  Exportar a CSV (miembros, inventario, pagos) y copias de seguridad (copia
-  automática + "crear copia ahora", que sella la fecha). Los CSV se generan en
-  el cliente desde los services (no hay backend todavía).
+  Exportar a CSV (miembros, inventario, pagos) y copias de seguridad REALES:
+  "crear copia ahora" pide al backend un snapshot .db de la BD (que queda en
+  disco junto al archivo de la BD), y "copia automática diaria" activa el
+  respaldo de las 03:00 que corre el server (lib/backup.js). La lista muestra
+  las copias guardadas y permite descargarlas, RESTAURARLAS (reemplaza toda la
+  BD, con confirmación fuerte) o borrarlas.
 
   Nota: "Pagos y recibos" exporta los recibos de los miembros — el libro de
   transacciones unificado llega con el backend (ver Limitaciones conocidas).
 
-  Recibe (de useSettings): backup, setAutoBackup, runBackup.
+  Recibe (de useSettings): backup, backups, setAutoBackup, runBackup,
+  deleteBackup.
 */
 
+import { useState } from 'react';
 import Toggle from '../../../components/Toggle/Toggle';
 import Icon from '../../../components/Icon/Icon';
 import SettingsCard from './SettingsCard';
+import BackupList from './BackupList';
+import ConfirmDangerModal from './ConfirmDangerModal';
+import useModal from '../../../hooks/useModal';
 import * as membersService from '../../../services/membersService';
 import * as inventoryService from '../../../services/inventoryService';
+import * as settingsService from '../../../services/settingsService';
 import { toCsv, downloadCsv } from '../../../lib/csv';
 import { formatCedula, formatPhone } from '../../../lib/format';
 import shared from './SettingsShared.module.css';
@@ -52,10 +61,46 @@ const EXPORTS = [
   },
 ];
 
-export default function DataSection({ backup, setAutoBackup, runBackup }) {
+export default function DataSection({ backup, backups, setAutoBackup, runBackup, deleteBackup }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null); // feedback de crear copia: {tone,text}
+  const confirm = useModal();
+  const [pendingRestore, setPendingRestore] = useState(null); // {name} a restaurar
+  const [restoreBusy, setRestoreBusy] = useState(false);
+
   const doExport = async (exp) => {
     const { headers, rows, file } = await exp.build();
     downloadCsv(file, toCsv(headers, rows));
+  };
+
+  const doRun = async () => {
+    if (busy) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      await runBackup();
+      setMsg({ tone: 'ok', text: 'Copia de seguridad creada.' });
+    } catch (e) {
+      setMsg({ tone: 'err', text: e.message || 'No se pudo crear la copia.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* Restaurar pide confirmación FUERTE (escribir RESTAURAR). Tras el éxito se
+     recarga la página para que todos los módulos relean datos frescos. */
+  const doRestore = async () => {
+    if (!pendingRestore || restoreBusy) return;
+    setRestoreBusy(true);
+    try {
+      await settingsService.restoreBackup(pendingRestore.name);
+      confirm.close(() => setPendingRestore(null));
+      setTimeout(() => window.location.reload(), 600);
+    } catch (e) {
+      setMsg({ tone: 'err', text: e.message || 'No se pudo restaurar la copia.' });
+      confirm.close(() => setPendingRestore(null));
+      setRestoreBusy(false);
+    }
   };
 
   return (
@@ -84,11 +129,41 @@ export default function DataSection({ backup, setAutoBackup, runBackup }) {
         <div className={shared.row}>
           <div className={shared.rowInfo}>
             <span className={styles.lastLabel}>Última copia</span>
-            <span className={styles.lastValue}>{backup.last}</span>
+            <span className={styles.lastValue}>{backup.last || '—'}</span>
+            {backup.lastFile && <span className={styles.lastFile}>{backup.lastFile}</span>}
           </div>
-          <button type="button" className={styles.backupBtn} onClick={runBackup}>↻ Crear copia ahora</button>
+          <button type="button" className={styles.backupBtn} onClick={doRun} disabled={busy}>
+            <Icon name="refresh" size={13} />
+            {busy ? 'Creando…' : 'Crear copia ahora'}
+          </button>
         </div>
+
+        {msg && (
+          <div className={msg.tone === 'ok' ? styles.okMsg : styles.errMsg}>{msg.text}</div>
+        )}
+
+        {backups.length > 0
+          ? <BackupList
+              backups={backups}
+              onDownload={settingsService.downloadBackup}
+              onRestore={(b) => { setMsg(null); setPendingRestore(b); confirm.open(); }}
+              onDelete={deleteBackup}
+            />
+          : <div className={styles.empty}>Aún no hay copias guardadas.</div>}
       </SettingsCard>
+
+      {pendingRestore && (
+        <ConfirmDangerModal
+          key={pendingRestore.name}
+          controller={confirm}
+          title="Restaurar copia"
+          message={`Se reemplazará TODA la base de datos actual con la copia "${pendingRestore.name}". Los registros actuales se perderán (recuerda crear una copia antes si los necesitas).`}
+          keyword="RESTAURAR"
+          confirmLabel="Restaurar copia"
+          busy={restoreBusy}
+          onConfirm={doRestore}
+        />
+      )}
     </div>
   );
 }

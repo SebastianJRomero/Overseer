@@ -18,22 +18,30 @@ export default function useSettings() {
   const [plans, setPlans] = useState([]);
   const [notifications, setNotifications] = useState({});
   const [backup, setBackup] = useState({ auto: true, last: '' });
+  const [backups, setBackups] = useState([]); // respaldos en disco: [{name,size,date}]
 
   const load = useCallback(async () => {
-    const [g, u, p, n, b] = await Promise.all([
+    const [g, u, p, n, b, files] = await Promise.all([
       settingsService.getGymInfo(),
       usersService.listUsers(),
       plansService.listPlans(),
       settingsService.getNotifications(),
       settingsService.getBackup(),
+      settingsService.listBackups(),
     ]);
-    setGym(g); setUsers(u); setPlans(p); setNotifications(n); setBackup(b);
+    setGym(g); setUsers(u); setPlans(p); setNotifications(n); setBackup(b); setBackups(files.files || []);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
+  /** Refresca la lista de respaldos desde el disco (tras crear/borrar). */
+  const refreshBackups = useCallback(async () => {
+    const files = await settingsService.listBackups();
+    setBackups(files.files || []);
+  }, []);
+
   return {
-    gym, users, plans, notifications, backup,
+    gym, users, plans, notifications, backup, backups,
 
     setGymField: async (k, v) => setGym(await settingsService.setGymField(k, v)),
     createUser: async (d) => setUsers(await usersService.createUser(d)),
@@ -44,6 +52,13 @@ export default function useSettings() {
     deletePlan: async (id) => setPlans(await plansService.deletePlan(id)),
     setNotification: async (k, on) => setNotifications(await settingsService.setNotification(k, on)),
     setAutoBackup: async (on) => setBackup(await settingsService.setAutoBackup(on)),
-    runBackup: async () => setBackup(await settingsService.runBackup()),
+    runBackup: async () => {
+      setBackup(await settingsService.runBackup());
+      await refreshBackups();
+    },
+    deleteBackup: async (name) => {
+      await settingsService.deleteBackup(name);
+      await refreshBackups();
+    },
   };
 }

@@ -16,7 +16,8 @@
 */
 
 import { load, save } from './storage';
-import { apiGet, apiPatch, apiPost } from './api';
+import { apiGet, apiPatch, apiPost, apiDelete, apiDownload } from './api';
+import { downloadBlob } from '../lib/download';
 
 /* ── Apariencia (local — decisión #2) ──────────────────────────────────── */
 
@@ -105,7 +106,7 @@ export async function setNotification(key, on) {
 
 /* ── Respaldos (backend) ───────────────────────────────────────────────── */
 
-/** @returns {Promise<{auto: boolean, last: string}>} */
+/** @returns {Promise<{auto: boolean, last: string, lastFile?: string}>} */
 export async function getBackup() {
   return apiGet('/settings/backup');
 }
@@ -115,7 +116,28 @@ export async function setAutoBackup(on) {
   return apiPatch('/settings/backup', { auto: on });
 }
 
-/** Registra una copia "creada ahora" (sella la fecha actual). @returns {Promise<Object>} */
+/** Crea una copia REAL de la BD (snapshot .db en el server). @returns {Promise<Object>} */
 export async function runBackup() {
   return apiPost('/settings/backup/run');
+}
+
+/** Lista las copias guardadas: { files: [{ name, size, date }] } más reciente primero. */
+export async function listBackups() {
+  return apiGet('/settings/backup/files');
+}
+
+/** Descarga una copia concreta como archivo .db (dispara el guardado). */
+export async function downloadBackup(name) {
+  const blob = await apiDownload(`/settings/backup/files/${encodeURIComponent(name)}`);
+  downloadBlob(name, blob);
+}
+
+/** Restaura la BD actual desde una copia concreta (reemplaza TODO). */
+export async function restoreBackup(name) {
+  return apiPost(`/settings/backup/files/${encodeURIComponent(name)}/restore`);
+}
+
+/** Borra una copia concreta del disco. @returns {Promise<*>} */
+export async function deleteBackup(name) {
+  return apiDelete(`/settings/backup/files/${encodeURIComponent(name)}`);
 }
