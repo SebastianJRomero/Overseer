@@ -14,6 +14,7 @@ import express from 'express';
 import { join } from 'node:path';
 import { migrate } from './db.js';
 import { seedAll, isSeeded } from './seed.js';
+import { startAutoBackup } from './lib/backup.js';
 
 import authRouter, { requireAuth } from './routes/auth.js';
 import membersRouter from './routes/members.js';
@@ -35,6 +36,10 @@ migrate();
 // La semilla corre solo la primera vez: si el usuario vacía/resetea datos
 // (menú de mantenimiento), el arranque no debe volver a sembrar la demo.
 if (!isSeeded()) seedAll();
+
+// Copias de seguridad automáticas (diarias desde las 03:00). Corre igual en
+// dev y en Electron porque vive en el server embebido. Ver lib/backup.js.
+startAutoBackup();
 
 const app = express();
 app.use(express.json({ limit: '8mb' }));

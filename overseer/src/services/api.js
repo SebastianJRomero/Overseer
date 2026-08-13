@@ -34,6 +34,20 @@ export function setAuthToken(token) {
 }
 
 /**
+ * Convierte una respuesta no-2xx en excepción (y 401 en cierre de sesión).
+ * Compartido por `request` y `apiDownload`.
+ */
+function throwOnError(res, method, path) {
+  if (res.status === 401) {
+    authToken = null;
+    remove('auth');
+    window.dispatchEvent(new Event('overseer:unauthorized'));
+    throw new Error(`API ${method} ${path} → 401 no autorizado`);
+  }
+  if (!res.ok) throw new Error(`API ${method} ${path} → ${res.status}`);
+}
+
+/**
  * Hace una petición JSON y devuelve el cuerpo parseado.
  * @param {string} method  GET | POST | PATCH | PUT | DELETE
  * @param {string} path    ruta bajo /api (p. ej. '/members')
@@ -50,15 +64,24 @@ async function request(method, path, body) {
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401) {
-    authToken = null;
-    remove('auth');
-    window.dispatchEvent(new Event('overseer:unauthorized'));
-    throw new Error(`API ${method} ${path} → 401 no autorizado`);
-  }
-  if (!res.ok) throw new Error(`API ${method} ${path} → ${res.status}`);
+  throwOnError(res, method, path);
   if (res.status === 204) return null;
   return res.json();
+}
+
+/**
+ * Descarga el contenido binario de una ruta (p. ej. un respaldo .db) con el
+ * token Bearer en el header, y lo devuelve como Blob. Se usa para descargar
+ * respaldos: un <a href> simple no llevaría el token de sesión.
+ * @param {string} path  ruta bajo /api
+ * @returns {Promise<Blob>}
+ */
+export async function apiDownload(path) {
+  const res = await fetch(BASE + path, {
+    headers: { ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
+  });
+  throwOnError(res, 'GET', path);
+  return res.blob();
 }
 
 export const apiGet = (path) => request('GET', path);

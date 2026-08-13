@@ -4,3 +4,5 @@ node_modules/
 *.db-wal
 *.db-shm
 *.sqlite
+# Humo de ejecuciones locales (npm start redirigido a log)
+*.log
