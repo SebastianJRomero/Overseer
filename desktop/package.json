@@ -1,6 +1,6 @@
 {
   "name": "overseer-desktop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "OVERSEER — App de escritorio (Electron): front compilado + server embebido + auto-updater.",
   "main": "main.cjs",
   "author": "SebastianJRomero",
