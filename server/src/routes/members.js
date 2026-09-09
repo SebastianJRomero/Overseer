@@ -21,14 +21,45 @@ import { db, nextOrd } from '../db.js';
 import { newId } from '../lib/id.js';
 import { todayDMY } from '../lib/date.js';
 import { toTitleCase } from '../lib/text.js';
+import { readSetting, writeSetting, getReceiptsConfig } from './settings.js';
 
 const router = Router();
 
-const COLS = 'id, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, obs, foto';
+const COLS = 'id, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, obs, foto, medio_pago';
+
+/** Normaliza el medio de pago: solo 'efectivo' | 'nequi', resto → 'efectivo'. */
+function normMedio(v) {
+  return v === 'nequi' ? 'nequi' : 'efectivo';
+}
 
 /** Lee la lista completa en el orden de la UI (más nuevos arriba). */
 function listAll() {
   return db.prepare(`SELECT ${COLS} FROM members ORDER BY ord ASC`).all();
+}
+
+/* ── Consecutivo de recibo digital (Fase 2) ───────────────────────────
+   Si el recibo digital está ACTIVO, el número manual se ignora y se asigna
+   el siguiente de la serie global (transacción para no duplicar con dos
+   recepciones simultáneas). Si está apagado, se respeta el manual. */
+function nextReceiptNumber() {
+  const cfg = getReceiptsConfig();
+  if (!cfg.enabled) return null;
+  const run = db.transaction(() => {
+    const cur = readSetting('receipts', { enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '' });
+    let base = cur.next;
+    if (base == null) {
+      let max = 0;
+      for (const r of db.prepare('SELECT recibo FROM members').all()) {
+        const m = String(r.recibo || '').trim().match(new RegExp(`^${cur.prefix}-(\\d{1,6})$`, 'i'));
+        if (m) max = Math.max(max, Number(m[1]));
+      }
+      base = max + 1;
+    }
+    const numero = `${cur.prefix}-${String(base).padStart(4, '0')}`;
+    writeSetting('receipts', { ...cur, next: base + 1 });
+    return numero;
+  });
+  return run();
 }
 
 /**
@@ -42,13 +73,14 @@ function listAll() {
  * se ven en los movimientos del día y del mes.
  * @param {{nombre, tipo, valor}} m  datos del miembro (alta o renovación)
  */
-function addMembershipEntry({ nombre, tipo, valor }) {
+function addMembershipEntry({ nombre, tipo, valor, medio_pago }) {
   if (!valor || valor <= 0) return;
-  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria)
-    VALUES (@id, @ord, 'entrada', @monto, @motivo, @fecha, 0, 1, '{}', 'membresia')`)
+  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria, medio_pago)
+    VALUES (@id, @ord, 'entrada', @monto, @motivo, @fecha, 0, 1, '{}', 'membresia', @medio_pago)`)
     .run({
       id: newId('mv'), ord: nextOrd('movements', 'top'),
       monto: valor, motivo: `Membresía ${tipo || ''} · ${nombre || ''}`.trim(), fecha: todayDMY(),
+      medio_pago: normMedio(medio_pago),
     });
 }
 
@@ -58,14 +90,17 @@ router.get('/', (req, res) => {
 
 router.post('/', (req, res) => {
   const d = req.body || {};
+  // Recibo digital activo → número automático (se ignora el manual).
+  const auto = nextReceiptNumber();
   const member = {
     id: newId('m'),
     nombre: toTitleCase(d.nombre ?? ''), cedula: d.cedula ?? '', telefono: d.telefono ?? '',
     inicio: d.inicio ?? '', fin: d.fin ?? '', tipo: d.tipo ?? '',
-    recibo: d.recibo ?? '', valor: d.valor ?? 0, obs: d.obs ?? '',
+    recibo: auto ?? d.recibo ?? '', valor: d.valor ?? 0, obs: d.obs ?? '',
+    medio_pago: normMedio(d.medio_pago),
   };
-  db.prepare(`INSERT INTO members (id, ord, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, obs)
-    VALUES (@id, @ord, @nombre, @cedula, @telefono, @inicio, @fin, @tipo, @recibo, @valor, @obs)`)
+  db.prepare(`INSERT INTO members (id, ord, nombre, cedula, telefono, inicio, fin, tipo, recibo, valor, obs, medio_pago)
+    VALUES (@id, @ord, @nombre, @cedula, @telefono, @inicio, @fin, @tipo, @recibo, @valor, @obs, @medio_pago)`)
     .run({ ...member, ord: nextOrd('members', 'top') });
   addMembershipEntry(member); // el pago del alta entra al libro mayor
   res.status(201).json(member); // createMember devuelve el miembro creado
@@ -73,11 +108,12 @@ router.post('/', (req, res) => {
 
 /** Aplica un patch parcial y devuelve la lista actualizada (update y renew). */
 function applyPatch(id, patch) {
-  const allowed = ['nombre', 'cedula', 'telefono', 'inicio', 'fin', 'tipo', 'recibo', 'valor', 'obs', 'foto'];
+  const allowed = ['nombre', 'cedula', 'telefono', 'inicio', 'fin', 'tipo', 'recibo', 'valor', 'obs', 'foto', 'medio_pago'];
   const keys = Object.keys(patch || {}).filter((k) => allowed.includes(k));
   if (keys.length) {
     const values = { ...patch, id };
     if (values.nombre != null) values.nombre = toTitleCase(values.nombre);
+    if (values.medio_pago != null) values.medio_pago = normMedio(values.medio_pago);
     const setSql = keys.map((k) => `${k} = @${k}`).join(', ');
     db.prepare(`UPDATE members SET ${setSql} WHERE id = @id`).run(values);
   }
@@ -89,7 +125,11 @@ router.patch('/:id', (req, res) => {
 });
 
 router.post('/:id/renew', (req, res) => {
-  const list = applyPatch(req.params.id, req.body);
+  // Recibo digital activo → número automático (se ignora el manual).
+  const body = { ...(req.body || {}) };
+  const auto = nextReceiptNumber();
+  if (auto) body.recibo = auto;
+  const list = applyPatch(req.params.id, body);
   // Renovar es un pago: leemos el miembro ya actualizado y asentamos el cobro
   // (nombre viene del registro; tipo/valor/inicio, de la renovación aplicada).
   const m = list.find((x) => x.id === req.params.id);

@@ -12,16 +12,29 @@
     - onNewEntrada / onNewSalida: abrir el modal de movimiento
 */
 
+import { useState } from 'react';
 import MovementRow from './MovementRow';
 import styles from './MovementList.module.css';
 
+// Filtro por medio de pago (en memoria, no toca el backend).
+const PAY_FILTERS = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'efectivo', label: 'Efectivo' },
+  { id: 'nequi', label: 'Nequi' },
+];
+
 export default function MovementList({ monthLabel, movements, onConfirm, onNewEntrada, onNewSalida }) {
+  const [payFilter, setPayFilter] = useState('todos');
+  const visible = payFilter === 'todos'
+    ? movements
+    : movements.filter((mv) => (mv.medio_pago === 'nequi' ? 'nequi' : 'efectivo') === payFilter);
+
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
         <div className={styles.heading}>
           <span className={styles.title}>Detalle de movimientos</span>
-          <span className={styles.subtitle}>{monthLabel} · {movements.length} movimientos</span>
+          <span className={styles.subtitle}>{monthLabel} · {visible.length} movimientos</span>
         </div>
         <div className={styles.actions}>
           <button type="button" className={`${styles.regBtn} ${styles.regEntrada}`} onClick={onNewEntrada}>
@@ -33,8 +46,22 @@ export default function MovementList({ monthLabel, movements, onConfirm, onNewEn
         </div>
       </div>
 
+      {/* Filtro Efectivo/Nequi: quién pagó por cada medio (Fase 1). */}
+      <div className={styles.filterRow}>
+        {PAY_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            className={payFilter === f.id ? `${styles.filterBtn} ${styles.filterActive}` : styles.filterBtn}
+            onClick={() => setPayFilter(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       <div className={styles.list}>
-        {movements.map((mv) => (
+        {visible.map((mv) => (
           <MovementRow key={mv.id} mv={mv} onConfirm={onConfirm} />
         ))}
       </div>

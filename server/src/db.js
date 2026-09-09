@@ -132,6 +132,10 @@ export function migrate() {
   // Auth real: hash de la contraseña ("salt:hash", scrypt). BDs viejas quedan
   // con '' → esas cuentas no entran hasta fijarles clave (o resembrar).
   ensureColumn('users', 'pass_hash', "TEXT DEFAULT ''");
+  // Medio de pago (Fase 1 recibo digital): 'efectivo' | 'nequi'. Default
+  // efectivo para no romper filas viejas ni el flujo manual actual.
+  ensureColumn('members', 'medio_pago', "TEXT DEFAULT 'efectivo'");
+  ensureColumn('movements', 'medio_pago', "TEXT DEFAULT 'efectivo'");
 }
 
 /**

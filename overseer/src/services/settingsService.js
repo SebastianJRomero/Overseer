@@ -104,6 +104,23 @@ export async function setNotification(key, on) {
   return apiPatch('/settings/notifications', { key, on });
 }
 
+/* ── Recibo digital (backend) ──────────────────────────────────────────── */
+
+/** @returns {Promise<{enabled, prefix, next}>} */
+export async function getReceipts() {
+  return apiGet('/settings/receipts');
+}
+
+/**
+ * Cambia el toggle o el prefijo del recibo digital.
+ * @param {string} key  'enabled' | 'prefix'
+ * @param {*} value
+ * @returns {Promise<object>} la config resultante
+ */
+export async function setReceipt(key, value) {
+  return apiPatch('/settings/receipts', { [key]: value });
+}
+
 /* ── Respaldos (backend) ───────────────────────────────────────────────── */
 
 /** @returns {Promise<{auto: boolean, last: string, lastFile?: string}>} */

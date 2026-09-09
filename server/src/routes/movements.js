@@ -33,11 +33,12 @@ const monthLabel = (m) => MONTH_ABBR[m].replace(/^\w/, (c) => c.toUpperCase());
 
 /** Lee TODOS los asientos del libro (crudos), más nuevos primero (ORDER BY ord). */
 function readAll() {
-  return db.prepare('SELECT id, tipo, monto, motivo, fecha, recurrent, settled, items, categoria FROM movements ORDER BY ord ASC').all()
+  return db.prepare('SELECT id, tipo, monto, motivo, fecha, recurrent, settled, items, categoria, medio_pago FROM movements ORDER BY ord ASC').all()
     .map((r) => ({
       id: r.id, tipo: r.tipo, monto: r.monto, motivo: r.motivo, fecha: r.fecha,
       recurrent: !!r.recurrent, settled: !!r.settled, items: JSON.parse(r.items || '{}'),
       categoria: r.categoria || 'otro',
+      medio_pago: r.medio_pago === 'nequi' ? 'nequi' : 'efectivo',
     }));
 }
 
@@ -77,16 +78,18 @@ router.post('/', (req, res) => {
   const hasItems = mov.items && Object.keys(mov.items).length > 0;
   const isIncome = sign(mov.tipo) > 0;
   const categoria = isIncome ? (hasItems ? 'venta' : 'otro') : 'otro';
-  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria)
-    VALUES (@id, @ord, @tipo, @monto, @motivo, @fecha, @recurrent, 0, @items, @categoria)`)
+  // Medio de pago: solo 'efectivo' | 'nequi' (default efectivo para no romper).
+  const medio_pago = mov.medio_pago === 'nequi' ? 'nequi' : 'efectivo';
+  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria, medio_pago)
+    VALUES (@id, @ord, @tipo, @monto, @motivo, @fecha, @recurrent, 0, @items, @categoria, @medio_pago)`)
     .run({
       id, ord: nextOrd('movements', 'top'),
       tipo: mov.tipo, monto: mov.monto, motivo: mov.motivo ?? '', fecha: mov.fecha,
-      recurrent: mov.recurrent ? 1 : 0, items: JSON.stringify(mov.items || {}), categoria,
+      recurrent: mov.recurrent ? 1 : 0, items: JSON.stringify(mov.items || {}), categoria, medio_pago,
     });
   // Mismo retorno que antes: el registro tal cual + id + settled:false
   // (el hook lo pasa a addFromMovement y applySale).
-  res.status(201).json({ ...mov, id, settled: false });
+  res.status(201).json({ ...mov, medio_pago, id, settled: false });
 });
 
 router.post('/:id/settle', (req, res) => {

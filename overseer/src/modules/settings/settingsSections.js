@@ -19,6 +19,7 @@ import ModulesSection from './components/ModulesSection';
 import AccountsSection from './components/AccountsSection';
 import PlansSection from './components/PlansSection';
 import NotificationsSection from './components/NotificationsSection';
+import ReceiptsSection from './components/ReceiptsSection';
 import DataSection from './components/DataSection';
 import MaintenanceSection from './components/MaintenanceSection';
 
@@ -28,6 +29,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'cuentas', icon: 'members', label: 'Cuentas y roles', desc: 'Admin, recepción y permisos', Component: AccountsSection },
   { id: 'planes', icon: 'finance', label: 'Planes y precios', desc: 'Membresías y tarifas', Component: PlansSection },
   { id: 'notificaciones', icon: 'notification', label: 'Notificaciones', desc: 'Recordatorios y avisos', Component: NotificationsSection },
+  { id: 'recibos', icon: 'finance', label: 'Recibo digital', desc: 'Consecutivo, QR y comprobante', Component: ReceiptsSection },
   { id: 'datos', icon: 'reports', label: 'Respaldos y datos', desc: 'Exportar y copias de seguridad', Component: DataSection },
 ];
 

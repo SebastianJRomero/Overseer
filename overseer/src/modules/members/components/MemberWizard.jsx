@@ -34,6 +34,8 @@
     - plans: planes activos del catálogo (Ajustes → Planes) [{ nombre, duracionDias, precio }]
     - members: lista completa de miembros (para detectar cédulas duplicadas en el alta)
     - onSave: (datos) => void — el módulo decide si es create o renew
+    - autoRecibo: true = recibo digital activo (se omite el paso manual)
+    - nextNumero: previsualización del siguiente consecutivo (no lo consume)
 */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -42,6 +44,7 @@ import WizardStepText from './WizardStepText';
 import WizardStepPlanDates from './WizardStepPlanDates';
 import WizardStepPago from './WizardStepPago';
 import WizardSummary from './WizardSummary';
+import MedioPagoCheck from '../../../components/MedioPagoCheck/MedioPagoCheck';
 import { todayDMY, isValidDMY } from '../../../lib/date';
 import { computeFin, SPECIAL_PLAN } from '../../../lib/memberStatus';
 import { parseMoney, quickThousands } from '../../../lib/money';
@@ -96,6 +99,8 @@ function initialData(mode, member, plans) {
     return {
       tipo, inicio, fin: computeFin(tipo, inicio, plan?.duracionDias),
       valor: member?.valor ?? null, recibo: '', obs: member?.obs || '',
+      // Medio de pago: siempre arranca en efectivo (default del negocio).
+      medioPago: 'efectivo',
     };
   }
   // Alta: arranca en el plan por defecto del catálogo con su precio precargado.
@@ -105,19 +110,25 @@ function initialData(mode, member, plans) {
     nombre: '', cedula: '', telefono: '',
     tipo, inicio: hoy, fin: computeFin(tipo, hoy, plan?.duracionDias),
     recibo: '', valor: plan ? plan.precio : '', obs: '',
+    // Medio de pago: siempre arranca en efectivo (default del negocio).
+    medioPago: 'efectivo',
   };
 }
 
-export default function MemberWizard({ controller, mode, member, plans, members, onSave }) {
+export default function MemberWizard({ controller, mode, member, plans, members, onSave, autoRecibo, nextNumero }) {
   const isRenew = mode === 'renew';
-  const totalSteps = isRenew ? 2 : ADD_STEPS.length;
+  // Recibo digital activo: el paso "Número de recibo" se omite (lo genera el
+  // backend) y la validación lo da por válido.
+  const steps = autoRecibo ? ADD_STEPS.filter((s) => s.field !== 'recibo') : ADD_STEPS;
+  const required = autoRecibo ? REQUIRED.filter((f) => f !== 'recibo') : REQUIRED;
+  const totalSteps = isRenew ? 2 : steps.length;
   const [step, setStep] = useState(0);
   const [data, setData] = useState(() => initialData(mode, member, plans));
 
   const patch = (p) => setData((d) => ({ ...d, ...p }));
-  const isSummary = !isRenew && step >= ADD_STEPS.length;
+  const isSummary = !isRenew && step >= steps.length;
   const isLast = isRenew ? step === 1 : isSummary;
-  const currentField = !isRenew && !isSummary ? ADD_STEPS[step].field : null;
+  const currentField = !isRenew && !isSummary ? steps[step].field : null;
 
   /* Cédula ya registrada (solo aplica al alta: la renovación no toca la cédula
      del miembro existente). Se compara solo por dígitos, sin importar puntos
@@ -129,15 +140,16 @@ export default function MemberWizard({ controller, mode, member, plans, members,
     return (members || []).some((m) => onlyDigits(m.cedula) === digits);
   }, [isRenew, data.cedula, members]);
 
-  /* ¿Se puede salir del paso actual? (bloquea Continuar/Enter si no). */
+  /* ¿Se puede salir del paso actual? (bloquea Continuar/Enter si no).
+     Con recibo digital, el paso de pago solo exige el valor. */
   const stepValid = (() => {
     if (isRenew) {
       return step === 0
         ? fieldValid('plan', data)
-        : fieldValid('recibo', data) && fieldValid('valor', data);
+        : (autoRecibo || fieldValid('recibo', data)) && fieldValid('valor', data);
     }
     if (currentField === 'cedula') return fieldValid('cedula', data) && !cedulaTaken;
-    if (isSummary) return REQUIRED.every((f) => fieldValid(f, data)) && !cedulaTaken;
+    if (isSummary) return required.every((f) => fieldValid(f, data)) && !cedulaTaken;
     return fieldValid(currentField, data);
   })();
 
@@ -145,9 +157,11 @@ export default function MemberWizard({ controller, mode, member, plans, members,
     if (!stepValid) return;
     // El valor pasa por el atajo de miles: "55" tecleado → 55.000.
     const valor = parseMoney(quickThousands(data.valor)); // texto/número → número limpio
+    // Medio de pago normalizado: solo 'nequi' viaja como tal, resto = efectivo.
+    const medio_pago = data.medioPago === 'nequi' ? 'nequi' : 'efectivo';
     onSave(isRenew
-      ? { tipo: data.tipo, inicio: data.inicio, fin: data.fin, valor, recibo: data.recibo, obs: data.obs }
-      : { ...data, nombre: toTitleCase(data.nombre), valor });
+      ? { tipo: data.tipo, inicio: data.inicio, fin: data.fin, valor, recibo: data.recibo, obs: data.obs, medio_pago }
+      : { ...data, nombre: toTitleCase(data.nombre), valor, medio_pago });
   };
 
   const next = () => {
@@ -176,12 +190,15 @@ export default function MemberWizard({ controller, mode, member, plans, members,
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  /* A qué paso vuelve cada campo del resumen (los 3 del plan van juntos). */
+  /* A qué paso vuelve cada campo del resumen (los 3 del plan van juntos;
+     medio de pago vive en el paso "valor"; recibo auto no es editable). */
   const jumpToField = (field) => {
-    const planIdx = ADD_STEPS.findIndex((s) => s.field === 'plan');
-    const idx = ['tipo', 'inicio', 'fin'].includes(field)
+    if (field === 'recibo' && autoRecibo) return;
+    const planIdx = steps.findIndex((s) => s.field === 'plan');
+    const key = field === 'medioPago' ? 'valor' : field;
+    const idx = ['tipo', 'inicio', 'fin'].includes(key)
       ? planIdx
-      : ADD_STEPS.findIndex((s) => s.field === field);
+      : steps.findIndex((s) => s.field === key);
     setStep(idx);
   };
 
@@ -189,7 +206,7 @@ export default function MemberWizard({ controller, mode, member, plans, members,
     ? (step === 0 ? 50 : 100)
     : Math.round((Math.min(step, totalSteps) / totalSteps) * 100);
 
-  const current = !isRenew && !isSummary ? ADD_STEPS[step] : null;
+  const current = !isRenew && !isSummary ? steps[step] : null;
 
   return (
     <Modal controller={controller} width={620} overflowVisible>
@@ -214,21 +231,32 @@ export default function MemberWizard({ controller, mode, member, plans, members,
         <WizardStepPlanDates data={data} onPatch={patch} plans={plans} />
       )}
       {isRenew && step === 1 && (
-        <WizardStepPago data={data} onPatch={patch} onNext={next} />
+        <WizardStepPago data={data} onPatch={patch} onNext={next} autoRecibo={autoRecibo} nextNumero={nextNumero} />
       )}
       {current && (current.field === 'plan' ? (
         <WizardStepPlanDates data={data} onPatch={patch} plans={plans} />
       ) : (
-        <WizardStepText
-          {...current}
-          value={data[current.field]}
-          onChange={(v) => patch({ [current.field]: current.field === 'nombre' ? toTitleCase(v) : v })}
-          onNext={next}
-          invalid={(!stepValid && REQUIRED.includes(current.field)) || (current.field === 'cedula' && cedulaTaken)}
-          errorText={current.field === 'cedula' && cedulaTaken ? 'Ya existe un miembro registrado con esta cédula.' : undefined}
-        />
+        <>
+          <WizardStepText
+            {...current}
+            value={data[current.field]}
+            onChange={(v) => patch({ [current.field]: current.field === 'nombre' ? toTitleCase(v) : v })}
+            onNext={next}
+            invalid={(!stepValid && REQUIRED.includes(current.field)) || (current.field === 'cedula' && cedulaTaken)}
+            errorText={current.field === 'cedula' && cedulaTaken ? 'Ya existe un miembro registrado con esta cédula.' : undefined}
+          />
+          {/* Paso "Valor pagado": check Nequi justo aquí (sin marcar = Efectivo). */}
+          {current.field === 'valor' && (
+            <div style={{ padding: '0 28px 18px' }}>
+              <MedioPagoCheck
+                checked={data.medioPago === 'nequi'}
+                onChange={(nequi) => patch({ medioPago: nequi ? 'nequi' : 'efectivo' })}
+              />
+            </div>
+          )}
+        </>
       ))}
-      {isSummary && <WizardSummary data={data} onEditField={jumpToField} />}
+      {isSummary && <WizardSummary data={data} onEditField={jumpToField} autoRecibo={autoRecibo} nextNumero={nextNumero} />}
 
       {/* Pie: atrás · hint de Enter · continuar/guardar */}
       <div className={styles.footer}>

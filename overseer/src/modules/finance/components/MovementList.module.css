@@ -221,3 +221,46 @@
 .confirm:active {
   transform: scale(0.86);
 }
+
+/* ── Medio de pago (chip + filtro) ── */
+.payChip {
+  flex: none;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border-2);
+  color: var(--text-muted);
+}
+
+.payNequi {
+  color: var(--info);
+  background: var(--info-bg);
+  border-color: var(--info);
+}
+
+.filterRow {
+  display: flex;
+  gap: 6px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.filterBtn {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filterActive {
+  color: var(--text-title);
+  background: var(--surface-2);
+  border-color: var(--border-4);
+}

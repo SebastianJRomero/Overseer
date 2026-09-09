@@ -1,0 +1,166 @@
+/* ReceiptModal.module.css — comprobante digital (tokens del tema, sin hex). */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 6px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--acc-grad);
+  color: var(--on-acc);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+}
+
+.gym {
+  font-size: var(--fs-modal-title);
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.sub {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.close {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--border-1);
+  color: var(--text-title);
+}
+
+.numero {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ok);
+  padding-top: 8px;
+}
+
+.codigo {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+  padding-bottom: 6px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 20px 0;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-1);
+  font-size: var(--fs-small);
+}
+.row:last-child {
+  border-bottom: none;
+}
+.row span {
+  width: 110px;
+  flex: none;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.row strong {
+  color: var(--text-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.valor {
+  color: var(--ok);
+}
+
+.qr {
+  display: block;
+  width: 168px;
+  height: 168px;
+  margin: 16px auto 3px;
+  border-radius: 12px;
+  border: 1px solid var(--border-2);
+  background: #fff;
+}
+
+.qrHint {
+  text-align: center;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+  padding: 0 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 20px 18px;
+}
+
+.btn {
+  flex: 1;
+  min-width: 110px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-4);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-title);
+}
+
+.primary {
+  background: var(--ok-grad);
+  border: none;
+  color: var(--on-acc);
+}

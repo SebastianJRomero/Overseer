@@ -16,7 +16,7 @@
      actualizaciones en el release de GitHub y ofrece reiniciar para aplicarla.
 */
 
-const { app, BrowserWindow, Tray, Menu, nativeImage, dialog } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell } = require('electron');
 const net = require('node:net');
 const os = require('node:os');
 const dgram = require('node:dgram');
@@ -143,6 +143,9 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      // Puente mínimo para el front (abrir carpeta de recibos). Sin esto,
+      // `window.overseer` no existe y el botón ni se muestra (ver preload.cjs).
+      preload: path.join(__dirname, 'preload.cjs'),
     },
   });
 
@@ -240,6 +243,49 @@ function setupAutoUpdater() {
   // Chequea al arrancar; falla silencioso si no hay release todavía.
   autoUpdater.checkForUpdatesAndNotify().catch(() => {});
 }
+
+// ── Puente recibos: carpeta propia + guardado ───────────────────────────
+// Los PNG del recibo digital viven en la carpeta de LA APP
+// (%APPDATA%\OVERSEER\recibos) salvo que Ajustes fije otra (receiptsDir).
+// Solo existe en escritorio: en la web el front usa Descargas (lib/desktop.js).
+
+/** Carpeta por defecto de recibos (se crea si no existe). */
+function defaultReceiptsDir() {
+  const dir = path.join(app.getPath('userData'), 'recibos');
+  try { fs.mkdirSync(dir, { recursive: true }); } catch { /* sin permiso → igual se devuelve */ }
+  return dir;
+}
+
+/** Carpeta efectiva: la elegida si es ruta absoluta válida, si no la default. */
+function resolveReceiptsDir(prefer) {
+  if (prefer && path.isAbsolute(prefer)) {
+    try { fs.mkdirSync(prefer, { recursive: true }); return prefer; } catch { /* cae a default */ }
+  }
+  return defaultReceiptsDir();
+}
+
+ipcMain.handle('overseer:open-receipts-folder', async (_e, prefer) => {
+  await shell.openPath(resolveReceiptsDir(prefer));
+  return true;
+});
+
+ipcMain.handle('overseer:default-receipts-dir', () => defaultReceiptsDir());
+
+ipcMain.handle('overseer:pick-receipts-dir', async () => {
+  const r = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory', 'createDirectory'] });
+  if (r.canceled || !r.filePaths[0]) return null;
+  return r.filePaths[0];
+});
+
+ipcMain.handle('overseer:save-receipt', async (_e, { filename, dataUrl, dir } = {}) => {
+  const folder = resolveReceiptsDir(dir);
+  const safe = String(filename || 'recibo.png').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80);
+  const m = /^data:image\/png;base64,(.+)$/.exec(dataUrl || '');
+  if (!m) throw new Error('PNG inválido');
+  const full = path.join(folder, safe);
+  fs.writeFileSync(full, Buffer.from(m[1], 'base64'));
+  return full;
+});
 
 app.on('second-instance', showWindow);
 

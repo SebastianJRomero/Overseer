@@ -44,19 +44,30 @@ const DEFAULT_NOTIFICATIONS = {
   chWhats: true, chMail: true, chSms: false,
 };
 const DEFAULT_BACKUP = { auto: true, last: '', lastFile: '' };
+// Recibo digital: toggle + prefijo + consecutivo global único + auto-descarga.
+// `next` null = aún no inicializado (se calcula del max(RC-XXXX) al primer uso).
+// `autoDownload` = al generar un recibo, guardar el PNG como respaldo.
+// `receiptsDir` = carpeta de esos respaldos (vacío = la carpeta de la app;
+// en escritorio se puede cambiar con selector, ver preload.cjs).
+const DEFAULT_RECEIPTS = { enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '' };
 
 /** Lee una clave de settings mezclada con sus defaults. */
-function readSetting(key, defaults) {
+export function readSetting(key, defaults) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   const stored = row ? JSON.parse(row.value) : {};
   return { ...defaults, ...stored };
 }
 
 /** Guarda (upsert) el objeto completo de una clave. */
-function writeSetting(key, obj) {
+export function writeSetting(key, obj) {
   db.prepare('INSERT INTO settings (key, value) VALUES (@key, @value) ON CONFLICT(key) DO UPDATE SET value = @value')
     .run({ key, value: JSON.stringify(obj) });
   return obj;
+}
+
+/** Config actual del recibo digital (para otros routers). */
+export function getReceiptsConfig() {
+  return readSetting('receipts', DEFAULT_RECEIPTS);
 }
 
 /* ── Datos del gimnasio ─────────────────────────────────────────────────── */
@@ -143,6 +154,28 @@ router.delete('/backup/files/:name', (req, res) => {
     return res.status(404).json({ error: 'Respaldo no encontrado' });
   }
   res.json({ ok: true });
+});
+
+/* ── Recibo digital (Fase 2) ────────────────────────────────────────────
+   Toggle + prefijo + consecutivo. El consecutivo lo consume POST
+   /receipts/issue en transacción; aquí solo se configura/consulta. */
+router.get('/receipts', (req, res) => res.json(readSetting('receipts', DEFAULT_RECEIPTS)));
+
+router.patch('/receipts', (req, res) => {
+  const { enabled, prefix, autoDownload, receiptsDir } = req.body || {};
+  const cur = readSetting('receipts', DEFAULT_RECEIPTS);
+  const next = { ...cur };
+  if (enabled != null) next.enabled = !!enabled;
+  if (autoDownload != null) next.autoDownload = !!autoDownload;
+  // Ruta de carpeta: string corto y válido (el escritorio la valida al usar).
+  if (typeof receiptsDir === 'string' && receiptsDir.length <= 260) {
+    next.receiptsDir = receiptsDir;
+  }
+  // Prefijo corto alfanumérico (2-6 chars); resto se ignora por seguridad.
+  if (typeof prefix === 'string' && /^[A-Za-z0-9]{2,6}$/.test(prefix.trim())) {
+    next.prefix = prefix.trim().toUpperCase();
+  }
+  res.json(writeSetting('receipts', next));
 });
 
 export default router;

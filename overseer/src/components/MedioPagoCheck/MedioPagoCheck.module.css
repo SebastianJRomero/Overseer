@@ -1,0 +1,55 @@
+/* MedioPagoCheck.module.css — fila check Nequi/Efectivo. */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  cursor: pointer;
+  text-align: left;
+}
+
+.on {
+  border-color: var(--info);
+  background: var(--info-bg);
+}
+
+.box {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--border-4);
+  background: var(--surface-1);
+  color: var(--on-acc);
+  font-size: 13px;
+}
+
+.boxOn {
+  background: var(--info);
+  border-color: transparent;
+}
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.title {
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.desc {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
