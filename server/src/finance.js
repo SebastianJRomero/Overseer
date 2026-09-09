@@ -44,12 +44,15 @@ export function toUserDomain(mv) {
   const itemNames = Object.keys(mv.items || {});
   const itemsTitle = itemNames.length ? itemNames.map((n) => `${n} x ${mv.items[n]}`).join(', ') : '';
   const label = sign(mv.tipo) > 0 ? 'Entrada' : 'Salida';
+  // Medio de pago: solo 'efectivo' | 'nequi'; filas viejas → 'efectivo'.
+  const medio_pago = mv.medio_pago === 'nequi' ? 'nequi' : 'efectivo';
   return {
     id: mv.id, source: 'user', tipo: mv.tipo, categoria: mv.categoria || 'otro',
     concepto: itemsTitle || (mv.motivo || '').trim() || label,
     motivo: (mv.motivo || '').trim(),
     monto: mv.monto, fecha: mv.fecha, day: dt ? dt.getDate() : 0,
     pending, settled: !!mv.settled, recurrent: !!mv.recurrent, items: mv.items || {},
+    medio_pago,
   };
 }
 

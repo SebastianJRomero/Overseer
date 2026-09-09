@@ -16,7 +16,7 @@
   reciben todo por props, sin leer estado del módulo.
 */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useMembers from './useMembers';
 import useActivePlans from '../../hooks/useActivePlans';
 import useModal from '../../hooks/useModal';
@@ -24,12 +24,17 @@ import { useSession } from '../../context/SessionProvider';
 import { hasPermission } from '../../app/moduleRegistry';
 import { SPECIAL_PLAN } from '../../lib/memberStatus';
 import { onlyDigits } from '../../lib/format';
+import { todayDMY } from '../../lib/date';
+import { receiptCode } from '../../lib/receiptCode';
+import * as settingsService from '../../services/settingsService';
+import * as receiptsService from '../../services/receiptsService';
 import MembersToolbar from './components/MembersToolbar';
 import { DEFAULT_SORT, DEFAULT_DIR, sortMembers } from './memberSort';
 import MemberTable from './components/MemberTable';
 import MemberDetailModal from './components/MemberDetailModal';
 import MemberWizard from './components/MemberWizard';
 import MemberFilterModal from './components/MemberFilterModal';
+import ReceiptModal from './components/ReceiptModal';
 import styles from './members.module.css';
 
 export default function MembersModule() {
@@ -52,6 +57,27 @@ export default function MembersModule() {
   const detailModal = useModal();
   const wizModal = useModal();
   const filterModal = useModal();
+  const receiptModal = useModal();
+
+  // Recibo digital (Ajustes → Recibo digital): si está activo, el wizard omite
+  // el número manual y al guardar se muestra el comprobante con QR.
+  // `receiptsCfg` guarda la config completa (enabled + autoDownload + dir).
+  const [receiptsCfg, setReceiptsCfg] = useState({ enabled: false, autoDownload: false, receiptsDir: '' });
+  const receiptsOn = !!receiptsCfg.enabled;
+  const [nextNumero, setNextNumero] = useState('');
+  const [gymName, setGymName] = useState('OVERSEER Fitness Club');
+  const [lastReceipt, setLastReceipt] = useState(null);
+
+  useEffect(() => {
+    settingsService.getReceipts().then((r) => setReceiptsCfg({ enabled: !!r?.enabled, autoDownload: !!r?.autoDownload, receiptsDir: r?.receiptsDir || '' })).catch(() => {});
+    settingsService.getGymInfo().then((g) => { if (g?.nombre) setGymName(g.nombre); }).catch(() => {});
+  }, []);
+
+  // Previsualiza el siguiente consecutivo (no lo consume) al abrir el wizard.
+  const peekNumero = () => {
+    if (!receiptsOn) return;
+    receiptsService.peekNext().then((r) => setNextNumero(r.numero)).catch(() => {});
+  };
 
   /* Búsqueda en vivo por nombre, cédula o teléfono. Los números se comparan
      "sin adornos": normalizamos tanto lo escrito como el dato guardado a
@@ -89,6 +115,7 @@ export default function MembersModule() {
   const openAdd = () => {
     if (!canEdit) return;
     setWizard((w) => ({ mode: 'add', member: null, key: w.key + 1 }));
+    peekNumero();
     wizModal.open();
   };
 
@@ -96,6 +123,7 @@ export default function MembersModule() {
     if (!canEdit) return;
     detailModal.close();
     setWizard((w) => ({ mode: 'renew', member, key: w.key + 1 }));
+    peekNumero();
     wizModal.open();
   };
 
@@ -105,9 +133,30 @@ export default function MembersModule() {
   };
 
   const saveWizard = async (datos) => {
-    if (wizard.mode === 'renew') await renewMember(wizard.member.id, datos);
-    else await createMember(datos);
+    // Flujo manual (recibo digital apagado): igual que siempre.
+    if (!receiptsOn) {
+      if (wizard.mode === 'renew') await renewMember(wizard.member.id, datos);
+      else await createMember(datos);
+      wizModal.close();
+      return;
+    }
+    // Recibo digital activo: el backend asignó el consecutivo; se muestra el
+    // comprobante con QR al final (el número viene en el miembro guardado).
+    let saved = null;
+    if (wizard.mode === 'renew') {
+      const list = await renewMember(wizard.member.id, datos);
+      saved = (list || []).find((m) => m.id === wizard.member.id) || null;
+    } else {
+      saved = await createMember(datos);
+    }
     wizModal.close();
+    if (saved?.recibo) {
+      setLastReceipt({
+        member: saved,
+        recibo: { numero: saved.recibo, codigo: receiptCode(saved.recibo, saved.id), fecha: todayDMY() },
+      });
+      receiptModal.open();
+    }
   };
 
   return (
@@ -141,7 +190,20 @@ export default function MembersModule() {
         plans={plans}
         members={members}
         onSave={saveWizard}
+        autoRecibo={receiptsOn}
+        nextNumero={nextNumero}
       />
+
+      {lastReceipt && (
+        <ReceiptModal
+          controller={receiptModal}
+          gymName={gymName}
+          member={lastReceipt.member}
+          recibo={lastReceipt.recibo}
+          autoDownload={receiptsCfg.autoDownload}
+          receiptsDir={receiptsCfg.receiptsDir}
+        />
+      )}
 
       <MemberFilterModal
         controller={filterModal}

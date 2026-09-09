@@ -36,6 +36,10 @@ export default function MovementRow({ mv, onConfirm }) {
   // la fila). Confirmados: entradas en verde, egresos en naranja sutil.
   const montoColor = mv.pending ? 'var(--text-muted)' : (meta.sign > 0 ? 'var(--ok)' : 'var(--egreso)');
 
+  // Medio de pago: solo 'nequi' pinta chip informativo; efectivo es el
+  // default silencioso (no satura la fila).
+  const isNequi = mv.medio_pago === 'nequi';
+
   const isSalidaPend = mv.tipo === 'salida_pend';
   // Los pendientes se resaltan con un fondo que pulsa despacio; el color del
   // resalte distingue el tipo: azul tenue para cobros (entrada) y ámbar tenue
@@ -58,6 +62,7 @@ export default function MovementRow({ mv, onConfirm }) {
         </div>
 
         <span className={styles.fecha}>{shortDate(mv.fecha)}</span>
+        {isNequi && <span className={`${styles.payChip} ${styles.payNequi}`}>Nequi</span>}
         <span className={styles.monto} style={{ color: montoColor }}>{montoLabel}</span>
 
         {mv.pending && (

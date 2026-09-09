@@ -24,12 +24,17 @@ const ROWS = [
   ['fin', 'Fecha fin'],
   ['recibo', 'N° Recibo'],
   ['valor', 'Valor pagado'],
+  ['medioPago', 'Medio de pago'],
   ['obs', 'Observaciones'],
 ];
 
-export default function WizardSummary({ data, onEditField }) {
+export default function WizardSummary({ data, onEditField, autoRecibo, nextNumero }) {
   const display = (key) => {
     const val = data[key];
+    // Recibo digital activo: el número real lo asigna el backend al guardar;
+    // aquí se previsualiza el siguiente sin consumirlo.
+    if (key === 'recibo' && autoRecibo) return `${nextNumero || 'Se genera solo'} · auto`;
+    if (key === 'medioPago') return val === 'nequi' ? 'Nequi' : 'Efectivo';
     if (key === 'valor' && val) return formatMoney(parseMoney(val));
     // Fechas del resumen en formato legible ("8 Ago 2026").
     if ((key === 'inicio' || key === 'fin') && val) return formatShortDate(val);

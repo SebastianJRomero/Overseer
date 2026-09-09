@@ -23,6 +23,7 @@ import Field from '../../../components/Field/Field';
 import MoneyInput from '../../../components/MoneyInput/MoneyInput';
 import DatePicker from '../../../components/DatePicker/DatePicker';
 import MovementCatalog from './MovementCatalog';
+import MedioPagoCheck from '../../../components/MedioPagoCheck/MedioPagoCheck';
 import * as inventoryService from '../../../services/inventoryService';
 import { formatMoney } from '../../../lib/money';
 import styles from './MovementModal.module.css';
@@ -46,6 +47,8 @@ export default function MovementModal({ controller, initial, onSave }) {
   const [fecha, setFecha] = useState(initial.fecha);
   const [pend, setPend] = useState(false);
   const [factura, setFactura] = useState(null);
+  // Medio de pago: default efectivo (mismo criterio que el wizard de miembros).
+  const [medioPago, setMedioPago] = useState('efectivo');
 
   useEffect(() => { inventoryService.listProducts().then(setProducts); }, []);
 
@@ -93,7 +96,7 @@ export default function MovementModal({ controller, initial, onSave }) {
   const save = () => {
     if (!canSave) return;
     const tipo = pend ? `${kind}_pend` : kind;
-    onSave({ tipo, monto, motivo: motivo.trim(), fecha, recurrent: false, items, factura });
+    onSave({ tipo, monto, motivo: motivo.trim(), fecha, recurrent: false, items, factura, medio_pago: medioPago === 'nequi' ? 'nequi' : 'efectivo' });
   };
 
   return (
@@ -130,6 +133,9 @@ export default function MovementModal({ controller, initial, onSave }) {
           <Field label="Observaciones">
             <textarea className={styles.textarea} value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Ej: Juan Pérez — 3 aguas + shaker" rows={3} />
           </Field>
+
+          {/* Mismo check que el wizard: sin marcar = Efectivo. */}
+          <MedioPagoCheck checked={medioPago === 'nequi'} onChange={(nequi) => setMedioPago(nequi ? 'nequi' : 'efectivo')} />
 
           <button type="button" className={styles.pendToggle} style={pend ? { background: 'var(--info-bg)', borderColor: 'var(--info)' } : undefined} onClick={() => setPend(!pend)}>
             <span className={styles.pendCheck} style={pend ? { background: 'linear-gradient(150deg,#5b9bf0,#7fb1f5)', borderColor: 'transparent' } : undefined}>{pend ? '✓' : ''}</span>

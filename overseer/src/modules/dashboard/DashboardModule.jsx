@@ -51,8 +51,9 @@ export default function DashboardModule() {
      eso NO pasa por useDashboard, refrescamos aquí las finanzas del Inicio para
      que los KPIs y "Movimientos del día" se actualicen al instante (antes solo
      cambiaban al cambiar de pestaña). */
-  const createMemberAndRefresh = async (datos) => { await createMember(datos); await refreshFinance(); };
-  const renewMemberAndRefresh = async (id, datos) => { await renewMember(id, datos); await refreshFinance(); };
+  // Devuelven lo guardado (el host del recibo digital necesita el consecutivo).
+  const createMemberAndRefresh = async (datos) => { const saved = await createMember(datos); await refreshFinance(); return saved; };
+  const renewMemberAndRefresh = async (id, datos) => { const list = await renewMember(id, datos); await refreshFinance(); return list; };
   const updateMemberAndRefresh = async (id, patch) => { await updateMember(id, patch); await refreshFinance(); };
 
   const movementModal = useModal();

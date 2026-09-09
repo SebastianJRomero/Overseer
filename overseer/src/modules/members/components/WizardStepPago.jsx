@@ -13,9 +13,10 @@
 
 import Field from '../../../components/Field/Field';
 import MoneyInput from '../../../components/MoneyInput/MoneyInput';
+import MedioPagoCheck from '../../../components/MedioPagoCheck/MedioPagoCheck';
 import styles from './MemberWizard.module.css';
 
-export default function WizardStepPago({ data, onPatch, onNext }) {
+export default function WizardStepPago({ data, onPatch, onNext, autoRecibo, nextNumero }) {
   return (
     <div className={styles.stepBody}>
       <div className={styles.stepHeading}>
@@ -23,19 +24,35 @@ export default function WizardStepPago({ data, onPatch, onNext }) {
         <span className={styles.stepHint}>Valor anterior precargado — ajústalo si cambió.</span>
       </div>
 
+      {/* Recibo digital activo: el número se genera solo, no se digita. */}
+      {autoRecibo && (
+        <div className={styles.autoRecibo}>
+          <span className={styles.autoReciboLabel}>N° Recibo (automático)</span>
+          <span className={styles.autoReciboValue}>{nextNumero || 'Se genera al guardar'}</span>
+        </div>
+      )}
+
+      {/* Check Nequi justo en el paso de pago (sin marcar = Efectivo). */}
+      <MedioPagoCheck
+        checked={data.medioPago === 'nequi'}
+        onChange={(nequi) => onPatch({ medioPago: nequi ? 'nequi' : 'efectivo' })}
+      />
+
       <div className={styles.dateGrid}>
         <Field label="Valor pagado">
           <MoneyInput value={data.valor} onChange={(valor) => onPatch({ valor })} onEnter={onNext} />
         </Field>
-        <Field label="N° Recibo nuevo">
-          <input
-            className={styles.boxInput}
-            value={data.recibo}
-            onChange={(e) => onPatch({ recibo: e.target.value })}
-            onKeyDown={(e) => { if (e.key === 'Enter') onNext(); }}
-            placeholder="RC-0000"
-          />
-        </Field>
+        {!autoRecibo && (
+          <Field label="N° Recibo nuevo">
+            <input
+              className={styles.boxInput}
+              value={data.recibo}
+              onChange={(e) => onPatch({ recibo: e.target.value })}
+              onKeyDown={(e) => { if (e.key === 'Enter') onNext(); }}
+              placeholder="RC-0000"
+            />
+          </Field>
+        )}
       </div>
 
       <Field label="Observaciones" hint="(opcional)">

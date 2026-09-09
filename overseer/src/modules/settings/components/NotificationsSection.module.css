@@ -1,7 +1,30 @@
-/* NotificationsSection.module.css */
+/* NotificationsSection.module.css (también lo usa Recibo digital). */
 
 .wrap {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Botones de carpeta (fila de Recibo digital): outline del tema. */
+.folderBtns {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.folderBtn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--border-4);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.folderBtn:hover {
+  background: var(--surface-hover);
+  color: var(--text-title);
 }

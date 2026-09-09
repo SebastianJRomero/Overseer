@@ -17,19 +17,21 @@ export default function useSettings() {
   const [users, setUsers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [notifications, setNotifications] = useState({});
+  const [receipts, setReceipts] = useState({ enabled: false, prefix: 'RC', next: null });
   const [backup, setBackup] = useState({ auto: true, last: '' });
   const [backups, setBackups] = useState([]); // respaldos en disco: [{name,size,date}]
 
   const load = useCallback(async () => {
-    const [g, u, p, n, b, files] = await Promise.all([
+    const [g, u, p, n, r, b, files] = await Promise.all([
       settingsService.getGymInfo(),
       usersService.listUsers(),
       plansService.listPlans(),
       settingsService.getNotifications(),
+      settingsService.getReceipts(),
       settingsService.getBackup(),
       settingsService.listBackups(),
     ]);
-    setGym(g); setUsers(u); setPlans(p); setNotifications(n); setBackup(b); setBackups(files.files || []);
+    setGym(g); setUsers(u); setPlans(p); setNotifications(n); setReceipts(r); setBackup(b); setBackups(files.files || []);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -41,7 +43,7 @@ export default function useSettings() {
   }, []);
 
   return {
-    gym, users, plans, notifications, backup, backups,
+    gym, users, plans, notifications, receipts, backup, backups,
 
     setGymField: async (k, v) => setGym(await settingsService.setGymField(k, v)),
     createUser: async (d) => setUsers(await usersService.createUser(d)),
@@ -51,6 +53,7 @@ export default function useSettings() {
     togglePlan: async (id) => setPlans(await plansService.togglePlan(id)),
     deletePlan: async (id) => setPlans(await plansService.deletePlan(id)),
     setNotification: async (k, on) => setNotifications(await settingsService.setNotification(k, on)),
+    setReceipt: async (k, v) => setReceipts(await settingsService.setReceipt(k, v)),
     setAutoBackup: async (on) => setBackup(await settingsService.setAutoBackup(on)),
     runBackup: async () => {
       setBackup(await settingsService.runBackup());

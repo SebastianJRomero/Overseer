@@ -38,8 +38,10 @@ export default function useMembers() {
   }), [members]);
 
   const createMember = async (datos) => {
-    await membersService.createMember(datos);
+    // Devuelve el miembro creado (el recibo digital necesita su consecutivo).
+    const saved = await membersService.createMember(datos);
     setRawMembers(await membersService.listMembers());
+    return saved;
   };
 
   const updateMember = async (id, patch) => {
@@ -47,7 +49,10 @@ export default function useMembers() {
   };
 
   const renewMember = async (id, datos) => {
-    setRawMembers(await membersService.renewMember(id, datos));
+    // Devuelve la lista actualizada (el recibo digital busca ahí el número).
+    const list = await membersService.renewMember(id, datos);
+    setRawMembers(list);
+    return list;
   };
 
   return { members, counts, createMember, updateMember, renewMember };
