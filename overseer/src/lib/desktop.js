@@ -13,6 +13,27 @@ export function isDesktop() {
 }
 
 /**
+ * Abre una URL externa en el navegador del sistema (NO ventana Electron).
+ * En web cae a una pestaña nueva con noopener. Solo permite https.
+ * @param {string} url
+ * @returns {Promise<boolean>} true si se abrió
+ */
+export async function openExternalUrl(url) {
+  const safe = String(url || '');
+  if (!/^https:\/\//i.test(safe)) return false;
+  try {
+    if (isDesktop() && window.overseer?.openExternal) {
+      await window.overseer.openExternal(safe);
+      return true;
+    }
+    window.open(safe, '_blank', 'noopener');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Abre la carpeta de recibos (la elegida o la de la app). Solo escritorio.
  * @param {string} [dir]  carpeta elegida en Ajustes ('' = la de la app)
  * @returns {Promise<boolean>} true si se abrió

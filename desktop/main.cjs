@@ -149,6 +149,18 @@ function createWindow() {
     },
   });
 
+  // Red de seguridad global: CUALQUIER link externo futuro (target=_blank o
+  // window.open) va al navegador del sistema y nunca abre ventanas Electron.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        shell.openExternal(url);
+      }
+    } catch { /* URL inválida: se deniega igual */ }
+    return { action: 'deny' };
+  });
+
   mainWindow.once('ready-to-show', () => mainWindow.show());
   // Cerrar la ventana oculta la app en la bandeja (como se venía usando).
   mainWindow.on('close', (e) => {
@@ -266,6 +278,18 @@ function resolveReceiptsDir(prefer) {
 
 ipcMain.handle('overseer:open-receipts-folder', async (_e, prefer) => {
   await shell.openPath(resolveReceiptsDir(prefer));
+  return true;
+});
+
+// ── Puente links externos: navegador del sistema ────────────────────────
+// Sin esto, un `target="_blank"` (p. ej. el botón WhatsApp del recibo) abre
+// una ventana Electron extra en vez del navegador. Solo se permite `https:`
+// para no exponer protocolos arbitrarios al renderer.
+ipcMain.handle('overseer:open-external', async (_e, url) => {
+  let parsed = null;
+  try { parsed = new URL(String(url || '')); } catch { /* URL inválida */ }
+  if (!parsed || parsed.protocol !== 'https:') throw new Error('URL externa no permitida');
+  await shell.openExternal(parsed.toString());
   return true;
 });
 

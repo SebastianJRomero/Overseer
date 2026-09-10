@@ -10,7 +10,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('overseer', {
-  // Abre la carpeta de recibos (la de la app o la elegida en Ajustes).
+  // Abre una URL externa en el navegador del sistema (NO ventana Electron).
+  openExternal: (url) => ipcRenderer.invoke('overseer:open-external', url),
+  // Abre la carpeta de recibos (la elegida o la de la app).
   openReceiptsFolder: (dir) => ipcRenderer.invoke('overseer:open-receipts-folder', dir || ''),
   // Carpeta por defecto de la app (%APPDATA%\OVERSEER\recibos).
   defaultReceiptsDir: () => ipcRenderer.invoke('overseer:default-receipts-dir'),
