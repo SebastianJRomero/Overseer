@@ -4,8 +4,9 @@
   Solo se monta cuando el recibo digital está ACTIVO en Ajustes (el módulo
   decide). Muestra miembro, plan, valor, medio de pago y el consecutivo
   generado por el backend, más el QR de validación (lib/qr.js vendorizado,
-  offline).   Al abrir, el PNG se copia SOLO al portapapeles (pegar en WhatsApp);
-  acciones manuales: descargar PNG y WhatsApp (wa.me + texto).
+  offline).   Al abrir, el PNG se guarda en disco PRIMERO (si auto-descarga está activa)
+  y luego se copia al portapapeles (pegar en WhatsApp); cada paso falla sin
+  cancelar el otro. WhatsApp abre el navegador del sistema (puente Electron).
 
   Recibe:
     - controller: useModal
@@ -25,7 +26,7 @@ import { downloadBlob } from '../../../lib/download';
 import { formatMoney } from '../../../lib/money';
 import { formatShortDate } from '../../../lib/date';
 import { onlyDigits } from '../../../lib/format';
-import { isDesktop, saveReceiptFile } from '../../../lib/desktop';
+import { isDesktop, saveReceiptFile, openExternalUrl } from '../../../lib/desktop';
 import styles from './ReceiptModal.module.css';
 
 /** wa.me solo acepta TEXTO: el PNG se descarga y se adjunta manual. */
@@ -38,41 +39,62 @@ function whatsappLink(member, recibo, gymName) {
 
 export default function ReceiptModal({ controller, gymName, member, recibo, autoDownload, receiptsDir }) {
   const [busy, setBusy] = useState(false);
-  // Estado del copiado automático: pending → ok | fail (fail = usar ↓ PNG).
-  const [copied, setCopied] = useState('pending');
-  const copiedOnce = useRef(false);
+  // Estado del respaldo automático: pending → ok | disk-fail | clip-fail.
+  // El disco va PRIMERO y con su propio try/catch: si el portapapeles falla
+  // (foco perdido), el archivo igual debe existir.
+  const [saved, setSaved] = useState('pending');
+  const startedOnce = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
   // QR legible al escanear: N° de recibo primero y OVERSEER al final;
   // en medio cliente, plan/valor, vigencia y código (se valida con
   // GET /receipts/:numero).
   const qrText = `${recibo.numero}|${recibo.codigo}|${member.nombre}|${member.tipo}|${formatMoney(member.valor)}|${formatShortDate(member.inicio)}|${formatShortDate(member.fin)}|OVERSEER`;
   const qrDataUrl = useMemo(() => makeQrDataUrl(qrText, 4), [qrText]);
 
-  // Al abrir: renderiza el PNG y lo deja en el portapapeles para pegarlo en
-  // el chat del cliente. Con auto-descarga activa (Ajustes) también lo guarda
-  // como respaldo: en la carpeta de recibos (escritorio) o en Descargas (web).
-  // Falla sin romper: el aviso cambia y queda ↓ PNG.
+  // Al abrir: renderiza el PNG (diferido para no trabar la animación de
+  // entrada), guarda el respaldo en disco PRIMERO y luego copia al
+  // portapapeles. Cada paso tiene su try/catch: el fallo de uno no cancela
+  // el otro. Si el modal se cierra a mitad, el guardado sigue en fondo.
   useEffect(() => {
-    if (copiedOnce.current) return;
-    copiedOnce.current = true;
-    (async () => {
+    if (startedOnce.current) return;
+    startedOnce.current = true;
+    const run = async () => {
+      // Cede el hilo para que el modal pinte antes del trabajo pesado.
+      await new Promise((res) => setTimeout(res, 0));
+      let blob = null;
       try {
         const canvas = await drawReceiptCanvas({ gym: gymName, member, recibo, qrDataUrl });
-        const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+        blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
         if (!blob) throw new Error('sin blob');
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        if (autoDownload) {
+      } catch {
+        if (mountedRef.current) setSaved('disk-fail');
+        return;
+      }
+      // 1. Disco (respaldo que no se puede perder).
+      if (autoDownload) {
+        try {
           if (isDesktop()) {
-            const saved = await saveReceiptFile({ filename: `${recibo.numero}.png`, blob, dir: receiptsDir });
-            if (!saved) throw new Error('sin guardado');
+            const path = await saveReceiptFile({ filename: `${recibo.numero}.png`, blob, dir: receiptsDir });
+            if (!path) throw new Error('sin guardado');
           } else {
             downloadBlob(`${recibo.numero}.png`, blob);
           }
+        } catch {
+          if (mountedRef.current) setSaved('disk-fail');
+          return;
         }
-        setCopied('ok');
-      } catch {
-        setCopied('fail');
       }
-    })();
+      // 2. Portapapeles (comodidad: exige foco, puede fallar sin romper nada).
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      } catch {
+        if (mountedRef.current) setSaved('clip-fail');
+        return;
+      }
+      if (mountedRef.current) setSaved('ok');
+    };
+    run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -111,16 +133,18 @@ export default function ReceiptModal({ controller, gymName, member, recibo, auto
 
       <img className={styles.qr} src={qrDataUrl} alt={`QR de validación ${recibo.numero}`} />
       <div className={styles.qrHint}>
-        {copied === 'ok'
+        {saved === 'ok'
           ? 'Imagen copiada: pégala en el chat del cliente'
-          : copied === 'fail'
-            ? 'No se pudo copiar sola: usa ↓ PNG y adjúntala manual'
-            : 'Copiando imagen…'}
+          : saved === 'disk-fail'
+            ? 'No se guardó el respaldo: usa ↓ PNG y adjúntala manual'
+            : saved === 'clip-fail'
+              ? 'Guardado OK · no se pudo copiar sola: usa ↓ PNG'
+              : 'Generando imagen…'}
       </div>
 
       <div className={styles.actions}>
         <button type="button" className={styles.btn} onClick={downloadPng} disabled={busy}><Icon name="download" /> PNG</button>
-        <a className={styles.btn} href={whatsappLink(member, recibo, gymName)} target="_blank" rel="noreferrer"><Icon name="up" /> WhatsApp</a>
+        <button type="button" className={styles.btn} onClick={() => openExternalUrl(whatsappLink(member, recibo, gymName))}><Icon name="up" /> WhatsApp</button>
         <button type="button" className={`${styles.btn} ${styles.primary}`} onClick={() => controller.close()}>Cerrar <Icon name="check" /></button>
       </div>
     </Modal>
