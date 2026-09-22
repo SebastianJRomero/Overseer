@@ -26,6 +26,7 @@ import { SPECIAL_PLAN } from '../../lib/memberStatus';
 import { onlyDigits } from '../../lib/format';
 import { todayDMY } from '../../lib/date';
 import { receiptCode } from '../../lib/receiptCode';
+import { loadShortcuts, matchShortcut } from '../../lib/shortcuts';
 import * as settingsService from '../../services/settingsService';
 import * as receiptsService from '../../services/receiptsService';
 import MembersToolbar from './components/MembersToolbar';
@@ -38,7 +39,7 @@ import ReceiptModal from './components/ReceiptModal';
 import styles from './members.module.css';
 
 export default function MembersModule() {
-  const { members, counts, createMember, updateMember, renewMember } = useMembers();
+  const { members, counts, createMember, updateMember, renewMember, undoLastRenew } = useMembers();
   const plans = useActivePlans();
   // Para la ficha (PlanDropdown): nombres de planes activos + "Especial".
   const planNames = [...plans.map((p) => p.nombre), SPECIAL_PLAN];
@@ -61,36 +62,49 @@ export default function MembersModule() {
 
   // Recibo digital (Ajustes → Recibo digital): si está activo, el wizard omite
   // el número manual y al guardar se muestra el comprobante con QR.
-  // `receiptsCfg` guarda la config completa (enabled + autoDownload + dir).
-  const [receiptsCfg, setReceiptsCfg] = useState({ enabled: false, autoDownload: false, receiptsDir: '' });
+  // `receiptsCfg` guarda la config completa (enabled + autoDownload + dir + mensajes).
+  const [receiptsCfg, setReceiptsCfg] = useState({ enabled: false, autoDownload: false, receiptsDir: '', msgWhatsapp: '', msgPie: '' });
   const receiptsOn = !!receiptsCfg.enabled;
   const [nextNumero, setNextNumero] = useState('');
   const [gymName, setGymName] = useState('OVERSEER Fitness Club');
   const [lastReceipt, setLastReceipt] = useState(null);
 
+  const toCfg = (r) => ({
+    enabled: !!r?.enabled, autoDownload: !!r?.autoDownload, receiptsDir: r?.receiptsDir || '',
+    msgWhatsapp: r?.msgWhatsapp || '', msgPie: r?.msgPie || '',
+  });
+
   useEffect(() => {
-    settingsService.getReceipts().then((r) => setReceiptsCfg({ enabled: !!r?.enabled, autoDownload: !!r?.autoDownload, receiptsDir: r?.receiptsDir || '' })).catch(() => {});
+    settingsService.getReceipts().then((r) => setReceiptsCfg(toCfg(r))).catch(() => {});
     settingsService.getGymInfo().then((g) => { if (g?.nombre) setGymName(g.nombre); }).catch(() => {});
   }, []);
 
   // Previsualiza el siguiente consecutivo (no lo consume) al abrir el wizard.
+  // También refresca la config (carpeta/autoDownload/mensajes): Ajustes pudo
+  // cambiar después de montar el módulo y el ReceiptModal debe usar lo vigente.
+  const refreshReceiptsCfg = () => settingsService.getReceipts()
+    .then((r) => setReceiptsCfg(toCfg(r)))
+    .catch(() => {});
   const peekNumero = () => {
+    refreshReceiptsCfg();
     if (!receiptsOn) return;
     receiptsService.peekNext().then((r) => setNextNumero(r.numero)).catch(() => {});
   };
 
-  /* Búsqueda en vivo por nombre, cédula o teléfono. Los números se comparan
-     "sin adornos": normalizamos tanto lo escrito como el dato guardado a
-     solo dígitos, así "315 665" encuentra el teléfono aunque se guarde y se
-     muestre con espacios. */
+  /* Búsqueda en vivo por nombre, cédula, teléfono o recibo. Los números se
+     comparan "sin adornos": normalizamos tanto lo escrito como el dato
+     guardado a solo dígitos, así "315 665" encuentra el teléfono aunque se
+     guarde y se muestre con espacios. El recibo se compara en texto libre
+     ("rc-10" encuentra "RC-1056"). */
   const raw = query.trim().toLowerCase();
   const digits = onlyDigits(query);
   const visible = raw
     ? members.filter((m) => {
         const nombreMatch = m.nombre.toLowerCase().includes(raw);
+        const reciboMatch = String(m.recibo || '').toLowerCase().includes(raw);
         const numeroMatch = digits.length > 0 &&
           (onlyDigits(m.cedula).includes(digits) || onlyDigits(m.telefono).includes(digits));
-        return nombreMatch || numeroMatch;
+        return nombreMatch || reciboMatch || numeroMatch;
       })
     : members;
 
@@ -131,6 +145,24 @@ export default function MembersModule() {
     setFilter(key);
     filterModal.open();
   };
+
+  // Atajo configurable "Agregar miembro rápido" (Ajustes → Atajos).
+  // No dispara escribiendo en inputs sin modificador, ni con el wizard abierto
+  // (abrir de nuevo remontaría y se perdería el borrador).
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = e.target.tagName;
+      if ((tag === 'INPUT' || tag === 'TEXTAREA') && !e.altKey && !e.ctrlKey) return;
+      if (wizModal.isOpen) return;
+      if (matchShortcut(loadShortcuts().nuevoMiembro, e)) {
+        e.preventDefault();
+        openAdd();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canEdit, receiptsOn, wizModal.isOpen]);
 
   const saveWizard = async (datos) => {
     // Flujo manual (recibo digital apagado): igual que siempre.
@@ -179,7 +211,12 @@ export default function MembersModule() {
         planOptions={planNames}
         onUpdate={updateMember}
         onRenew={openRenew}
+        onUndo={undoLastRenew}
         canEdit={canEdit}
+        gymName={gymName}
+        receiptsDir={receiptsCfg.receiptsDir}
+        msgWhatsapp={receiptsCfg.msgWhatsapp}
+        msgPie={receiptsCfg.msgPie}
       />
 
       <MemberWizard
@@ -202,6 +239,8 @@ export default function MembersModule() {
           recibo={lastReceipt.recibo}
           autoDownload={receiptsCfg.autoDownload}
           receiptsDir={receiptsCfg.receiptsDir}
+          msgWhatsapp={receiptsCfg.msgWhatsapp}
+          msgPie={receiptsCfg.msgPie}
         />
       )}
 

@@ -36,7 +36,7 @@ import MemberDetailModal from '../../members/components/MemberDetailModal';
 import MemberWizard from '../../members/components/MemberWizard';
 import ReceiptModal from '../../members/components/ReceiptModal';
 
-export default function MemberModalsHost({ request, members, canEdit = true, onCreate, onUpdate, onRenew }) {
+export default function MemberModalsHost({ request, members, canEdit = true, onCreate, onUpdate, onRenew, onUndo }) {
   const filterModal = useModal();
   const detailModal = useModal();
   const wizModal = useModal();
@@ -50,18 +50,27 @@ export default function MemberModalsHost({ request, members, canEdit = true, onC
 
   // Recibo digital (mismo cableado que MembersModule): si está activo, el
   // wizard omite el número manual y al guardar se muestra el comprobante.
-  const [receiptsCfg, setReceiptsCfg] = useState({ enabled: false, autoDownload: false, receiptsDir: '' });
+  const [receiptsCfg, setReceiptsCfg] = useState({ enabled: false, autoDownload: false, receiptsDir: '', msgWhatsapp: '', msgPie: '' });
   const receiptsOn = !!receiptsCfg.enabled;
   const [nextNumero, setNextNumero] = useState('');
   const [gymName, setGymName] = useState('OVERSEER Fitness Club');
   const [lastReceipt, setLastReceipt] = useState(null);
 
+  const toCfg = (r) => ({
+    enabled: !!r?.enabled, autoDownload: !!r?.autoDownload, receiptsDir: r?.receiptsDir || '',
+    msgWhatsapp: r?.msgWhatsapp || '', msgPie: r?.msgPie || '',
+  });
+
   useEffect(() => {
-    settingsService.getReceipts().then((r) => setReceiptsCfg({ enabled: !!r?.enabled, autoDownload: !!r?.autoDownload, receiptsDir: r?.receiptsDir || '' })).catch(() => {});
+    settingsService.getReceipts().then((r) => setReceiptsCfg(toCfg(r))).catch(() => {});
     settingsService.getGymInfo().then((g) => { if (g?.nombre) setGymName(g.nombre); }).catch(() => {});
   }, []);
 
+  const refreshReceiptsCfg = () => settingsService.getReceipts()
+    .then((r) => setReceiptsCfg(toCfg(r)))
+    .catch(() => {});
   const peekNumero = () => {
+    refreshReceiptsCfg();
     if (!receiptsOn) return;
     receiptsService.peekNext().then((r) => setNextNumero(r.numero)).catch(() => {});
   };
@@ -140,7 +149,12 @@ export default function MemberModalsHost({ request, members, canEdit = true, onC
         planOptions={planNames}
         onUpdate={onUpdate}
         onRenew={openRenew}
+        onUndo={onUndo}
         canEdit={canEdit}
+        gymName={gymName}
+        receiptsDir={receiptsCfg.receiptsDir}
+        msgWhatsapp={receiptsCfg.msgWhatsapp}
+        msgPie={receiptsCfg.msgPie}
       />
 
       <MemberWizard
@@ -163,6 +177,8 @@ export default function MemberModalsHost({ request, members, canEdit = true, onC
           recibo={lastReceipt.recibo}
           autoDownload={receiptsCfg.autoDownload}
           receiptsDir={receiptsCfg.receiptsDir}
+          msgWhatsapp={receiptsCfg.msgWhatsapp}
+          msgPie={receiptsCfg.msgPie}
         />
       )}
     </>

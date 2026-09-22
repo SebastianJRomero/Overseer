@@ -55,8 +55,21 @@ export default function MembersToolbar({ total, counts, query, onQuery, onFilter
           className={styles.searchInput}
           value={query}
           onChange={(e) => onQuery(e.target.value)}
-          placeholder="Filtrar…"
+          onKeyDown={(e) => { if (e.key === 'Escape' && query) onQuery(''); }}
+          placeholder="Filtrar por nombre, cédula, teléfono o recibo…"
+          aria-label="Filtrar miembros"
         />
+        {query && (
+          <button
+            type="button"
+            className={styles.clearBtn}
+            onClick={() => onQuery('')}
+            title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {canEdit && <Button onClick={onAdd}>＋ Agregar</Button>}

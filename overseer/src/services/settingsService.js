@@ -87,6 +87,15 @@ export async function getGymInfo() {
   return apiGet('/settings/gym');
 }
 
+/** Versión del sistema (desktop/package.json vía backend). */
+export async function getVersion() {
+  try {
+    return await apiGet('/settings/version');
+  } catch {
+    return { app: 'OVERSEER', version: '1.0.5' };
+  }
+}
+
 /** Guarda un campo de los datos del gimnasio. @returns {Promise<Object>} */
 export async function setGymField(key, value) {
   return apiPatch('/settings/gym', { key, value });
@@ -112,8 +121,8 @@ export async function getReceipts() {
 }
 
 /**
- * Cambia el toggle o el prefijo del recibo digital.
- * @param {string} key  'enabled' | 'prefix'
+ * Cambia el toggle, el prefijo o los mensajes del recibo digital.
+ * @param {string} key  'enabled' | 'prefix' | 'autoDownload' | 'receiptsDir' | 'msgWhatsapp' | 'msgPie'
  * @param {*} value
  * @returns {Promise<object>} la config resultante
  */

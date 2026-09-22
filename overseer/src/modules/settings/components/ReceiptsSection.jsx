@@ -120,6 +120,44 @@ export default function ReceiptsSection({ receipts, setReceipt }) {
             }}
           />
         </div>
+
+        <div className={shared.row}>
+          <div className={shared.rowInfo}>
+            <span className={shared.rowLabel}>Mensaje de WhatsApp</span>
+            <span className={shared.rowDesc}>Variables: {'{nombre} {numero} {plan} {valor} {codigo} {gym} {inicio} {fin}'}</span>
+          </div>
+        </div>
+        <textarea
+          value={receipts?.msgWhatsapp ?? ''}
+          onChange={(e) => setReceipt('msgWhatsapp', e.target.value.slice(0, 500))}
+          placeholder="Hola {nombre}, tu recibo {numero} ({plan}) por {valor} fue registrado en {gym}. Código: {codigo}."
+          rows={3}
+          aria-label="Mensaje de WhatsApp del recibo"
+          style={{
+            width: '100%', padding: '8px 12px', borderRadius: 'var(--r-btn)',
+            background: 'var(--surface-2)', border: '1px solid var(--border-2)',
+            color: 'var(--text-title)', fontSize: 13, resize: 'vertical',
+          }}
+        />
+
+        <div className={shared.row}>
+          <div className={shared.rowInfo}>
+            <span className={shared.rowLabel}>Pie del recibo (PNG)</span>
+            <span className={shared.rowDesc}>Texto al pie de la imagen generada</span>
+          </div>
+        </div>
+        <input
+          value={receipts?.msgPie ?? ''}
+          onChange={(e) => setReceipt('msgPie', e.target.value.slice(0, 200))}
+          placeholder="Escanea para validar · presenta este recibo en recepción"
+          maxLength={200}
+          aria-label="Pie del recibo"
+          style={{
+            width: '100%', padding: '8px 12px', borderRadius: 'var(--r-btn)',
+            background: 'var(--surface-2)', border: '1px solid var(--border-2)',
+            color: 'var(--text-title)', fontSize: 13,
+          }}
+        />
       </SettingsCard>
     </div>
   );

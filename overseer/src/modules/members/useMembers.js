@@ -55,5 +55,14 @@ export default function useMembers() {
     return list;
   };
 
-  return { members, counts, createMember, updateMember, renewMember };
+  // Superusuario: deshace la última renovación duplicada (borra el asiento
+  // extra y restaura el recibo previo). Devuelve lo que diga el backend.
+  const undoLastRenew = async (id, reciboPrevio) => {
+    const out = await membersService.undoLastRenew(id, reciboPrevio);
+    if (out?.members) setRawMembers(out.members);
+    else setRawMembers(await membersService.listMembers());
+    return out;
+  };
+
+  return { members, counts, createMember, updateMember, renewMember, undoLastRenew };
 }

@@ -69,8 +69,7 @@ process.env.OVERSEER_STATIC_DIR = path.join(__dirname, 'web');
  */
 function loadConfig() {
   let cfg = {};
-  const cfgPath = path.join(app.getPath('userData'), 'config.json');
-  try {
+  const cfgPath = path.join(app.getPath('userData'), 'config.json');  try {
     // `replace` inicial: tolera BOM (p. ej. archivos guardados con PowerShell).
     cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8').replace(/^\uFEFF/, ''));
   } catch { /* sin config → defaults */ }
@@ -270,10 +269,28 @@ function defaultReceiptsDir() {
 
 /** Carpeta efectiva: la elegida si es ruta absoluta válida, si no la default. */
 function resolveReceiptsDir(prefer) {
-  if (prefer && path.isAbsolute(prefer)) {
-    try { fs.mkdirSync(prefer, { recursive: true }); return prefer; } catch { /* cae a default */ }
+  return resolveReceiptsDirInfo(prefer).dir;
+}
+
+/**
+ * Variante informativa: indica si se cayó a la default y por qué, para que
+ * el front avise en vez de parecer "no se guardó en la carpeta elegida".
+ * @returns {{dir:string, fallback:boolean, reason:string}}
+ */
+function resolveReceiptsDirInfo(prefer) {
+  const wanted = String(prefer || '').trim();
+  // Sin carpeta elegida: la default es lo esperado, no un fallback.
+  if (!wanted) return { dir: defaultReceiptsDir(), fallback: false, reason: '' };
+  if (!path.isAbsolute(wanted)) {
+    return { dir: defaultReceiptsDir(), fallback: true, reason: 'ruta no absoluta' };
   }
-  return defaultReceiptsDir();
+  try {
+    fs.mkdirSync(wanted, { recursive: true });
+    fs.accessSync(wanted, fs.constants.W_OK);
+    return { dir: wanted, fallback: false, reason: '' };
+  } catch (err) {
+    return { dir: defaultReceiptsDir(), fallback: true, reason: err?.code || 'sin permiso' };
+  }
 }
 
 ipcMain.handle('overseer:open-receipts-folder', async (_e, prefer) => {
@@ -302,13 +319,15 @@ ipcMain.handle('overseer:pick-receipts-dir', async () => {
 });
 
 ipcMain.handle('overseer:save-receipt', async (_e, { filename, dataUrl, dir } = {}) => {
-  const folder = resolveReceiptsDir(dir);
+  const info = resolveReceiptsDirInfo(dir);
   const safe = String(filename || 'recibo.png').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80);
-  const m = /^data:image\/png;base64,(.+)$/.exec(dataUrl || '');
+  // Tolerante a saltos de línea: algunos FileReader/partes insertan \n en base64.
+  const m = /^data:image\/png;base64,([\s\S]+)$/.exec(String(dataUrl || '').trim());
   if (!m) throw new Error('PNG inválido');
-  const full = path.join(folder, safe);
-  fs.writeFileSync(full, Buffer.from(m[1], 'base64'));
-  return full;
+  const b64 = m[1].replace(/\s/g, '');
+  const full = path.join(info.dir, safe);
+  fs.writeFileSync(full, Buffer.from(b64, 'base64'));
+  return { path: full, dir: info.dir, fallback: info.fallback, reason: info.reason };
 });
 
 app.on('second-instance', showWindow);
@@ -320,6 +339,11 @@ app.on('before-quit', () => {
 app.whenReady().then(async () => {
   const cfg = loadConfig();
   process.env.HOST = cfg.host;
+  // Versión visible en Ajustes/menú (la de este package.json, hoy 1.0.5).
+  try {
+    // eslint-disable-next-line global-require
+    process.env.OVERSEER_VERSION = require('./package.json').version || '1.0.5';
+  } catch { process.env.OVERSEER_VERSION = '1.0.5'; }
 
   // Puerto fijo (origen estable para que persistan tema/sesión/flags); si está
   // ocupado, efímero y se muestra en la bandeja y el título de la ventana.

@@ -2,8 +2,8 @@
   MovementRow — Una fila de la lista de movimientos.
 
   Icono por tipo, concepto + etiqueta (con sufijos "saldada"/"mensual"),
-  badge "Pendiente" si aplica, fecha corta, monto con signo y color, y el
-  botón de confirmar (✓ Saldar / ✓ Pagar) en los pendientes.
+  badge "Pendiente" si aplica, fecha corta + hora am/pm, monto con signo y
+  color, y el botón de confirmar (✓ Saldar / ✓ Pagar) en los pendientes.
 
   Recibe:
     - mv: movimiento de dominio (movementsService)
@@ -21,6 +21,18 @@ function shortDate(fecha) {
   return d ? `${String(d.getDate()).padStart(2, '0')} ${MONTH_ABBR[d.getMonth()]}` : '';
 }
 
+/* "15:45" (24h) → "3:45 p. m." · "" → "" (filas viejas sin hora). */
+function horaAmPm(hora) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(hora || ''));
+  if (!m) return '';
+  let h = Number(m[1]);
+  const mm = m[2];
+  const suffix = h >= 12 ? 'p. m.' : 'a. m.';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${mm} ${suffix}`;
+}
+
 export default function MovementRow({ mv, onConfirm }) {
   const meta = getMovementMeta(mv.tipo);
   const settledExtra = (mv.tipo === 'entrada_pend' || mv.tipo === 'salida_pend') && mv.settled ? ' · saldada' : '';
@@ -30,6 +42,10 @@ export default function MovementRow({ mv, onConfirm }) {
   // muestran junto al tipo, en texto más claro y en negrita para leerlas de
   // un vistazo (salvo que ya sean el concepto principal, sin artículos).
   const obs = mv.motivo && mv.motivo !== mv.concepto ? mv.motivo : '';
+
+  // Fecha + hora am/pm ("05 jul · 3:45 p. m."). Sin hora (filas viejas): solo fecha.
+  const hora = horaAmPm(mv.hora);
+  const fechaLabel = hora ? `${shortDate(mv.fecha)} · ${hora}` : shortDate(mv.fecha);
 
   const montoLabel = (meta.sign > 0 ? '+ ' : '− ') + formatMoney(mv.monto);
   // Pendientes: se dejan en el color neutro actual (no distraen del aviso de
@@ -61,7 +77,7 @@ export default function MovementRow({ mv, onConfirm }) {
           <span className={styles.tipoLabel}>{tipoLabel}</span>
         </div>
 
-        <span className={styles.fecha}>{shortDate(mv.fecha)}</span>
+        <span className={styles.fecha} title={hora ? `Hora del movimiento: ${hora}` : undefined}>{fechaLabel}</span>
         {isNequi && <span className={`${styles.payChip} ${styles.payNequi}`}>Nequi</span>}
         <span className={styles.monto} style={{ color: montoColor }}>{montoLabel}</span>
 

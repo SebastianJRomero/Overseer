@@ -36,6 +36,12 @@
   color: var(--text-dim);
 }
 
+.version {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
 /* Sub-nav (fija) + contenido. */
 .grid {
   display: grid;

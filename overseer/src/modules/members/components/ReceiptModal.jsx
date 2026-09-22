@@ -15,6 +15,7 @@
     - recibo: { numero, codigo, fecha }
     - autoDownload: guardar respaldo al generar (Ajustes → Recibo digital)
     - receiptsDir: carpeta elegida ('' = la de la app en escritorio)
+    - msgWhatsapp / msgPie: plantillas editables (Ajustes → Recibo digital)
 */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -26,25 +27,29 @@ import { downloadBlob } from '../../../lib/download';
 import { formatMoney } from '../../../lib/money';
 import { formatShortDate } from '../../../lib/date';
 import { onlyDigits } from '../../../lib/format';
-import { isDesktop, saveReceiptFile, openExternalUrl } from '../../../lib/desktop';
+import { renderReceiptMsg, DEFAULT_WHATSAPP_MSG } from '../../../lib/receiptMsg';
+import { isDesktop, saveReceiptFile, openExternalUrl, openReceiptsFolder } from '../../../lib/desktop';
 import styles from './ReceiptModal.module.css';
 
 /** wa.me solo acepta TEXTO: el PNG se descarga y se adjunta manual. */
-function whatsappLink(member, recibo, gymName) {
+function whatsappLink(member, recibo, gymName, tpl) {
   const digits = onlyDigits(member.telefono || '');
   const to = digits.length === 10 ? `57${digits}` : digits;
-  const text = `Hola ${member.nombre}, tu recibo ${recibo.numero} (${member.tipo}) por ${formatMoney(member.valor)} fue registrado en ${gymName}. Código: ${recibo.codigo}.`;
+  const text = renderReceiptMsg(tpl || DEFAULT_WHATSAPP_MSG, { gym: gymName, member, recibo });
   return `https://wa.me/${to}?text=${encodeURIComponent(text)}`;
 }
 
-export default function ReceiptModal({ controller, gymName, member, recibo, autoDownload, receiptsDir }) {
+export default function ReceiptModal({ controller, gymName, member, recibo, autoDownload, receiptsDir, msgWhatsapp, msgPie }) {
   const [busy, setBusy] = useState(false);
   // Estado del respaldo automático: pending → ok | disk-fail | clip-fail.
   // El disco va PRIMERO y con su propio try/catch: si el portapapeles falla
-  // (foco perdido), el archivo igual debe existir.
+  // (foco perdido), el archivo igual debe existir. `saveInfo` guarda si hubo
+  // fallback a la carpeta default (ver main.cjs resolveReceiptsDirInfo).
   const [saved, setSaved] = useState('pending');
+  const [saveInfo, setSaveInfo] = useState(null);
   const startedOnce = useRef(false);
   const mountedRef = useRef(true);
+  const blobRef = useRef(null);
   useEffect(() => () => { mountedRef.current = false; }, []);
   // QR legible al escanear: N° de recibo primero y OVERSEER al final;
   // en medio cliente, plan/valor, vigencia y código (se valida con
@@ -55,7 +60,18 @@ export default function ReceiptModal({ controller, gymName, member, recibo, auto
   // Al abrir: renderiza el PNG (diferido para no trabar la animación de
   // entrada), guarda el respaldo en disco PRIMERO y luego copia al
   // portapapeles. Cada paso tiene su try/catch: el fallo de uno no cancela
-  // el otro. Si el modal se cierra a mitad, el guardado sigue en fondo.
+  // el otro. Si el modal se cierra a mitad, el guardado sigue en fondo
+  // (blobRef permite reintentar aunque el modal siga montado).
+  const saveBlobToDisk = async (blob) => {
+    if (isDesktop()) {
+      const out = await saveReceiptFile({ filename: `${recibo.numero}.png`, blob, dir: receiptsDir });
+      if (!out?.path) throw new Error('sin guardado');
+      return out;
+    }
+    downloadBlob(`${recibo.numero}.png`, blob);
+    return { path: '', dir: '', fallback: false, reason: '' };
+  };
+
   useEffect(() => {
     if (startedOnce.current) return;
     startedOnce.current = true;
@@ -64,23 +80,22 @@ export default function ReceiptModal({ controller, gymName, member, recibo, auto
       await new Promise((res) => setTimeout(res, 0));
       let blob = null;
       try {
-        const canvas = await drawReceiptCanvas({ gym: gymName, member, recibo, qrDataUrl });
+        const canvas = await drawReceiptCanvas({ gym: gymName, member, recibo, qrDataUrl, pie: msgPie });
         blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
         if (!blob) throw new Error('sin blob');
-      } catch {
+        blobRef.current = blob;
+      } catch (err) {
+        console.error('[OVERSEER] no se pudo renderizar el recibo:', err?.message || err);
         if (mountedRef.current) setSaved('disk-fail');
         return;
       }
       // 1. Disco (respaldo que no se puede perder).
       if (autoDownload) {
         try {
-          if (isDesktop()) {
-            const path = await saveReceiptFile({ filename: `${recibo.numero}.png`, blob, dir: receiptsDir });
-            if (!path) throw new Error('sin guardado');
-          } else {
-            downloadBlob(`${recibo.numero}.png`, blob);
-          }
-        } catch {
+          const out = await saveBlobToDisk(blob);
+          if (mountedRef.current) setSaveInfo(out);
+        } catch (err) {
+          console.error('[OVERSEER] fallo respaldo recibo:', err?.message || err);
           if (mountedRef.current) setSaved('disk-fail');
           return;
         }
@@ -102,13 +117,47 @@ export default function ReceiptModal({ controller, gymName, member, recibo, auto
     if (busy) return;
     setBusy(true);
     try {
-      const canvas = await drawReceiptCanvas({ gym: gymName, member, recibo, qrDataUrl });
+      const canvas = await drawReceiptCanvas({ gym: gymName, member, recibo, qrDataUrl, pie: msgPie });
       const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
-      if (blob) downloadBlob(`${recibo.numero}.png`, blob);
+      if (blob) {
+        blobRef.current = blob;
+        downloadBlob(`${recibo.numero}.png`, blob);
+      }
     } finally {
       setBusy(false);
     }
   };
+
+  // Reintenta solo el paso de disco con el blob ya renderizado.
+  const retrySave = async () => {
+    if (busy || !blobRef.current) return;
+    setBusy(true);
+    try {
+      const out = await saveBlobToDisk(blobRef.current);
+      setSaveInfo(out);
+      setSaved('ok');
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobRef.current })]);
+      } catch { /* portapapeles opcional */ }
+    } catch {
+      setSaved('disk-fail');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openFolder = () => openReceiptsFolder(receiptsDir);
+
+  // Mensaje según estado + si hubo fallback a la carpeta default.
+  const hint = saved === 'ok'
+    ? (saveInfo?.fallback
+      ? `Guardado en carpeta default (elegida no disponible: ${saveInfo.reason})`
+      : 'Imagen copiada: pégala en el chat del cliente')
+    : saved === 'disk-fail'
+      ? 'No se guardó el respaldo: usa ↓ PNG o Reintentar'
+      : saved === 'clip-fail'
+        ? 'Guardado OK · no se pudo copiar sola: usa ↓ PNG'
+        : 'Generando imagen…';
 
   return (
     <Modal controller={controller} width={560}>
@@ -132,19 +181,21 @@ export default function ReceiptModal({ controller, gymName, member, recibo, auto
       </div>
 
       <img className={styles.qr} src={qrDataUrl} alt={`QR de validación ${recibo.numero}`} />
-      <div className={styles.qrHint}>
-        {saved === 'ok'
-          ? 'Imagen copiada: pégala en el chat del cliente'
-          : saved === 'disk-fail'
-            ? 'No se guardó el respaldo: usa ↓ PNG y adjúntala manual'
-            : saved === 'clip-fail'
-              ? 'Guardado OK · no se pudo copiar sola: usa ↓ PNG'
-              : 'Generando imagen…'}
-      </div>
+      <div className={styles.qrHint}>{hint}</div>
+      {(saveInfo?.fallback || saved === 'disk-fail') && (
+        <div className={styles.actions}>
+          {saved === 'disk-fail' && (
+            <button type="button" className={styles.btn} onClick={retrySave} disabled={busy}>↻ Reintentar guardado</button>
+          )}
+          {isDesktop() && (
+            <button type="button" className={styles.btn} onClick={openFolder}>Abrir carpeta</button>
+          )}
+        </div>
+      )}
 
       <div className={styles.actions}>
         <button type="button" className={styles.btn} onClick={downloadPng} disabled={busy}><Icon name="download" /> PNG</button>
-        <button type="button" className={styles.btn} onClick={() => openExternalUrl(whatsappLink(member, recibo, gymName))}><Icon name="up" /> WhatsApp</button>
+        <button type="button" className={styles.btn} onClick={() => openExternalUrl(whatsappLink(member, recibo, gymName, msgWhatsapp))}><Icon name="up" /> WhatsApp</button>
         <button type="button" className={`${styles.btn} ${styles.primary}`} onClick={() => controller.close()}>Cerrar <Icon name="check" /></button>
       </div>
     </Modal>

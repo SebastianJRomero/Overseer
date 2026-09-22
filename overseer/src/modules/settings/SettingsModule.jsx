@@ -16,6 +16,7 @@ import { SETTINGS_SECTIONS, MAINTENANCE_SECTION, DEFAULT_SECTION } from './setti
 import { useSession } from '../../context/SessionProvider';
 import SettingsNav from './components/SettingsNav';
 import Icon from '../../components/Icon/Icon';
+import { getVersion } from '../../services/settingsService';
 import styles from './settings.module.css';
 
 export default function SettingsModule() {
@@ -23,12 +24,18 @@ export default function SettingsModule() {
   const { isSuper } = useSession();
   const [section, setSection] = useState(DEFAULT_SECTION);
   const [unlocked, setUnlocked] = useState(false); // atajo secreto revelado
+  const [version, setVersion] = useState('');
 
   // SOLO el superusuario (credencial maestra) alcanza el menú de mantenimiento.
   // NO se gatea por rol: el login es permisivo (cualquier usuario entra como
   // Admin por fallback, ver routes/auth.js), así que gatear por 'Admin' lo
   // dejaría abierto a CUALQUIER login. El menú es del superusuario y punto.
   const canMaintain = isSuper;
+
+  // Versión del sistema (backend → desktop/package.json).
+  useEffect(() => {
+    getVersion().then((v) => setVersion(`v${v?.version || '1.0.5'}`)).catch(() => {});
+  }, []);
 
   // Atajo secreto (Ctrl+Shift+M): revela la sección oculta y salta a ella.
   // Sin permiso no hace nada (ni siquiera revela que existe).
@@ -59,6 +66,7 @@ export default function SettingsModule() {
       <div className={styles.heading}>
         <span className={styles.title}>Ajustes</span>
         <span className={styles.subtitle}>Configuración general del sistema</span>
+        {version && <span className={styles.version}>OVERSEER {version}</span>}
       </div>
 
       {/* Dos columnas: sub-nav + contenido de la sección */}

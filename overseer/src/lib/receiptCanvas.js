@@ -23,12 +23,13 @@ function loadImage(src) {
 
 /**
  * Dibuja el recibo y devuelve el canvas (1080×1520, listo para PNG).
- * @param {{ gym, member, recibo, qrDataUrl }} d
+ * @param {{ gym, member, recibo, qrDataUrl, pie }} d
  * @param {string} d.gym  nombre del gimnasio
  * @param {object} d.member  { nombre, tipo, valor, inicio, fin, medio_pago }
  * @param {object} d.recibo  { numero, codigo, fecha }
+ * @param {string} [d.pie]  texto al pie (Ajustes → Recibo digital)
  */
-export async function drawReceiptCanvas({ gym, member, recibo, qrDataUrl }) {
+export async function drawReceiptCanvas({ gym, member, recibo, qrDataUrl, pie }) {
   const W = 1080;
   const H = 1520;
   const canvas = document.createElement('canvas');
@@ -117,7 +118,7 @@ export async function drawReceiptCanvas({ gym, member, recibo, qrDataUrl }) {
   c.textAlign = 'center';
   c.fillStyle = '#5c6a82';
   c.font = '500 24px Archivo, system-ui, sans-serif';
-  c.fillText('Escanea para validar · presenta este recibo en recepción', cx, H - 130);
+  c.fillText(pie || 'Escanea para validar · presenta este recibo en recepción', cx, H - 130);
 
   return canvas;
 }

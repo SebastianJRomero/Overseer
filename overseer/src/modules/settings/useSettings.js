@@ -17,7 +17,7 @@ export default function useSettings() {
   const [users, setUsers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [notifications, setNotifications] = useState({});
-  const [receipts, setReceipts] = useState({ enabled: false, prefix: 'RC', next: null });
+  const [receipts, setReceipts] = useState({ enabled: false, prefix: 'RC', next: null, msgWhatsapp: '', msgPie: '' });
   const [backup, setBackup] = useState({ auto: true, last: '' });
   const [backups, setBackups] = useState([]); // respaldos en disco: [{name,size,date}]
 

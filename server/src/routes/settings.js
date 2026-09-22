@@ -49,7 +49,13 @@ const DEFAULT_BACKUP = { auto: true, last: '', lastFile: '' };
 // `autoDownload` = al generar un recibo, guardar el PNG como respaldo.
 // `receiptsDir` = carpeta de esos respaldos (vacío = la carpeta de la app;
 // en escritorio se puede cambiar con selector, ver preload.cjs).
-const DEFAULT_RECEIPTS = { enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '' };
+// `msgWhatsapp` / `msgPie` = plantillas editables con {nombre} {numero} {plan}
+// {valor} {codigo} {gym} {inicio} {fin}.
+const DEFAULT_RECEIPTS = {
+  enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '',
+  msgWhatsapp: 'Hola {nombre}, tu recibo {numero} ({plan}) por {valor} fue registrado en {gym}. Código: {codigo}.',
+  msgPie: 'Escanea para validar · presenta este recibo en recepción',
+};
 
 /** Lee una clave de settings mezclada con sus defaults. */
 export function readSetting(key, defaults) {
@@ -71,6 +77,13 @@ export function getReceiptsConfig() {
 }
 
 /* ── Datos del gimnasio ─────────────────────────────────────────────────── */
+router.get('/version', (req, res) => res.json({
+  app: 'OVERSEER',
+  // En Electron main.cjs setea OVERSEER_VERSION desde desktop/package.json
+  // (hoy 1.0.5). En dev cae al default para no depender del build.
+  version: process.env.OVERSEER_VERSION || '1.0.5',
+}));
+
 router.get('/gym', (req, res) => res.json(readSetting('gymInfo', DEFAULT_GYM)));
 
 router.patch('/gym', (req, res) => {
@@ -162,7 +175,7 @@ router.delete('/backup/files/:name', (req, res) => {
 router.get('/receipts', (req, res) => res.json(readSetting('receipts', DEFAULT_RECEIPTS)));
 
 router.patch('/receipts', (req, res) => {
-  const { enabled, prefix, autoDownload, receiptsDir } = req.body || {};
+  const { enabled, prefix, autoDownload, receiptsDir, msgWhatsapp, msgPie } = req.body || {};
   const cur = readSetting('receipts', DEFAULT_RECEIPTS);
   const next = { ...cur };
   if (enabled != null) next.enabled = !!enabled;
@@ -174,6 +187,13 @@ router.patch('/receipts', (req, res) => {
   // Prefijo corto alfanumérico (2-6 chars); resto se ignora por seguridad.
   if (typeof prefix === 'string' && /^[A-Za-z0-9]{2,6}$/.test(prefix.trim())) {
     next.prefix = prefix.trim().toUpperCase();
+  }
+  // Plantillas del mensaje (WhatsApp y pie del PNG): texto libre ≤500 chars.
+  if (typeof msgWhatsapp === 'string' && msgWhatsapp.length <= 500) {
+    next.msgWhatsapp = msgWhatsapp;
+  }
+  if (typeof msgPie === 'string' && msgPie.length <= 200) {
+    next.msgPie = msgPie;
   }
   res.json(writeSetting('receipts', next));
 });

@@ -27,10 +27,12 @@
     - canEdit: con permiso 'Editar miembros'. Si es false, la ficha es de SOLO
       LECTURA: los controles editables se muestran como texto y se ocultan
       "Renovar", el editor de nombre y el selector de foto.
+    - gymName / receiptsDir: para reimprimir el recibo guardado (botón Ver recibo).
 */
 
 import { useEffect, useRef, useState } from 'react';
 import useModal from '../../../hooks/useModal';
+import { useSession } from '../../../context/SessionProvider';
 import Modal from '../../../components/Modal/Modal';
 import Badge from '../../../components/Badge/Badge';
 import Button from '../../../components/Button/Button';
@@ -38,16 +40,19 @@ import Field from '../../../components/Field/Field';
 import DatePicker from '../../../components/DatePicker/DatePicker';
 import PlanDropdown from './PlanDropdown';
 import MemberPhotoPreview from './MemberPhotoPreview';
+import MemberUndoRenew from './MemberUndoRenew';
+import ReceiptModal from './ReceiptModal';
 import { getInitials } from '../../../lib/initials';
 import { formatMoney } from '../../../lib/money';
 import { formatCedula, formatPhone, onlyDigits, toTitleCase } from '../../../lib/format';
 import { formatShortDate } from '../../../lib/date';
 import { computeFin, STATUS } from '../../../lib/memberStatus';
+import { receiptCode } from '../../../lib/receiptCode';
 import { resizeImage } from '../../../lib/image';
 import { ESTADO_STYLES, getPlanStyle } from '../memberStyles';
 import styles from './MemberDetailModal.module.css';
 
-export default function MemberDetailModal({ controller, member, planOptions, onUpdate, onRenew, canEdit = true }) {
+export default function MemberDetailModal({ controller, member, planOptions, onUpdate, onRenew, onUndo, canEdit = true, gymName = 'OVERSEER Fitness Club', receiptsDir = '', msgWhatsapp = '', msgPie = '' }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   // Cédula y teléfono se editan en la columna izquierda: borrador local que se
@@ -60,6 +65,10 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
   // Vista ampliada de la foto: se abre al tocar la foto cuando ya hay una
   // adjunta; desde ahí se puede cambiar la foto (canEdit) o cerrar.
   const previewCtrl = useModal();
+  // Reimpresión del recibo: reutiliza ReceiptModal en modo lectura
+  // (autoDownload=false, no consume consecutivo ni crea movimiento).
+  const receiptViewCtrl = useModal();
+  const { isSuper } = useSession();
 
   // Al cerrar el modal, salir de los modos edición para que la próxima apertura
   // empiece en modo vista.
@@ -130,6 +139,13 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
       console.error('[OVERSEER] no se pudo adjuntar la foto:', err.message || err);
     }
   };
+
+  // Recibo existente para reimprimir: número guardado + código derivado.
+  // Si no hay recibo (flujo manual sin digitar), no se ofrece la vista.
+  const hasReceipt = !!(member.recibo && String(member.recibo).trim());
+  const receiptView = hasReceipt
+    ? { numero: member.recibo, codigo: receiptCode(member.recibo, member.id), fecha: member.inicio }
+    : null;
 
   // Tocar la foto: si ya hay una foto adjunta se AMPLÍA (vista previa); si no,
   // se abre directo el selector de archivos/cámara para subir la primera foto.
@@ -328,10 +344,20 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
       <div className={styles.footer}>
         <span className={styles.lastRenewal}>Última renovación: {formatShortDate(member.inicio)}</span>
         <div className={styles.actions}>
+          {hasReceipt && (
+            <Button variant="outline" onClick={() => receiptViewCtrl.open()}>⎙ Ver recibo</Button>
+          )}
           <Button variant="outline" onClick={() => controller.close()}>Cerrar</Button>
           {canEdit && <Button onClick={() => onRenew(member)}>↻ Renovar membresía</Button>}
         </div>
       </div>
+
+      {/* Superusuario: corregir duplicado por doble renovar (fuera del flujo normal). */}
+      {isSuper && onUndo && (
+        <div style={{ padding: '0 20px 18px' }}>
+          <MemberUndoRenew member={member} onUndo={onUndo} />
+        </div>
+      )}
     </Modal>
 
       {/* Vista ampliada de la foto (solo si hay foto adjunta). */}
@@ -342,6 +368,20 @@ export default function MemberDetailModal({ controller, member, planOptions, onU
         canEdit={canEdit}
         onChangePhoto={changePhotoFromPreview}
       />
+
+      {/* Reimpresión del recibo guardado (lectura, sin consumir consecutivo). */}
+      {receiptView && (
+        <ReceiptModal
+          controller={receiptViewCtrl}
+          gymName={gymName}
+          member={member}
+          recibo={receiptView}
+          autoDownload={false}
+          receiptsDir={receiptsDir}
+          msgWhatsapp={msgWhatsapp}
+          msgPie={msgPie}
+        />
+      )}
     </>
   );
 }

@@ -213,3 +213,12 @@
   border-color: var(--danger-border);
   color: var(--danger-strong);
 }
+
+/* Versión del sistema al pie del menú (Ajustes la muestra también). */
+.version {
+  padding: 8px 16px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  border-top: 1px solid var(--border-1);
+}
