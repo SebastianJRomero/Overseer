@@ -73,8 +73,9 @@ export async function pickReceiptsDir() {
 
 /**
  * Guarda el PNG en la carpeta de recibos (sin diálogo). Solo escritorio.
+ * Devuelve el resultado estructurado del main (ruta + si hubo fallback).
  * @param {{ filename: string, blob: Blob, dir?: string }} d
- * @returns {Promise<string|null>} la ruta final, o null si falló
+ * @returns {Promise<{path:string, dir:string, fallback:boolean, reason:string}|null>} la ruta final, o null si falló
  */
 export async function saveReceiptFile({ filename, blob, dir }) {
   try {
@@ -85,8 +86,12 @@ export async function saveReceiptFile({ filename, blob, dir }) {
       r.onerror = rej;
       r.readAsDataURL(blob);
     });
-    return await window.overseer.saveReceipt({ filename, dataUrl, dir: dir || '' });
-  } catch {
+    const out = await window.overseer.saveReceipt({ filename, dataUrl, dir: dir || '' });
+    // Compat: builds viejos devolvían solo el string de la ruta.
+    if (typeof out === 'string') return { path: out, dir: '', fallback: false, reason: '' };
+    return out;
+  } catch (err) {
+    console.error('[OVERSEER] no se pudo guardar el recibo:', err?.message || err);
     return null;
   }
 }

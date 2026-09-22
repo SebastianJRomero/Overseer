@@ -136,6 +136,9 @@ export function migrate() {
   // efectivo para no romper filas viejas ni el flujo manual actual.
   ensureColumn('members', 'medio_pago', "TEXT DEFAULT 'efectivo'");
   ensureColumn('movements', 'medio_pago', "TEXT DEFAULT 'efectivo'");
+  // Hora del movimiento (HH:MM 24h, p. ej. '15:45'): el front la muestra en
+  // formato am/pm. Filas viejas quedan '' y se muestran sin hora.
+  ensureColumn('movements', 'hora', "TEXT DEFAULT ''");
 }
 
 /**

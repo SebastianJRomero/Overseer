@@ -62,10 +62,14 @@ export default function WizardStepPlanDates({ data, onPatch, plans }) {
 
       <div className={styles.dateGrid}>
         <Field label="Fecha inicio">
-          <DatePicker value={data.inicio} onChange={pickInicio} display={formatShortDate} />
+          <div data-field="inicio">
+            <DatePicker value={data.inicio} onChange={pickInicio} display={formatShortDate} />
+          </div>
         </Field>
         <Field label="Fecha fin" hint="(auto)">
-          <DatePicker value={data.fin} onChange={(fin) => onPatch({ fin })} align="right" display={formatShortDate} />
+          <div data-field="fin">
+            <DatePicker value={data.fin} onChange={(fin) => onPatch({ fin })} align="right" display={formatShortDate} />
+          </div>
         </Field>
       </div>
     </div>

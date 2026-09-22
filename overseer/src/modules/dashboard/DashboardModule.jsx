@@ -41,7 +41,7 @@ export default function DashboardModule() {
   const session = useSession();
   const { user } = session;
   const canEditMembers = hasPermission(session, 'Editar miembros');
-  const { members, counts, createMember, updateMember, renewMember } = useMembers();
+  const { members, counts, createMember, updateMember, renewMember, undoLastRenew } = useMembers();
   const {
     day, isToday, movements, entradas, salidas, upcoming, summary,
     prevDay, nextDay, goToday, createMovement, settleMovement, refresh: refreshFinance,
@@ -55,6 +55,7 @@ export default function DashboardModule() {
   const createMemberAndRefresh = async (datos) => { const saved = await createMember(datos); await refreshFinance(); return saved; };
   const renewMemberAndRefresh = async (id, datos) => { const list = await renewMember(id, datos); await refreshFinance(); return list; };
   const updateMemberAndRefresh = async (id, patch) => { await updateMember(id, patch); await refreshFinance(); };
+  const undoMemberAndRefresh = async (id, reciboPrevio) => { const out = await undoLastRenew(id, reciboPrevio); await refreshFinance(); return out; };
 
   const movementModal = useModal();
   const summaryModal = useModal();
@@ -158,6 +159,7 @@ export default function DashboardModule() {
         onCreate={createMemberAndRefresh}
         onUpdate={updateMemberAndRefresh}
         onRenew={renewMemberAndRefresh}
+        onUndo={undoMemberAndRefresh}
       />
     </div>
   );

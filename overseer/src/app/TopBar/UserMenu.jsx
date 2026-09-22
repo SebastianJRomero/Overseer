@@ -14,22 +14,30 @@
   portal, el overlay vive fuera de la barra y se apila por encima de todo.
 */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from '../../context/SessionProvider';
 import { useTheme, ZOOM_MIN, ZOOM_MAX } from '../../theme/ThemeProvider';
 import { getInitials } from '../../lib/initials';
+import { getVersion } from '../../services/settingsService';
 import styles from './UserMenu.module.css';
 
 export default function UserMenu() {
   const { user, role, logout } = useSession();
   const { tema, zoom, setAppearance } = useTheme();
   const [open, setOpen] = useState(false);
+  const [version, setVersion] = useState('');
   const name = user || 'Admin';
   const roleLabel = role || 'Administrador';
   const isDark = tema !== 'claro';
 
   const close = () => setOpen(false);
+
+  // Versión del sistema (backend → desktop/package.json). Se carga al abrir.
+  useEffect(() => {
+    if (!open || version) return;
+    getVersion().then((v) => setVersion(`v${v?.version || '1.0.5'}`)).catch(() => {});
+  }, [open, version]);
 
   return (
     <>
@@ -86,6 +94,7 @@ export default function UserMenu() {
                 <span>Cerrar sesión</span>
               </button>
             </div>
+            <div className={styles.version}>OVERSEER {version || 'v1.0.5'}</div>
           </div>
         </div>,
         document.body,

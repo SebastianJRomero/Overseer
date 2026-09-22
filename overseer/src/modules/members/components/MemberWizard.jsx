@@ -39,13 +39,14 @@
 */
 
 import { useEffect, useMemo, useState } from 'react';
-import Modal from '../../../components/Modal/Modal';
-import WizardStepText from './WizardStepText';
+import Modal from '../../../components/Modal/Modal';import WizardStepText from './WizardStepText';
 import WizardStepPlanDates from './WizardStepPlanDates';
 import WizardStepPago from './WizardStepPago';
 import WizardSummary from './WizardSummary';
 import MedioPagoCheck from '../../../components/MedioPagoCheck/MedioPagoCheck';
 import { todayDMY, isValidDMY } from '../../../lib/date';
+import { loadShortcuts, matchShortcut } from '../../../lib/shortcuts';
+import useWizardDraft, { loadDraft } from '../../../hooks/useWizardDraft';
 import { computeFin, SPECIAL_PLAN } from '../../../lib/memberStatus';
 import { parseMoney, quickThousands } from '../../../lib/money';
 import { onlyDigits, toTitleCase } from '../../../lib/format';
@@ -122,8 +123,12 @@ export default function MemberWizard({ controller, mode, member, plans, members,
   const steps = autoRecibo ? ADD_STEPS.filter((s) => s.field !== 'recibo') : ADD_STEPS;
   const required = autoRecibo ? REQUIRED.filter((f) => f !== 'recibo') : REQUIRED;
   const totalSteps = isRenew ? 2 : steps.length;
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState(() => initialData(mode, member, plans));
+  // Guardrail: si hay borrador (salida accidental), se restaura en vez de
+  // arrancar vacío. El módulo remonta con key nueva, así el initial corre limpio.
+  const [step, setStep] = useState(() => loadDraft(mode, member)?.step ?? 0);
+  const [data, setData] = useState(() => loadDraft(mode, member)?.data ?? initialData(mode, member, plans));
+  const [restored, setRestored] = useState(() => !!loadDraft(mode, member));
+  const { clear } = useWizardDraft(mode, member, data, step);
 
   const patch = (p) => setData((d) => ({ ...d, ...p }));
   const isSummary = !isRenew && step >= steps.length;
@@ -155,6 +160,8 @@ export default function MemberWizard({ controller, mode, member, plans, members,
 
   const save = () => {
     if (!stepValid) return;
+    clear();
+    setRestored(false);
     // El valor pasa por el atajo de miles: "55" tecleado → 55.000.
     const valor = parseMoney(quickThousands(data.valor)); // texto/número → número limpio
     // Medio de pago normalizado: solo 'nequi' viaja como tal, resto = efectivo.
@@ -189,6 +196,32 @@ export default function MemberWizard({ controller, mode, member, plans, members,
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
+
+  // Atajos configurables (Ajustes → Atajos): atrás + foco a inicio/fin.
+  // Se ignoran escribiendo en inputs, salvo que el combo lleve Alt/Ctrl.
+  useEffect(() => {
+    if (!controller.isOpen || controller.isClosing) return undefined;
+    const onKey = (e) => {
+      const tag = e.target.tagName;
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA';
+      const hasMod = e.altKey || e.ctrlKey;
+      if (typing && !hasMod) return;
+      const sc = loadShortcuts();
+      if (matchShortcut(sc.wizardAtras, e)) {
+        e.preventDefault();
+        if (step > 0) setStep(step - 1);
+      } else if (matchShortcut(sc.fechaInicio, e)) {
+        e.preventDefault();
+        document.querySelector('[data-field="inicio"] button')?.focus();
+      } else if (matchShortcut(sc.fechaFin, e)) {
+        e.preventDefault();
+        document.querySelector('[data-field="fin"] button')?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controller.isOpen, controller.isClosing, step]);
 
   /* A qué paso vuelve cada campo del resumen (los 3 del plan van juntos;
      medio de pago vive en el paso "valor"; recibo auto no es editable). */
@@ -225,6 +258,20 @@ export default function MemberWizard({ controller, mode, member, plans, members,
       <div className={styles.progress}>
         <div className={styles.progressFill} style={{ width: `${pct}%` }} />
       </div>
+
+      {/* Guardrail: se restauró un borrador tras salida accidental. */}
+      {restored && (
+        <div style={{ padding: '8px 28px 0', fontSize: 12, color: 'var(--warn)' }}>
+          Borrador restaurado (salida anterior).{' '}
+          <button
+            type="button"
+            onClick={() => { clear(); setRestored(false); setData(initialData(mode, member, plans)); setStep(0); }}
+            style={{ textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+          >
+            Descartar
+          </button>
+        </div>
+      )}
 
       {/* Paso actual */}
       {isRenew && step === 0 && (

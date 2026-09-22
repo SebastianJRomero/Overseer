@@ -20,6 +20,7 @@ import AccountsSection from './components/AccountsSection';
 import PlansSection from './components/PlansSection';
 import NotificationsSection from './components/NotificationsSection';
 import ReceiptsSection from './components/ReceiptsSection';
+import ShortcutsSection from './components/ShortcutsSection';
 import DataSection from './components/DataSection';
 import MaintenanceSection from './components/MaintenanceSection';
 
@@ -30,6 +31,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'planes', icon: 'finance', label: 'Planes y precios', desc: 'Membresías y tarifas', Component: PlansSection },
   { id: 'notificaciones', icon: 'notification', label: 'Notificaciones', desc: 'Recordatorios y avisos', Component: NotificationsSection },
   { id: 'recibos', icon: 'finance', label: 'Recibo digital', desc: 'Consecutivo, QR y comprobante', Component: ReceiptsSection },
+  { id: 'atajos', icon: 'key', label: 'Atajos', desc: 'Teclado para el flujo de miembros', Component: ShortcutsSection },
   { id: 'datos', icon: 'reports', label: 'Respaldos y datos', desc: 'Exportar y copias de seguridad', Component: DataSection },
 ];
 

@@ -21,7 +21,7 @@ import { readSetting, writeSetting, getReceiptsConfig } from './settings.js';
 
 const router = Router();
 
-const DEFAULT_RECEIPTS = { enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '' };
+const DEFAULT_RECEIPTS = { enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '', msgWhatsapp: '', msgPie: '' };
 
 /** Extrae el número de un recibo "RC-1056" → 1056 (null si no calza). */
 function parseNumero(recibo, prefix) {

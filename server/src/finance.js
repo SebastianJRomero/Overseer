@@ -50,7 +50,7 @@ export function toUserDomain(mv) {
     id: mv.id, source: 'user', tipo: mv.tipo, categoria: mv.categoria || 'otro',
     concepto: itemsTitle || (mv.motivo || '').trim() || label,
     motivo: (mv.motivo || '').trim(),
-    monto: mv.monto, fecha: mv.fecha, day: dt ? dt.getDate() : 0,
+    monto: mv.monto, fecha: mv.fecha, hora: mv.hora || '', day: dt ? dt.getDate() : 0,
     pending, settled: !!mv.settled, recurrent: !!mv.recurrent, items: mv.items || {},
     medio_pago,
   };

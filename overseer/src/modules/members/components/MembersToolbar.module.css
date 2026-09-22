@@ -108,3 +108,23 @@
 .searchInput::placeholder {
   color: var(--text-dim);
 }
+
+/* X para borrar rápido el texto del buscador (solo si hay query). */
+.clearBtn {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+}
+.clearBtn:hover {
+  background: var(--border-1);
+  color: var(--text-title);
+}

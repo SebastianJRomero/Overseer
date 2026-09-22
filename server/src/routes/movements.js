@@ -33,13 +33,19 @@ const monthLabel = (m) => MONTH_ABBR[m].replace(/^\w/, (c) => c.toUpperCase());
 
 /** Lee TODOS los asientos del libro (crudos), más nuevos primero (ORDER BY ord). */
 function readAll() {
-  return db.prepare('SELECT id, tipo, monto, motivo, fecha, recurrent, settled, items, categoria, medio_pago FROM movements ORDER BY ord ASC').all()
+  return db.prepare('SELECT id, tipo, monto, motivo, fecha, hora, recurrent, settled, items, categoria, medio_pago FROM movements ORDER BY ord ASC').all()
     .map((r) => ({
-      id: r.id, tipo: r.tipo, monto: r.monto, motivo: r.motivo, fecha: r.fecha,
+      id: r.id, tipo: r.tipo, monto: r.monto, motivo: r.motivo, fecha: r.fecha, hora: r.hora || '',
       recurrent: !!r.recurrent, settled: !!r.settled, items: JSON.parse(r.items || '{}'),
       categoria: r.categoria || 'otro',
       medio_pago: r.medio_pago === 'nequi' ? 'nequi' : 'efectivo',
     }));
+}
+
+/** Hora actual HH:MM 24h (para el nuevo asiento). */
+function nowHHMM() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 /** ¿La fila (cruda) cae en el mes (y,m)? */
@@ -80,16 +86,16 @@ router.post('/', (req, res) => {
   const categoria = isIncome ? (hasItems ? 'venta' : 'otro') : 'otro';
   // Medio de pago: solo 'efectivo' | 'nequi' (default efectivo para no romper).
   const medio_pago = mov.medio_pago === 'nequi' ? 'nequi' : 'efectivo';
-  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria, medio_pago)
-    VALUES (@id, @ord, @tipo, @monto, @motivo, @fecha, @recurrent, 0, @items, @categoria, @medio_pago)`)
+  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, hora, recurrent, settled, items, categoria, medio_pago)
+    VALUES (@id, @ord, @tipo, @monto, @motivo, @fecha, @hora, @recurrent, 0, @items, @categoria, @medio_pago)`)
     .run({
       id, ord: nextOrd('movements', 'top'),
-      tipo: mov.tipo, monto: mov.monto, motivo: mov.motivo ?? '', fecha: mov.fecha,
+      tipo: mov.tipo, monto: mov.monto, motivo: mov.motivo ?? '', fecha: mov.fecha, hora: mov.hora || nowHHMM(),
       recurrent: mov.recurrent ? 1 : 0, items: JSON.stringify(mov.items || {}), categoria, medio_pago,
     });
   // Mismo retorno que antes: el registro tal cual + id + settled:false
   // (el hook lo pasa a addFromMovement y applySale).
-  res.status(201).json({ ...mov, medio_pago, id, settled: false });
+  res.status(201).json({ ...mov, medio_pago, id, settled: false, hora: mov.hora || '' });
 });
 
 router.post('/:id/settle', (req, res) => {

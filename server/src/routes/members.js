@@ -45,7 +45,7 @@ function nextReceiptNumber() {
   const cfg = getReceiptsConfig();
   if (!cfg.enabled) return null;
   const run = db.transaction(() => {
-    const cur = readSetting('receipts', { enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '' });
+    const cur = readSetting('receipts', { enabled: false, prefix: 'RC', next: null, autoDownload: false, receiptsDir: '', msgWhatsapp: '', msgPie: '' });
     let base = cur.next;
     if (base == null) {
       let max = 0;
@@ -73,13 +73,16 @@ function nextReceiptNumber() {
  * se ven en los movimientos del día y del mes.
  * @param {{nombre, tipo, valor}} m  datos del miembro (alta o renovación)
  */
-function addMembershipEntry({ nombre, tipo, valor, medio_pago }) {
+function addMembershipEntry({ id, nombre, tipo, valor, medio_pago }) {
   if (!valor || valor <= 0) return;
-  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, recurrent, settled, items, categoria, medio_pago)
-    VALUES (@id, @ord, 'entrada', @monto, @motivo, @fecha, 0, 1, '{}', 'membresia', @medio_pago)`)
+  const d = new Date();
+  const hora = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  db.prepare(`INSERT INTO movements (id, ord, tipo, monto, motivo, fecha, hora, recurrent, settled, items, categoria, medio_pago)
+    VALUES (@id, @ord, 'entrada', @monto, @motivo, @fecha, @hora, 0, 1, @items, 'membresia', @medio_pago)`)
     .run({
       id: newId('mv'), ord: nextOrd('movements', 'top'),
-      monto: valor, motivo: `Membresía ${tipo || ''} · ${nombre || ''}`.trim(), fecha: todayDMY(),
+      monto: valor, motivo: `Membresía ${tipo || ''} · ${nombre || ''}`.trim(), fecha: todayDMY(), hora,
+      items: JSON.stringify({ memberId: id || '' }),
       medio_pago: normMedio(medio_pago),
     });
 }
@@ -135,6 +138,42 @@ router.post('/:id/renew', (req, res) => {
   const m = list.find((x) => x.id === req.params.id);
   if (m) addMembershipEntry(m);
   res.json(list);
+});
+
+/**
+ * Deshace la última renovación duplicada (SOLO superusuario): borra el
+ * asiento de membresía más reciente del miembro y restaura el recibo previo
+ * que envía el front (el admin lo copia del PNG/carpeta antes de confirmar).
+ * Sin recibo previo, solo borra el movimiento extra.
+ */
+router.post('/:id/undo-renew', (req, res) => {
+  if (req.userId !== '__super__') return res.status(403).json({ error: 'Solo superusuario' });
+  const id = req.params.id;
+  const { reciboPrevio } = req.body || {};
+  const member = db.prepare('SELECT id, nombre FROM members WHERE id = ?').get(id);
+  if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
+  // Asiento más reciente: primero por memberId en items, si no por motivo.
+  let mv = null;
+  try {
+    const rows = db.prepare(`SELECT id, motivo, items FROM movements WHERE categoria = 'membresia' ORDER BY ord ASC`).all();
+    const byMember = rows.filter((r) => {
+      try { return JSON.parse(r.items || '{}').memberId === id; } catch { return false; }
+    });
+    if (byMember.length) mv = byMember[byMember.length - 1];
+    else {
+      const byName = rows.filter((r) => String(r.motivo || '').includes(member.nombre));
+      if (byName.length) mv = byName[byName.length - 1];
+    }
+  } catch { /* sin asiento para borrar */ }
+  const run = db.transaction(() => {
+    if (mv) db.prepare('DELETE FROM movements WHERE id = ?').run(mv.id);
+    if (reciboPrevio && String(reciboPrevio).trim()) {
+      db.prepare('UPDATE members SET recibo = @recibo WHERE id = @id')
+        .run({ recibo: String(reciboPrevio).trim(), id });
+    }
+  });
+  run();
+  res.json({ ok: true, deleted: mv ? mv.id : null, members: listAll() });
 });
 
 export default router;

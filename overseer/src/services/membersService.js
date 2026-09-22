@@ -52,3 +52,14 @@ export async function updateMember(id, patch) {
 export async function renewMember(id, datos) {
   return apiPost(`/members/${id}/renew`, datos);
 }
+
+/**
+ * Deshace la última renovación duplicada (SOLO superusuario): borra el
+ * asiento extra y restaura el recibo previo si se envía.
+ * @param {string} id
+ * @param {string} [reciboPrevio]
+ * @returns {Promise<{ok, deleted, members}>}
+ */
+export async function undoLastRenew(id, reciboPrevio) {
+  return apiPost(`/members/${id}/undo-renew`, { reciboPrevio: reciboPrevio || '' });
+}
